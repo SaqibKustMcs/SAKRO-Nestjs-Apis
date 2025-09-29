@@ -12,10 +12,36 @@ export const UserSchema = new Schema(
     color: { type: String, default: '' },
     isEmailVerified: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
+    
+    // Profile completion fields
+    fullName: { type: String, default: '' },
+    phoneNumber: { type: String, default: '' },
+    village: { type: String, default: '' },
+    country: { type: String, default: '' },
+    homeAddress: { type: String, default: '' },
+    profilePic: { type: String, default: '' },
+    zipcode: { type: String, default: '' },
+    
+    // Shopping app specific fields
+    userLevel: { type: String, default: 'beginner', enum: ['beginner', 'intermediate', 'advanced', 'expert'] },
+    userStatus: { type: String, default: 'active', enum: ['active', 'inactive', 'suspended'] },
+    userRole: { type: String, default: 'normal', enum: ['normal', 'seller', 'admin'] },
+    sellOrders: { type: Number, default: 0 },
+    buyOrders: { type: Number, default: 0 },
+    wishlist: { type: [String], default: [] },
+    cart: { type: [String], default: [] },
+
+    // Two-Factor Authentication fields
+    twoFactorSecret: { type: String, default: null },
+    isTwoFactorEnabled: { type: Boolean, default: false },
+
+    // Biometric Authentication field
+    isBiometric: { type: Boolean, default: false },
 
   },
   {
     collection: 'users',
+    timestamps: true,
   },
 );
 

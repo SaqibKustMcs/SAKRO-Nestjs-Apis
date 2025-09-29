@@ -10,6 +10,9 @@ import { PostModule } from './post/post.module';
 import { OrderModule } from './order/order.module';
 import { CommentsModule } from './comments/comments.module';
 import { VillageModule } from './village/village.module';
+import { ShopModule } from './shop/shop.module';
+import { CategoryModule } from './category/category.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -21,7 +24,10 @@ import { VillageModule } from './village/village.module';
     PostModule,
     OrderModule,
     CommentsModule,
-    VillageModule
+    VillageModule,
+    ShopModule,
+    CategoryModule,
+    ProductModule
   ],
   controllers: [AppController],
   providers: [AppService],

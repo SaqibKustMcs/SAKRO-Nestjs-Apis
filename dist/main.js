@@ -2613,6 +2613,9 @@ const post_module_1 = __webpack_require__(/*! ./post/post.module */ "./src/post/
 const order_module_1 = __webpack_require__(/*! ./order/order.module */ "./src/order/order.module.ts");
 const comments_module_1 = __webpack_require__(/*! ./comments/comments.module */ "./src/comments/comments.module.ts");
 const village_module_1 = __webpack_require__(/*! ./village/village.module */ "./src/village/village.module.ts");
+const shop_module_1 = __webpack_require__(/*! ./shop/shop.module */ "./src/shop/shop.module.ts");
+const category_module_1 = __webpack_require__(/*! ./category/category.module */ "./src/category/category.module.ts");
+const product_module_1 = __webpack_require__(/*! ./product/product.module */ "./src/product/product.module.ts");
 let AppModule = exports.AppModule = class AppModule {
 };
 exports.AppModule = AppModule = __decorate([
@@ -2626,7 +2629,10 @@ exports.AppModule = AppModule = __decorate([
             post_module_1.PostModule,
             order_module_1.OrderModule,
             comments_module_1.CommentsModule,
-            village_module_1.VillageModule
+            village_module_1.VillageModule,
+            shop_module_1.ShopModule,
+            category_module_1.CategoryModule,
+            product_module_1.ProductModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
@@ -2667,6 +2673,366 @@ exports.AppService = AppService = __decorate([
 
 /***/ }),
 
+/***/ "./src/auth/2fa.controller.ts":
+/*!************************************!*\
+  !*** ./src/auth/2fa.controller.ts ***!
+  \************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Auth2FAController = exports.TwoFactorController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const _2fa_service_1 = __webpack_require__(/*! ./2fa.service */ "./src/auth/2fa.service.ts");
+const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/auth/auth.service.ts");
+const _2fa_dto_1 = __webpack_require__(/*! ./dto/2fa.dto */ "./src/auth/dto/2fa.dto.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! ./jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+let TwoFactorController = exports.TwoFactorController = class TwoFactorController {
+    constructor(twoFactorService, authService) {
+        this.twoFactorService = twoFactorService;
+        this.authService = authService;
+    }
+    async enable2FA(user) {
+        const result = await this.twoFactorService.enable2FA(user.id);
+        return {
+            success: true,
+            message: '2FA setup initiated. Please scan the QR code with Google Authenticator and verify with a token.',
+            data: result
+        };
+    }
+    async verify2FA(verifyDto, user) {
+        const result = await this.twoFactorService.verify2FA(user.id, verifyDto);
+        if (result.verified) {
+            return {
+                success: true,
+                message: '2FA has been enabled successfully',
+                data: result
+            };
+        }
+        else {
+            return {
+                success: false,
+                message: 'Invalid 2FA token. Please try again.',
+                data: result
+            };
+        }
+    }
+    async disable2FA(user) {
+        const result = await this.twoFactorService.disable2FA(user.id);
+        return {
+            success: true,
+            message: result.message,
+            data: result
+        };
+    }
+    async generateBackupCodes(user) {
+        const result = await this.twoFactorService.generateBackupCodes(user.id);
+        return {
+            success: true,
+            message: 'Backup codes generated successfully. Store them in a safe place.',
+            data: result
+        };
+    }
+};
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Enable 2FA for authenticated user' }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: '2FA setup initiated successfully',
+        type: _2fa_dto_1.Enable2FAResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - 2FA already enabled' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('enable'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TwoFactorController.prototype, "enable2FA", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Verify 2FA token to complete setup' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '2FA verified and enabled successfully',
+        type: _2fa_dto_1.Verify2FAResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - invalid token' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('verify'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof _2fa_dto_1.Verify2FADTO !== "undefined" && _2fa_dto_1.Verify2FADTO) === "function" ? _c : Object, Object]),
+    __metadata("design:returntype", Promise)
+], TwoFactorController.prototype, "verify2FA", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Disable 2FA for authenticated user' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '2FA disabled successfully'
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - 2FA not enabled' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('disable'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TwoFactorController.prototype, "disable2FA", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Generate backup codes for 2FA' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Backup codes generated successfully'
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - 2FA not enabled' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('backup-codes'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TwoFactorController.prototype, "generateBackupCodes", null);
+exports.TwoFactorController = TwoFactorController = __decorate([
+    (0, swagger_1.ApiTags)('Two-Factor Authentication'),
+    (0, common_1.Controller)('auth/2fa'),
+    __metadata("design:paramtypes", [typeof (_a = typeof _2fa_service_1.TwoFactorService !== "undefined" && _2fa_service_1.TwoFactorService) === "function" ? _a : Object, typeof (_b = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _b : Object])
+], TwoFactorController);
+let Auth2FAController = exports.Auth2FAController = class Auth2FAController {
+    constructor(authService) {
+        this.authService = authService;
+    }
+    async loginWith2FA(login2FADto) {
+        return await this.authService.loginWith2FA(login2FADto);
+    }
+};
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Login with 2FA support' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Login successful',
+        type: _2fa_dto_1.Login2FAResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - missing 2FA token' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - invalid credentials or 2FA token' }),
+    (0, common_1.Post)('login-2fa'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof _2fa_dto_1.Login2FADTO !== "undefined" && _2fa_dto_1.Login2FADTO) === "function" ? _e : Object]),
+    __metadata("design:returntype", Promise)
+], Auth2FAController.prototype, "loginWith2FA", null);
+exports.Auth2FAController = Auth2FAController = __decorate([
+    (0, swagger_1.ApiTags)('Authentication'),
+    (0, common_1.Controller)('auth'),
+    __metadata("design:paramtypes", [typeof (_d = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _d : Object])
+], Auth2FAController);
+
+
+/***/ }),
+
+/***/ "./src/auth/2fa.service.ts":
+/*!*********************************!*\
+  !*** ./src/auth/2fa.service.ts ***!
+  \*********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TwoFactorService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const speakeasy = __webpack_require__(/*! speakeasy */ "speakeasy");
+const QRCode = __webpack_require__(/*! qrcode */ "qrcode");
+let TwoFactorService = exports.TwoFactorService = class TwoFactorService {
+    constructor(userModel) {
+        this.userModel = userModel;
+    }
+    async enable2FA(userId) {
+        try {
+            const user = await this.userModel.findById(userId);
+            if (!user) {
+                throw new common_1.BadRequestException('User not found');
+            }
+            if (user.isTwoFactorEnabled) {
+                throw new common_1.BadRequestException('2FA is already enabled for this user');
+            }
+            const secret = speakeasy.generateSecret({
+                name: `SAKRO (${user.email})`,
+                issuer: 'SAKRO Shopping App',
+                length: 32,
+            });
+            await this.userModel.findByIdAndUpdate(userId, {
+                twoFactorSecret: secret.base32,
+            });
+            const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+            return {
+                qrCode,
+                manualEntryKey: secret.base32,
+                otpauthUrl: secret.otpauth_url,
+            };
+        }
+        catch (error) {
+            console.error('Error enabling 2FA:', error);
+            throw new common_1.BadRequestException('Failed to enable 2FA');
+        }
+    }
+    async verify2FA(userId, verifyDto) {
+        try {
+            const user = await this.userModel.findById(userId);
+            if (!user) {
+                throw new common_1.BadRequestException('User not found');
+            }
+            if (!user.twoFactorSecret) {
+                throw new common_1.BadRequestException('2FA secret not found. Please enable 2FA first.');
+            }
+            const verified = speakeasy.totp.verify({
+                secret: user.twoFactorSecret,
+                encoding: 'base32',
+                token: verifyDto.token,
+                window: 2,
+            });
+            if (verified) {
+                await this.userModel.findByIdAndUpdate(userId, {
+                    isTwoFactorEnabled: true,
+                });
+                return {
+                    verified: true,
+                    enabled: true,
+                };
+            }
+            else {
+                return {
+                    verified: false,
+                    enabled: false,
+                };
+            }
+        }
+        catch (error) {
+            console.error('Error verifying 2FA:', error);
+            throw new common_1.BadRequestException('Failed to verify 2FA token');
+        }
+    }
+    async verify2FAToken(userId, token) {
+        try {
+            const user = await this.userModel.findById(userId);
+            if (!user || !user.twoFactorSecret || !user.isTwoFactorEnabled) {
+                return false;
+            }
+            const verified = speakeasy.totp.verify({
+                secret: user.twoFactorSecret,
+                encoding: 'base32',
+                token: token,
+                window: 2,
+            });
+            return verified;
+        }
+        catch (error) {
+            console.error('Error verifying 2FA token:', error);
+            return false;
+        }
+    }
+    async disable2FA(userId) {
+        try {
+            const user = await this.userModel.findById(userId);
+            if (!user) {
+                throw new common_1.BadRequestException('User not found');
+            }
+            if (!user.isTwoFactorEnabled) {
+                throw new common_1.BadRequestException('2FA is not enabled for this user');
+            }
+            await this.userModel.findByIdAndUpdate(userId, {
+                isTwoFactorEnabled: false,
+                twoFactorSecret: null,
+            });
+            return {
+                success: true,
+                message: '2FA has been disabled successfully',
+            };
+        }
+        catch (error) {
+            console.error('Error disabling 2FA:', error);
+            throw new common_1.BadRequestException('Failed to disable 2FA');
+        }
+    }
+    async generateBackupCodes(userId) {
+        try {
+            const user = await this.userModel.findById(userId);
+            if (!user) {
+                throw new common_1.BadRequestException('User not found');
+            }
+            if (!user.isTwoFactorEnabled) {
+                throw new common_1.BadRequestException('2FA is not enabled for this user');
+            }
+            const backupCodes = Array.from({ length: 10 }, () => Math.random().toString(36).substring(2, 8).toUpperCase());
+            return {
+                backupCodes,
+            };
+        }
+        catch (error) {
+            console.error('Error generating backup codes:', error);
+            throw new common_1.BadRequestException('Failed to generate backup codes');
+        }
+    }
+    async validateBackupCode(userId, backupCode) {
+        try {
+            const user = await this.userModel.findById(userId);
+            if (!user || !user.isTwoFactorEnabled) {
+                return false;
+            }
+            return backupCode.length === 6 && /^[A-Z0-9]+$/.test(backupCode);
+        }
+        catch (error) {
+            console.error('Error validating backup code:', error);
+            return false;
+        }
+    }
+};
+exports.TwoFactorService = TwoFactorService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)('User')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], TwoFactorService);
+
+
+/***/ }),
+
 /***/ "./src/auth/auth.controller.ts":
 /*!*************************************!*\
   !*** ./src/auth/auth.controller.ts ***!
@@ -2686,7 +3052,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -2694,11 +3060,13 @@ const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/auth/aut
 const login_dto_1 = __webpack_require__(/*! ./dto/login.dto */ "./src/auth/dto/login.dto.ts");
 const otp_dto_1 = __webpack_require__(/*! ./dto/otp.dto */ "./src/auth/dto/otp.dto.ts");
 const signup_dto_1 = __webpack_require__(/*! ./dto/signup.dto */ "./src/auth/dto/signup.dto.ts");
+const update_profile_dto_1 = __webpack_require__(/*! ./dto/update-profile.dto */ "./src/auth/dto/update-profile.dto.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const email_dto_1 = __webpack_require__(/*! ./dto/email.dto */ "./src/auth/dto/email.dto.ts");
 const password_dto_1 = __webpack_require__(/*! ./dto/password.dto */ "./src/auth/dto/password.dto.ts");
 const jwt_auth_guard_1 = __webpack_require__(/*! ./jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
 const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+const biometric_dto_1 = __webpack_require__(/*! ./dto/biometric.dto */ "./src/auth/dto/biometric.dto.ts");
 let AuthController = exports.AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -2729,6 +3097,12 @@ let AuthController = exports.AuthController = class AuthController {
     }
     getLoggedInUsers(user) {
         return this.authService.getLoggedInUsers(user);
+    }
+    updateProfile(updateProfileDto, user) {
+        return this.authService.updateProfile(updateProfileDto, user);
+    }
+    updateBiometricStatus(updateBiometricDto, user) {
+        return this.authService.updateBiometricStatus(user.id, updateBiometricDto);
     }
 };
 __decorate([
@@ -2799,6 +3173,34 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getLoggedInUsers", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)('update-profile'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_k = typeof update_profile_dto_1.UpdateProfileDTO !== "undefined" && update_profile_dto_1.UpdateProfileDTO) === "function" ? _k : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "updateProfile", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update biometric authentication status' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Biometric status updated successfully',
+        type: biometric_dto_1.BiometricResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - Invalid input' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Invalid token' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)('biometric-status'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_l = typeof biometric_dto_1.UpdateBiometricStatusDTO !== "undefined" && biometric_dto_1.UpdateBiometricStatusDTO) === "function" ? _l : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "updateBiometricStatus", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),
@@ -2829,6 +3231,8 @@ const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
 const auth_controller_1 = __webpack_require__(/*! ./auth.controller */ "./src/auth/auth.controller.ts");
 const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/auth/auth.service.ts");
 const jwt_strategy_1 = __webpack_require__(/*! ./jwt.strategy */ "./src/auth/jwt.strategy.ts");
+const _2fa_controller_1 = __webpack_require__(/*! ./2fa.controller */ "./src/auth/2fa.controller.ts");
+const _2fa_service_1 = __webpack_require__(/*! ./2fa.service */ "./src/auth/2fa.service.ts");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 const otp_schema_1 = __webpack_require__(/*! src/schema/otp/otp.schema */ "./src/schema/otp/otp.schema.ts");
@@ -2848,8 +3252,8 @@ let AuthModule = exports.AuthModule = AuthModule_1 = class AuthModule {
                 ]),
                 chat_1.ChatModule,
             ],
-            controllers: [auth_controller_1.AuthController],
-            providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, utils_service_1.UtilsService],
+            controllers: [auth_controller_1.AuthController, _2fa_controller_1.TwoFactorController, _2fa_controller_1.Auth2FAController],
+            providers: [auth_service_1.AuthService, _2fa_service_1.TwoFactorService, jwt_strategy_1.JwtStrategy, utils_service_1.UtilsService],
             module: AuthModule_1,
         };
     }
@@ -2880,7 +3284,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -2893,14 +3297,16 @@ const otpGenerator = __webpack_require__(/*! otp-generator */ "otp-generator");
 const email_1 = __webpack_require__(/*! ./email */ "./src/auth/email.ts");
 const utils_service_1 = __webpack_require__(/*! ../utils/utils.service */ "./src/utils/utils.service.ts");
 const chat_service_1 = __webpack_require__(/*! @app/chat/chat.service */ "./libs/chat/src/chat.service.ts");
+const _2fa_service_1 = __webpack_require__(/*! ./2fa.service */ "./src/auth/2fa.service.ts");
 const GO_CARDLESS_ACTIVE = false;
 let AuthService = exports.AuthService = class AuthService {
-    constructor(jwtService, _userModel, _otpModel, chatService, utilsService) {
+    constructor(jwtService, _userModel, _otpModel, chatService, utilsService, twoFactorService) {
         this.jwtService = jwtService;
         this._userModel = _userModel;
         this._otpModel = _otpModel;
         this.chatService = chatService;
         this.utilsService = utilsService;
+        this.twoFactorService = twoFactorService;
     }
     generateToken(payload) {
         return {
@@ -2962,9 +3368,11 @@ let AuthService = exports.AuthService = class AuthService {
             const res = await this.utilsService.sendEmail({
                 to: signupDto?.email,
                 subject: "Confirm your email",
-                html: (0, email_1.getEmail)(`${signupDto?.name}`, otp)
+                html: (0, email_1.getEmail)(`${signupDto?.email}`, otp)
             });
-            return { user: userData };
+            const userResponse = JSON.parse(JSON.stringify(userData));
+            delete userResponse.password;
+            return { user: userResponse };
         }
         catch (err) {
             console.log(err);
@@ -3217,13 +3625,271 @@ let AuthService = exports.AuthService = class AuthService {
             throw new common_1.BadRequestException(err?.message);
         }
     }
+    async updateProfile(updateProfileDto, user) {
+        try {
+            const userData = await this._userModel.findOne({ _id: user.id, isDeleted: false });
+            if (!userData) {
+                throw new Error('User not found');
+            }
+            const updatedUser = await this._userModel.findByIdAndUpdate(user.id, {
+                fullName: updateProfileDto.fullName,
+                phoneNumber: updateProfileDto.phoneNumber,
+                village: updateProfileDto.village,
+                country: updateProfileDto.country,
+                homeAddress: updateProfileDto.homeAddress,
+                profilePic: updateProfileDto.profilePic || userData.profilePic,
+                zipcode: updateProfileDto.zipcode,
+            }, { new: true });
+            const userResponse = JSON.parse(JSON.stringify(updatedUser));
+            delete userResponse.password;
+            return { user: userResponse };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message);
+        }
+    }
+    async loginWith2FA(login2FADto) {
+        try {
+            const { email, password, token } = login2FADto;
+            const user = await this._userModel.findOne({
+                email: email.toLowerCase(),
+                isEmailVerified: true,
+                isDeleted: false,
+            });
+            if (!user) {
+                throw new common_1.UnauthorizedException('Invalid credentials');
+            }
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                throw new common_1.UnauthorizedException('Invalid credentials');
+            }
+            if (user.isTwoFactorEnabled) {
+                if (!token) {
+                    throw new common_1.BadRequestException('2FA token is required');
+                }
+                const isTokenValid = await this.twoFactorService.verify2FAToken(user.id, token);
+                if (!isTokenValid) {
+                    throw new common_1.UnauthorizedException('Invalid 2FA token');
+                }
+            }
+            const payload = {
+                id: user.id,
+                email: user.email,
+                userRole: user.userRole,
+            };
+            const tokenResponse = this.generateToken(payload);
+            const userResponse = {
+                id: user.id,
+                email: user.email,
+                fullName: user.fullName,
+                userRole: user.userRole,
+                userStatus: user.userStatus,
+                isTwoFactorEnabled: user.isTwoFactorEnabled,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            };
+            return {
+                success: true,
+                message: 'Login successful',
+                data: {
+                    ...tokenResponse,
+                    user: userResponse,
+                },
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Login failed');
+        }
+    }
+    async updateBiometricStatus(userId, updateBiometricDto) {
+        try {
+            const user = await this._userModel.findById(userId);
+            if (!user) {
+                throw new common_1.BadRequestException('User not found');
+            }
+            user.isBiometric = updateBiometricDto.isBiometric;
+            await user.save();
+            return {
+                success: true,
+                message: `Biometric authentication ${updateBiometricDto.isBiometric ? 'enabled' : 'disabled'} successfully`,
+                data: {
+                    isBiometric: user.isBiometric,
+                },
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to update biometric status');
+        }
+    }
 };
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(1, (0, mongoose_2.InjectModel)('User')),
     __param(2, (0, mongoose_2.InjectModel)('Otp')),
-    __metadata("design:paramtypes", [typeof (_a = typeof dist_1.JwtService !== "undefined" && dist_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _c : Object, typeof (_d = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _d : Object, typeof (_e = typeof utils_service_1.UtilsService !== "undefined" && utils_service_1.UtilsService) === "function" ? _e : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof dist_1.JwtService !== "undefined" && dist_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _c : Object, typeof (_d = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _d : Object, typeof (_e = typeof utils_service_1.UtilsService !== "undefined" && utils_service_1.UtilsService) === "function" ? _e : Object, typeof (_f = typeof _2fa_service_1.TwoFactorService !== "undefined" && _2fa_service_1.TwoFactorService) === "function" ? _f : Object])
 ], AuthService);
+
+
+/***/ }),
+
+/***/ "./src/auth/dto/2fa.dto.ts":
+/*!*********************************!*\
+  !*** ./src/auth/dto/2fa.dto.ts ***!
+  \*********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Login2FAResponseDTO = exports.Verify2FAResponseDTO = exports.Enable2FAResponseDTO = exports.Login2FADTO = exports.Verify2FADTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class Verify2FADTO {
+}
+exports.Verify2FADTO = Verify2FADTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '6-digit TOTP token from Google Authenticator',
+        example: '123456',
+        minLength: 6,
+        maxLength: 6
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Length)(6, 6, { message: 'Token must be exactly 6 digits' }),
+    __metadata("design:type", String)
+], Verify2FADTO.prototype, "token", void 0);
+class Login2FADTO {
+}
+exports.Login2FADTO = Login2FADTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User email address',
+        example: 'user@example.com'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User password',
+        example: 'password123'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '6-digit TOTP token from Google Authenticator (required if 2FA is enabled)',
+        example: '123456',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(6, 6, { message: 'Token must be exactly 6 digits' }),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "token", void 0);
+class Enable2FAResponseDTO {
+}
+exports.Enable2FAResponseDTO = Enable2FAResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'QR code as base64 string for Google Authenticator' }),
+    __metadata("design:type", String)
+], Enable2FAResponseDTO.prototype, "qrCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Manual entry key for Google Authenticator' }),
+    __metadata("design:type", String)
+], Enable2FAResponseDTO.prototype, "manualEntryKey", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'OTPAUTH URL for Google Authenticator' }),
+    __metadata("design:type", String)
+], Enable2FAResponseDTO.prototype, "otpauthUrl", void 0);
+class Verify2FAResponseDTO {
+}
+exports.Verify2FAResponseDTO = Verify2FAResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Whether 2FA verification was successful' }),
+    __metadata("design:type", Boolean)
+], Verify2FAResponseDTO.prototype, "verified", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Whether 2FA is now enabled for the user' }),
+    __metadata("design:type", Boolean)
+], Verify2FAResponseDTO.prototype, "enabled", void 0);
+class Login2FAResponseDTO {
+}
+exports.Login2FAResponseDTO = Login2FAResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'JWT access token' }),
+    __metadata("design:type", String)
+], Login2FAResponseDTO.prototype, "accessToken", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User information' }),
+    __metadata("design:type", Object)
+], Login2FAResponseDTO.prototype, "user", void 0);
+
+
+/***/ }),
+
+/***/ "./src/auth/dto/biometric.dto.ts":
+/*!***************************************!*\
+  !*** ./src/auth/dto/biometric.dto.ts ***!
+  \***************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricResponseDTO = exports.UpdateBiometricStatusDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class UpdateBiometricStatusDTO {
+}
+exports.UpdateBiometricStatusDTO = UpdateBiometricStatusDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Enable or disable biometric authentication',
+        example: true,
+        type: Boolean
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Biometric status is required' }),
+    (0, class_validator_1.IsBoolean)({ message: 'Biometric status must be a boolean value' }),
+    __metadata("design:type", Boolean)
+], UpdateBiometricStatusDTO.prototype, "isBiometric", void 0);
+class BiometricResponseDTO {
+}
+exports.BiometricResponseDTO = BiometricResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Success status' }),
+    __metadata("design:type", Boolean)
+], BiometricResponseDTO.prototype, "success", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Response message' }),
+    __metadata("design:type", String)
+], BiometricResponseDTO.prototype, "message", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Updated biometric status' }),
+    __metadata("design:type", Object)
+], BiometricResponseDTO.prototype, "data", void 0);
 
 
 /***/ }),
@@ -3385,30 +4051,90 @@ class SignupDTO {
 }
 exports.SignupDTO = SignupDTO;
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'Email address of the user' }),
+    (0, class_validator_1.IsEmail)({}, { message: 'Please provide a valid email address' }),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], SignupDTO.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'Password for the user account' }),
     (0, class_validator_1.MinLength)(MIN_LENGTH, { message: 'Minimum 8 characters required' }),
     (0, class_validator_1.Matches)(NUMBER, { message: 'Minimum 1 digit required' }),
     (0, class_validator_1.Matches)(CAPITAL_LETTER, { message: 'Minimum 1 uppercase character required' }),
     (0, class_validator_1.Matches)(SMALL_LETTER, { message: 'Minimum 1 lowercase character required' }),
     (0, class_validator_1.Matches)(SPECIAL_CHARACTER, { message: 'Minimum 1 special character required' }),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], SignupDTO.prototype, "password", void 0);
+
+
+/***/ }),
+
+/***/ "./src/auth/dto/update-profile.dto.ts":
+/*!********************************************!*\
+  !*** ./src/auth/dto/update-profile.dto.ts ***!
+  \********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateProfileDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class UpdateProfileDTO {
+}
+exports.UpdateProfileDTO = UpdateProfileDTO;
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Full name of the user' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], SignupDTO.prototype, "name", void 0);
+], UpdateProfileDTO.prototype, "fullName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Phone number of the user' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], SignupDTO.prototype, "pic", void 0);
+], UpdateProfileDTO.prototype, "phoneNumber", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Village selected from dropdown' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], SignupDTO.prototype, "color", void 0);
+], UpdateProfileDTO.prototype, "village", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Country of the user' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], UpdateProfileDTO.prototype, "country", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Home address of the user' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], UpdateProfileDTO.prototype, "homeAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Profile picture URL', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProfileDTO.prototype, "profilePic", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Zipcode of the user' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], UpdateProfileDTO.prototype, "zipcode", void 0);
 
 
 /***/ }),
@@ -3638,6 +4364,915 @@ exports.JwtStrategy = JwtStrategy = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [])
 ], JwtStrategy);
+
+
+/***/ }),
+
+/***/ "./src/category/category.controller.ts":
+/*!*********************************************!*\
+  !*** ./src/category/category.controller.ts ***!
+  \*********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CategoryController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const category_service_1 = __webpack_require__(/*! ./category.service */ "./src/category/category.service.ts");
+const create_category_dto_1 = __webpack_require__(/*! ./dto/create-category.dto */ "./src/category/dto/create-category.dto.ts");
+const update_category_dto_1 = __webpack_require__(/*! ./dto/update-category.dto */ "./src/category/dto/update-category.dto.ts");
+const category_query_dto_1 = __webpack_require__(/*! ./dto/category-query.dto */ "./src/category/dto/category-query.dto.ts");
+const category_response_dto_1 = __webpack_require__(/*! ./dto/category-response.dto */ "./src/category/dto/category-response.dto.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+let CategoryController = exports.CategoryController = class CategoryController {
+    constructor(categoryService) {
+        this.categoryService = categoryService;
+    }
+    createCategory(createCategoryDto) {
+        return this.categoryService.createCategory(createCategoryDto);
+    }
+    getCategoryById(id) {
+        return this.categoryService.getCategoryById(id);
+    }
+    getAllCategories(query) {
+        return this.categoryService.getAllCategories(query);
+    }
+    updateCategory(id, updateCategoryDto) {
+        return this.categoryService.updateCategory(id, updateCategoryDto);
+    }
+    deleteCategory(id) {
+        return this.categoryService.deleteCategory(id);
+    }
+    getCategoriesByType(type) {
+        return this.categoryService.getCategoriesByType(type);
+    }
+    getCategoryHierarchy() {
+        return this.categoryService.getCategoryHierarchy();
+    }
+};
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new category' }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'Category created successfully',
+        type: category_response_dto_1.CategoryResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - validation failed' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof create_category_dto_1.CreateCategoryDTO !== "undefined" && create_category_dto_1.CreateCategoryDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "createCategory", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get category by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Category ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Category retrieved successfully',
+        type: category_response_dto_1.CategoryResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Category not found' }),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "getCategoryById", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all categories with optional filters' }),
+    (0, swagger_1.ApiQuery)({ name: 'type', required: false, enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY'] }),
+    (0, swagger_1.ApiQuery)({ name: 'shopCategoryId', required: false, description: 'Filter by shop category ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'productCategoryId', required: false, description: 'Filter by product category ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: ['ACTIVE', 'INACTIVE'] }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false, description: 'Search by category name' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Categories retrieved successfully',
+        type: [category_response_dto_1.CategoryResponseDTO]
+    }),
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof category_query_dto_1.CategoryQueryDTO !== "undefined" && category_query_dto_1.CategoryQueryDTO) === "function" ? _c : Object]),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "getAllCategories", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update category by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Category ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Category updated successfully',
+        type: category_response_dto_1.CategoryResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Category not found' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_d = typeof update_category_dto_1.UpdateCategoryDTO !== "undefined" && update_category_dto_1.UpdateCategoryDTO) === "function" ? _d : Object]),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "updateCategory", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Delete category by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Category ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Category deleted successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - category has children' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Category not found' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "deleteCategory", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get categories by type' }),
+    (0, swagger_1.ApiParam)({ name: 'type', enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY'] }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Categories retrieved successfully',
+        type: [category_response_dto_1.CategoryResponseDTO]
+    }),
+    (0, common_1.Get)('type/:type'),
+    __param(0, (0, common_1.Param)('type')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "getCategoriesByType", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get complete category hierarchy' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Category hierarchy retrieved successfully',
+        schema: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    type: { type: 'string', enum: ['SHOP_CATEGORY'] },
+                    status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] },
+                    children: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                id: { type: 'string' },
+                                name: { type: 'string' },
+                                type: { type: 'string', enum: ['PRODUCT_CATEGORY'] },
+                                status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] },
+                                children: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            id: { type: 'string' },
+                                            name: { type: 'string' },
+                                            type: { type: 'string', enum: ['SUBCATEGORY'] },
+                                            status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }),
+    (0, common_1.Get)('hierarchy/all'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "getCategoryHierarchy", null);
+exports.CategoryController = CategoryController = __decorate([
+    (0, swagger_1.ApiTags)('Category'),
+    (0, common_1.Controller)('category'),
+    __metadata("design:paramtypes", [typeof (_a = typeof category_service_1.CategoryService !== "undefined" && category_service_1.CategoryService) === "function" ? _a : Object])
+], CategoryController);
+
+
+/***/ }),
+
+/***/ "./src/category/category.module.ts":
+/*!*****************************************!*\
+  !*** ./src/category/category.module.ts ***!
+  \*****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CategoryModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const category_controller_1 = __webpack_require__(/*! ./category.controller */ "./src/category/category.controller.ts");
+const category_service_1 = __webpack_require__(/*! ./category.service */ "./src/category/category.service.ts");
+const category_schema_1 = __webpack_require__(/*! src/schema/category/category.schema */ "./src/schema/category/category.schema.ts");
+let CategoryModule = exports.CategoryModule = class CategoryModule {
+};
+exports.CategoryModule = CategoryModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([
+                { name: 'Category', schema: category_schema_1.CategorySchema },
+            ]),
+        ],
+        controllers: [category_controller_1.CategoryController],
+        providers: [category_service_1.CategoryService],
+        exports: [category_service_1.CategoryService],
+    })
+], CategoryModule);
+
+
+/***/ }),
+
+/***/ "./src/category/category.service.ts":
+/*!******************************************!*\
+  !*** ./src/category/category.service.ts ***!
+  \******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CategoryService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let CategoryService = exports.CategoryService = class CategoryService {
+    constructor(categoryModel) {
+        this.categoryModel = categoryModel;
+    }
+    async createCategory(createCategoryDto) {
+        try {
+            await this.validateParentCategories(createCategoryDto);
+            const category = await new this.categoryModel(createCategoryDto).save();
+            return await this.getCategoryById(category.id);
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to create category');
+        }
+    }
+    async getCategoryById(id) {
+        try {
+            const category = await this.categoryModel
+                .findById(id)
+                .populate('parentCategoryId', 'id name type')
+                .populate('shopCategoryId', 'id name type')
+                .populate('productCategoryId', 'id name type')
+                .exec();
+            if (!category) {
+                throw new common_1.NotFoundException('Category not found');
+            }
+            return this.formatCategoryResponse(category);
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.NotFoundException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to get category');
+        }
+    }
+    async getAllCategories(query) {
+        try {
+            const filter = {};
+            if (query.type) {
+                filter.type = query.type;
+            }
+            if (query.shopCategoryId) {
+                filter.shopCategoryId = query.shopCategoryId;
+            }
+            if (query.productCategoryId) {
+                filter.productCategoryId = query.productCategoryId;
+            }
+            if (query.status) {
+                filter.status = query.status;
+            }
+            if (query.search) {
+                filter.name = { $regex: query.search, $options: 'i' };
+            }
+            const categories = await this.categoryModel
+                .find(filter)
+                .populate('parentCategoryId', 'id name type')
+                .populate('shopCategoryId', 'id name type')
+                .populate('productCategoryId', 'id name type')
+                .sort({ sortOrder: 1, createdAt: -1 })
+                .exec();
+            return categories.map(category => this.formatCategoryResponse(category));
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get categories');
+        }
+    }
+    async updateCategory(id, updateCategoryDto) {
+        try {
+            const category = await this.categoryModel.findById(id);
+            if (!category) {
+                throw new common_1.NotFoundException('Category not found');
+            }
+            const updatedCategory = await this.categoryModel.findByIdAndUpdate(id, updateCategoryDto, { new: true }).populate('parentCategoryId', 'id name type')
+                .populate('shopCategoryId', 'id name type')
+                .populate('productCategoryId', 'id name type');
+            return this.formatCategoryResponse(updatedCategory);
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.NotFoundException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to update category');
+        }
+    }
+    async deleteCategory(id) {
+        try {
+            const category = await this.categoryModel.findById(id);
+            if (!category) {
+                throw new common_1.NotFoundException('Category not found');
+            }
+            const hasChildren = await this.categoryModel.findOne({
+                $or: [
+                    { parentCategoryId: id },
+                    { shopCategoryId: id },
+                    { productCategoryId: id }
+                ]
+            });
+            if (hasChildren) {
+                throw new common_1.BadRequestException('Cannot delete category with child categories');
+            }
+            await this.categoryModel.findByIdAndDelete(id);
+            return { message: 'Category deleted successfully' };
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.NotFoundException || err instanceof common_1.BadRequestException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to delete category');
+        }
+    }
+    async getCategoriesByType(type) {
+        try {
+            const categories = await this.categoryModel
+                .find({ type, status: 'ACTIVE' })
+                .populate('parentCategoryId', 'id name type')
+                .populate('shopCategoryId', 'id name type')
+                .populate('productCategoryId', 'id name type')
+                .sort({ sortOrder: 1, name: 1 })
+                .exec();
+            return categories.map(category => this.formatCategoryResponse(category));
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get categories by type');
+        }
+    }
+    async getCategoryHierarchy() {
+        try {
+            const shopCategories = await this.categoryModel
+                .find({ type: 'SHOP_CATEGORY', status: 'ACTIVE' })
+                .sort({ sortOrder: 1, name: 1 })
+                .exec();
+            const hierarchy = [];
+            for (const shopCategory of shopCategories) {
+                const productCategories = await this.categoryModel
+                    .find({
+                    type: 'PRODUCT_CATEGORY',
+                    shopCategoryId: shopCategory.id,
+                    status: 'ACTIVE'
+                })
+                    .sort({ sortOrder: 1, name: 1 })
+                    .exec();
+                const shopCategoryWithChildren = {
+                    ...this.formatCategoryResponse(shopCategory),
+                    children: []
+                };
+                for (const productCategory of productCategories) {
+                    const subcategories = await this.categoryModel
+                        .find({
+                        type: 'SUBCATEGORY',
+                        productCategoryId: productCategory.id,
+                        status: 'ACTIVE'
+                    })
+                        .sort({ sortOrder: 1, name: 1 })
+                        .exec();
+                    shopCategoryWithChildren.children.push({
+                        ...this.formatCategoryResponse(productCategory),
+                        children: subcategories.map(sub => this.formatCategoryResponse(sub))
+                    });
+                }
+                hierarchy.push(shopCategoryWithChildren);
+            }
+            return hierarchy;
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get category hierarchy');
+        }
+    }
+    async validateParentCategories(createCategoryDto) {
+        if (createCategoryDto.shopCategoryId) {
+            const shopCategory = await this.categoryModel.findOne({
+                id: createCategoryDto.shopCategoryId,
+                type: 'SHOP_CATEGORY',
+                status: 'ACTIVE'
+            });
+            if (!shopCategory) {
+                throw new common_1.BadRequestException('Invalid shopCategoryId');
+            }
+        }
+        if (createCategoryDto.productCategoryId) {
+            const productCategory = await this.categoryModel.findOne({
+                id: createCategoryDto.productCategoryId,
+                type: 'PRODUCT_CATEGORY',
+                status: 'ACTIVE'
+            });
+            if (!productCategory) {
+                throw new common_1.BadRequestException('Invalid productCategoryId');
+            }
+        }
+    }
+    formatCategoryResponse(category) {
+        const response = {
+            id: category.id,
+            name: category.name,
+            type: category.type,
+            parentCategoryId: category.parentCategoryId,
+            shopCategoryId: category.shopCategoryId,
+            productCategoryId: category.productCategoryId,
+            status: category.status,
+            description: category.description,
+            icon: category.icon,
+            sortOrder: category.sortOrder,
+            createdAt: category.createdAt,
+            updatedAt: category.updatedAt,
+        };
+        if (category.parentCategoryId && typeof category.parentCategoryId === 'object') {
+            response['parentCategory'] = {
+                id: category.parentCategoryId.id,
+                name: category.parentCategoryId.name,
+                type: category.parentCategoryId.type
+            };
+        }
+        if (category.shopCategoryId && typeof category.shopCategoryId === 'object') {
+            response['shopCategory'] = {
+                id: category.shopCategoryId.id,
+                name: category.shopCategoryId.name,
+                type: category.shopCategoryId.type
+            };
+        }
+        if (category.productCategoryId && typeof category.productCategoryId === 'object') {
+            response['productCategory'] = {
+                id: category.productCategoryId.id,
+                name: category.productCategoryId.name,
+                type: category.productCategoryId.type
+            };
+        }
+        return response;
+    }
+};
+exports.CategoryService = CategoryService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)('Category')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], CategoryService);
+
+
+/***/ }),
+
+/***/ "./src/category/dto/category-query.dto.ts":
+/*!************************************************!*\
+  !*** ./src/category/dto/category-query.dto.ts ***!
+  \************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CategoryQueryDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class CategoryQueryDTO {
+}
+exports.CategoryQueryDTO = CategoryQueryDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by category type',
+        enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY'],
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CategoryQueryDTO.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by shop category ID',
+        required: false,
+        example: 'shop_cat_123'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CategoryQueryDTO.prototype, "shopCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by product category ID',
+        required: false,
+        example: 'product_cat_123'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CategoryQueryDTO.prototype, "productCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by status',
+        enum: ['ACTIVE', 'INACTIVE'],
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['ACTIVE', 'INACTIVE']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CategoryQueryDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Search by category name',
+        required: false,
+        example: 'electronics'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CategoryQueryDTO.prototype, "search", void 0);
+
+
+/***/ }),
+
+/***/ "./src/category/dto/category-response.dto.ts":
+/*!***************************************************!*\
+  !*** ./src/category/dto/category-response.dto.ts ***!
+  \***************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CategoryResponseDTO = exports.ParentCategoryDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class ParentCategoryDTO {
+}
+exports.ParentCategoryDTO = ParentCategoryDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Parent category ID' }),
+    __metadata("design:type", String)
+], ParentCategoryDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Parent category name' }),
+    __metadata("design:type", String)
+], ParentCategoryDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Parent category type' }),
+    __metadata("design:type", String)
+], ParentCategoryDTO.prototype, "type", void 0);
+class CategoryResponseDTO {
+}
+exports.CategoryResponseDTO = CategoryResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category ID' }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category name' }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Category type',
+        enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY']
+    }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Parent category ID (nullable for SHOP_CATEGORY)',
+        required: false
+    }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "parentCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Shop category ID (for PRODUCT_CATEGORY and SUBCATEGORY)',
+        required: false
+    }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "shopCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product category ID (for SUBCATEGORY)',
+        required: false
+    }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "productCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Category status',
+        enum: ['ACTIVE', 'INACTIVE']
+    }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category description', required: false }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category icon URL', required: false }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "icon", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Sort order for display' }),
+    __metadata("design:type", Number)
+], CategoryResponseDTO.prototype, "sortOrder", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Parent category details', type: ParentCategoryDTO, required: false }),
+    __metadata("design:type", ParentCategoryDTO)
+], CategoryResponseDTO.prototype, "parentCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop category details', type: ParentCategoryDTO, required: false }),
+    __metadata("design:type", ParentCategoryDTO)
+], CategoryResponseDTO.prototype, "shopCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product category details', type: ParentCategoryDTO, required: false }),
+    __metadata("design:type", ParentCategoryDTO)
+], CategoryResponseDTO.prototype, "productCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], CategoryResponseDTO.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last update timestamp' }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], CategoryResponseDTO.prototype, "updatedAt", void 0);
+
+
+/***/ }),
+
+/***/ "./src/category/dto/create-category.dto.ts":
+/*!*************************************************!*\
+  !*** ./src/category/dto/create-category.dto.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateCategoryDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class CreateCategoryDTO {
+}
+exports.CreateCategoryDTO = CreateCategoryDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Name of the category',
+        example: 'Electronics'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateCategoryDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Type of category',
+        enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY'],
+        example: 'SHOP_CATEGORY'
+    }),
+    (0, class_validator_1.IsEnum)(['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY']),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateCategoryDTO.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Parent category ID (nullable for SHOP_CATEGORY)',
+        required: false,
+        example: null
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCategoryDTO.prototype, "parentCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Shop category ID (required for PRODUCT_CATEGORY and SUBCATEGORY)',
+        required: false,
+        example: 'shop_cat_123'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCategoryDTO.prototype, "shopCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product category ID (required for SUBCATEGORY)',
+        required: false,
+        example: 'product_cat_123'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCategoryDTO.prototype, "productCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Category status',
+        enum: ['ACTIVE', 'INACTIVE'],
+        default: 'ACTIVE',
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['ACTIVE', 'INACTIVE']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCategoryDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Category description',
+        required: false,
+        example: 'Electronic devices and accessories'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCategoryDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Category icon URL',
+        required: false,
+        example: 'https://example.com/icon.png'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateCategoryDTO.prototype, "icon", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Sort order for display',
+        required: false,
+        example: 1,
+        minimum: 0
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateCategoryDTO.prototype, "sortOrder", void 0);
+
+
+/***/ }),
+
+/***/ "./src/category/dto/update-category.dto.ts":
+/*!*************************************************!*\
+  !*** ./src/category/dto/update-category.dto.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateCategoryDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class UpdateCategoryDTO {
+}
+exports.UpdateCategoryDTO = UpdateCategoryDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Name of the category',
+        required: false,
+        example: 'Updated Electronics'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateCategoryDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Category status',
+        enum: ['ACTIVE', 'INACTIVE'],
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['ACTIVE', 'INACTIVE']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateCategoryDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Category description',
+        required: false,
+        example: 'Updated description'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateCategoryDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Category icon URL',
+        required: false,
+        example: 'https://example.com/updated-icon.png'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateCategoryDTO.prototype, "icon", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Sort order for display',
+        required: false,
+        example: 2,
+        minimum: 0
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateCategoryDTO.prototype, "sortOrder", void 0);
 
 
 /***/ }),
@@ -5067,6 +6702,1966 @@ exports.PostService = PostService = __decorate([
 
 /***/ }),
 
+/***/ "./src/product/dto/create-product.dto.ts":
+/*!***********************************************!*\
+  !*** ./src/product/dto/create-product.dto.ts ***!
+  \***********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateProductDTO = exports.ProductDimensionsDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+class ProductDimensionsDto {
+}
+exports.ProductDimensionsDto = ProductDimensionsDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product length in cm',
+        example: 10,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ProductDimensionsDto.prototype, "length", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product width in cm',
+        example: 5,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ProductDimensionsDto.prototype, "width", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product height in cm',
+        example: 3,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ProductDimensionsDto.prototype, "height", void 0);
+class CreateProductDTO {
+}
+exports.CreateProductDTO = CreateProductDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Shop ID where the product belongs',
+        example: 'shop_123'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "shopId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Shop category ID',
+        example: 'cat_123'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "shopCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product category ID',
+        example: 'cat_456'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "productCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Subcategory ID (optional)',
+        example: 'cat_789',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "subCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product name',
+        example: 'iPhone 15 Pro Max'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product description',
+        example: 'Latest iPhone with advanced features',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Array of product image URLs',
+        example: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+        type: [String]
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayMinSize)(1, { message: 'At least one image is required' }),
+    (0, class_validator_1.IsUrl)({}, { each: true, message: 'Each image must be a valid URL' }),
+    __metadata("design:type", Array)
+], CreateProductDTO.prototype, "images", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product video URL',
+        example: 'https://example.com/video.mp4',
+        required: false
+    }),
+    (0, class_validator_1.IsUrl)({}, { message: 'Video must be a valid URL' }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "video", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product price',
+        example: 150000,
+        minimum: 0
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateProductDTO.prototype, "price", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Discounted price (must be less than regular price)',
+        example: 140000,
+        minimum: 0,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateProductDTO.prototype, "discountPrice", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Currency code',
+        example: 'PKR',
+        default: 'PKR',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "currency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Stock Keeping Unit (SKU)',
+        example: 'IPH15PM-256-BLK',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "sku", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Available stock quantity',
+        example: 50,
+        minimum: 0,
+        default: 0
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateProductDTO.prototype, "stock", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product unit',
+        example: 'piece',
+        default: 'piece',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "unit", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product status',
+        enum: ['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK'],
+        default: 'ACTIVE',
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product tags for search and categorization',
+        example: ['smartphone', 'apple', 'premium'],
+        type: [String],
+        required: false
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], CreateProductDTO.prototype, "tags", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Is this a featured product?',
+        example: false,
+        default: false,
+        required: false
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], CreateProductDTO.prototype, "isFeatured", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product weight in grams',
+        example: 240,
+        minimum: 0,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], CreateProductDTO.prototype, "weight", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product dimensions',
+        type: ProductDimensionsDto,
+        required: false
+    }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => ProductDimensionsDto),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", ProductDimensionsDto)
+], CreateProductDTO.prototype, "dimensions", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product warranty information',
+        example: '1 year manufacturer warranty',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "warranty", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product brand',
+        example: 'Apple',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "brand", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product model',
+        example: 'iPhone 15 Pro Max',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "model", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product color',
+        example: 'Space Black',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product size',
+        example: '256GB',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "size", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product material',
+        example: 'Titanium',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "material", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product condition',
+        enum: ['NEW', 'USED', 'REFURBISHED'],
+        default: 'NEW',
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['NEW', 'USED', 'REFURBISHED']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDTO.prototype, "condition", void 0);
+
+
+/***/ }),
+
+/***/ "./src/product/dto/product-query.dto.ts":
+/*!**********************************************!*\
+  !*** ./src/product/dto/product-query.dto.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProductQueryDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+class ProductQueryDTO {
+}
+exports.ProductQueryDTO = ProductQueryDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by shop ID',
+        example: 'shop_123',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "shopId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by shop category ID',
+        example: 'cat_123',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "shopCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by product category ID',
+        example: 'cat_456',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "productCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by subcategory ID',
+        example: 'cat_789',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "subCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by product status',
+        enum: ['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK'],
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Search by product name, description, or tags',
+        example: 'iPhone',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "search", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Minimum price filter',
+        example: 1000,
+        minimum: 0,
+        required: false
+    }),
+    (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ProductQueryDTO.prototype, "minPrice", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Maximum price filter',
+        example: 200000,
+        minimum: 0,
+        required: false
+    }),
+    (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ProductQueryDTO.prototype, "maxPrice", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter products created from this date (ISO string)',
+        example: '2025-01-01T00:00:00.000Z',
+        required: false
+    }),
+    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "createdFrom", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter products created until this date (ISO string)',
+        example: '2025-12-31T23:59:59.999Z',
+        required: false
+    }),
+    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "createdTo", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Sort by field',
+        enum: ['price', 'createdAt', 'updatedAt', 'stock', 'name', 'rating', 'soldCount', 'viewCount'],
+        default: 'createdAt',
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['price', 'createdAt', 'updatedAt', 'stock', 'name', 'rating', 'soldCount', 'viewCount']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "sortBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Sort order',
+        enum: ['asc', 'desc'],
+        default: 'desc',
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['asc', 'desc']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "sortOrder", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Number of products to return per page',
+        example: 10,
+        minimum: 1,
+        maximum: 100,
+        default: 10,
+        required: false
+    }),
+    (0, class_transformer_1.Transform)(({ value }) => parseInt(value)),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(100),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ProductQueryDTO.prototype, "limit", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Number of products to skip for pagination',
+        example: 0,
+        minimum: 0,
+        default: 0,
+        required: false
+    }),
+    (0, class_transformer_1.Transform)(({ value }) => parseInt(value)),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ProductQueryDTO.prototype, "offset", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by featured products only',
+        example: true,
+        required: false
+    }),
+    (0, class_transformer_1.Transform)(({ value }) => value === 'true'),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], ProductQueryDTO.prototype, "isFeatured", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by product condition',
+        enum: ['NEW', 'USED', 'REFURBISHED'],
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['NEW', 'USED', 'REFURBISHED']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "condition", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by product brand',
+        example: 'Apple',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "brand", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by product color',
+        example: 'Black',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ProductQueryDTO.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Filter by minimum rating',
+        example: 4.0,
+        minimum: 0,
+        maximum: 5,
+        required: false
+    }),
+    (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(5),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ProductQueryDTO.prototype, "minRating", void 0);
+
+
+/***/ }),
+
+/***/ "./src/product/dto/product-response.dto.ts":
+/*!*************************************************!*\
+  !*** ./src/product/dto/product-response.dto.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c, _d, _e, _f;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ApiResponseDTO = exports.ProductListResponseDTO = exports.ProductResponseDTO = exports.CategoryResponseDTO = exports.ShopResponseDTO = exports.ShopOwnerResponseDTO = exports.ProductDimensionsResponseDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class ProductDimensionsResponseDTO {
+}
+exports.ProductDimensionsResponseDTO = ProductDimensionsResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product length in cm' }),
+    __metadata("design:type", Number)
+], ProductDimensionsResponseDTO.prototype, "length", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product width in cm' }),
+    __metadata("design:type", Number)
+], ProductDimensionsResponseDTO.prototype, "width", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product height in cm' }),
+    __metadata("design:type", Number)
+], ProductDimensionsResponseDTO.prototype, "height", void 0);
+class ShopOwnerResponseDTO {
+}
+exports.ShopOwnerResponseDTO = ShopOwnerResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User ID' }),
+    __metadata("design:type", String)
+], ShopOwnerResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User role', enum: ['normal', 'seller', 'admin'] }),
+    __metadata("design:type", String)
+], ShopOwnerResponseDTO.prototype, "userRole", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Full name of the user' }),
+    __metadata("design:type", String)
+], ShopOwnerResponseDTO.prototype, "fullName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Email address' }),
+    __metadata("design:type", String)
+], ShopOwnerResponseDTO.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Phone number' }),
+    __metadata("design:type", String)
+], ShopOwnerResponseDTO.prototype, "phoneNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User status', enum: ['active', 'inactive', 'suspended'] }),
+    __metadata("design:type", String)
+], ShopOwnerResponseDTO.prototype, "userStatus", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Profile picture URL' }),
+    __metadata("design:type", String)
+], ShopOwnerResponseDTO.prototype, "profilePic", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], ShopOwnerResponseDTO.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last update timestamp' }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], ShopOwnerResponseDTO.prototype, "updatedAt", void 0);
+class ShopResponseDTO {
+}
+exports.ShopResponseDTO = ShopResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop ID' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop name' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "shopName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop owner ID' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "ownerId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop owner details', type: ShopOwnerResponseDTO }),
+    __metadata("design:type", ShopOwnerResponseDTO)
+], ShopResponseDTO.prototype, "user", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Village details' }),
+    __metadata("design:type", Object)
+], ShopResponseDTO.prototype, "villageId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category details' }),
+    __metadata("design:type", Object)
+], ShopResponseDTO.prototype, "categoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'URL of the shop profile image' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "profileImage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'URL of the shop cover image' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "coverImage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Description of the shop' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Number of likes for the shop' }),
+    __metadata("design:type", Number)
+], ShopResponseDTO.prototype, "likes", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'List of user IDs following the shop' }),
+    __metadata("design:type", Array)
+], ShopResponseDTO.prototype, "followers", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'List of product IDs sold by the shop' }),
+    __metadata("design:type", Array)
+], ShopResponseDTO.prototype, "products", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop rating' }),
+    __metadata("design:type", Number)
+], ShopResponseDTO.prototype, "rating", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'List of review IDs for the shop' }),
+    __metadata("design:type", Array)
+], ShopResponseDTO.prototype, "reviews", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Is the shop verified?' }),
+    __metadata("design:type", Boolean)
+], ShopResponseDTO.prototype, "isVerified", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Status of the shop', enum: ['active', 'suspended', 'closed'] }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], ShopResponseDTO.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last update timestamp' }),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], ShopResponseDTO.prototype, "updatedAt", void 0);
+class CategoryResponseDTO {
+}
+exports.CategoryResponseDTO = CategoryResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category ID' }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category name' }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category type' }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "type", void 0);
+class ProductResponseDTO {
+}
+exports.ProductResponseDTO = ProductResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product ID' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop ID' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "shopId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop details', type: ShopResponseDTO }),
+    __metadata("design:type", ShopResponseDTO)
+], ProductResponseDTO.prototype, "shop", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop category ID' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "shopCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop category details', type: CategoryResponseDTO }),
+    __metadata("design:type", CategoryResponseDTO)
+], ProductResponseDTO.prototype, "shopCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product category ID' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "productCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product category details', type: CategoryResponseDTO }),
+    __metadata("design:type", CategoryResponseDTO)
+], ProductResponseDTO.prototype, "productCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Subcategory ID', required: false }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "subCategoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Subcategory details', type: CategoryResponseDTO, required: false }),
+    __metadata("design:type", CategoryResponseDTO)
+], ProductResponseDTO.prototype, "subCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product name' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product description' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Array of product image URLs', type: [String] }),
+    __metadata("design:type", Array)
+], ProductResponseDTO.prototype, "images", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product video URL' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "video", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product price' }),
+    __metadata("design:type", Number)
+], ProductResponseDTO.prototype, "price", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Discounted price' }),
+    __metadata("design:type", Number)
+], ProductResponseDTO.prototype, "discountPrice", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Currency code' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "currency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Stock Keeping Unit' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "sku", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Available stock quantity' }),
+    __metadata("design:type", Number)
+], ProductResponseDTO.prototype, "stock", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product unit' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "unit", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product status', enum: ['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK'] }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product tags', type: [String] }),
+    __metadata("design:type", Array)
+], ProductResponseDTO.prototype, "tags", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Is this a featured product?' }),
+    __metadata("design:type", Boolean)
+], ProductResponseDTO.prototype, "isFeatured", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product weight in grams' }),
+    __metadata("design:type", Number)
+], ProductResponseDTO.prototype, "weight", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product dimensions', type: ProductDimensionsResponseDTO }),
+    __metadata("design:type", ProductDimensionsResponseDTO)
+], ProductResponseDTO.prototype, "dimensions", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product warranty information' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "warranty", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product brand' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "brand", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product model' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "model", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product color' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product size' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "size", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product material' }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "material", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product condition', enum: ['NEW', 'USED', 'REFURBISHED'] }),
+    __metadata("design:type", String)
+], ProductResponseDTO.prototype, "condition", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product rating' }),
+    __metadata("design:type", Number)
+], ProductResponseDTO.prototype, "rating", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Number of reviews' }),
+    __metadata("design:type", Number)
+], ProductResponseDTO.prototype, "reviewCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Number of views' }),
+    __metadata("design:type", Number)
+], ProductResponseDTO.prototype, "viewCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Number of sold items' }),
+    __metadata("design:type", Number)
+], ProductResponseDTO.prototype, "soldCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
+], ProductResponseDTO.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last update timestamp' }),
+    __metadata("design:type", typeof (_f = typeof Date !== "undefined" && Date) === "function" ? _f : Object)
+], ProductResponseDTO.prototype, "updatedAt", void 0);
+class ProductListResponseDTO {
+}
+exports.ProductListResponseDTO = ProductListResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Array of products', type: [ProductResponseDTO] }),
+    __metadata("design:type", Array)
+], ProductListResponseDTO.prototype, "products", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total number of products' }),
+    __metadata("design:type", Number)
+], ProductListResponseDTO.prototype, "total", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Current page number' }),
+    __metadata("design:type", Number)
+], ProductListResponseDTO.prototype, "page", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Number of products per page' }),
+    __metadata("design:type", Number)
+], ProductListResponseDTO.prototype, "limit", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total number of pages' }),
+    __metadata("design:type", Number)
+], ProductListResponseDTO.prototype, "totalPages", void 0);
+class ApiResponseDTO {
+}
+exports.ApiResponseDTO = ApiResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Success status' }),
+    __metadata("design:type", Boolean)
+], ApiResponseDTO.prototype, "success", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Response message' }),
+    __metadata("design:type", String)
+], ApiResponseDTO.prototype, "message", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Response data' }),
+    __metadata("design:type", Object)
+], ApiResponseDTO.prototype, "data", void 0);
+
+
+/***/ }),
+
+/***/ "./src/product/dto/update-product.dto.ts":
+/*!***********************************************!*\
+  !*** ./src/product/dto/update-product.dto.ts ***!
+  \***********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateProductDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+const create_product_dto_1 = __webpack_require__(/*! ./create-product.dto */ "./src/product/dto/create-product.dto.ts");
+class UpdateProductDTO {
+}
+exports.UpdateProductDTO = UpdateProductDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product name',
+        example: 'iPhone 15 Pro Max - Updated',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product description',
+        example: 'Updated description for iPhone 15 Pro Max',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Array of product image URLs',
+        example: ['https://example.com/updated-image1.jpg'],
+        type: [String],
+        required: false
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayMinSize)(1, { message: 'At least one image is required' }),
+    (0, class_validator_1.IsUrl)({}, { each: true, message: 'Each image must be a valid URL' }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], UpdateProductDTO.prototype, "images", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product video URL',
+        example: 'https://example.com/updated-video.mp4',
+        required: false
+    }),
+    (0, class_validator_1.IsUrl)({}, { message: 'Video must be a valid URL' }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "video", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product price',
+        example: 160000,
+        minimum: 0,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateProductDTO.prototype, "price", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Discounted price (must be less than regular price)',
+        example: 150000,
+        minimum: 0,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateProductDTO.prototype, "discountPrice", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Currency code',
+        example: 'PKR',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "currency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Stock Keeping Unit (SKU)',
+        example: 'IPH15PM-256-BLK-UPDATED',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "sku", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Available stock quantity',
+        example: 75,
+        minimum: 0,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateProductDTO.prototype, "stock", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product unit',
+        example: 'piece',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "unit", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product status',
+        enum: ['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK'],
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product tags for search and categorization',
+        example: ['smartphone', 'apple', 'premium', 'updated'],
+        type: [String],
+        required: false
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], UpdateProductDTO.prototype, "tags", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Is this a featured product?',
+        example: true,
+        required: false
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], UpdateProductDTO.prototype, "isFeatured", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product weight in grams',
+        example: 250,
+        minimum: 0,
+        required: false
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateProductDTO.prototype, "weight", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product dimensions',
+        type: create_product_dto_1.ProductDimensionsDto,
+        required: false
+    }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => create_product_dto_1.ProductDimensionsDto),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", typeof (_a = typeof create_product_dto_1.ProductDimensionsDto !== "undefined" && create_product_dto_1.ProductDimensionsDto) === "function" ? _a : Object)
+], UpdateProductDTO.prototype, "dimensions", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product warranty information',
+        example: '2 years manufacturer warranty',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "warranty", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product brand',
+        example: 'Apple',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "brand", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product model',
+        example: 'iPhone 15 Pro Max',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "model", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product color',
+        example: 'Natural Titanium',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product size',
+        example: '512GB',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "size", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product material',
+        example: 'Titanium',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "material", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Product condition',
+        enum: ['NEW', 'USED', 'REFURBISHED'],
+        required: false
+    }),
+    (0, class_validator_1.IsEnum)(['NEW', 'USED', 'REFURBISHED']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDTO.prototype, "condition", void 0);
+
+
+/***/ }),
+
+/***/ "./src/product/product.controller.ts":
+/*!*******************************************!*\
+  !*** ./src/product/product.controller.ts ***!
+  \*******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProductController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const product_service_1 = __webpack_require__(/*! ./product.service */ "./src/product/product.service.ts");
+const create_product_dto_1 = __webpack_require__(/*! ./dto/create-product.dto */ "./src/product/dto/create-product.dto.ts");
+const update_product_dto_1 = __webpack_require__(/*! ./dto/update-product.dto */ "./src/product/dto/update-product.dto.ts");
+const product_query_dto_1 = __webpack_require__(/*! ./dto/product-query.dto */ "./src/product/dto/product-query.dto.ts");
+const product_response_dto_1 = __webpack_require__(/*! ./dto/product-response.dto */ "./src/product/dto/product-response.dto.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+let ProductController = exports.ProductController = class ProductController {
+    constructor(productService) {
+        this.productService = productService;
+    }
+    async createProduct(createProductDto, user) {
+        const product = await this.productService.createProduct(createProductDto, user.id);
+        return {
+            success: true,
+            message: 'Product created successfully',
+            data: product
+        };
+    }
+    async getProductById(id) {
+        const product = await this.productService.getProductById(id);
+        return {
+            success: true,
+            message: 'Product retrieved successfully',
+            data: product
+        };
+    }
+    async getAllProducts(query) {
+        const result = await this.productService.getAllProducts(query);
+        return {
+            success: true,
+            message: 'Products retrieved successfully',
+            data: result
+        };
+    }
+    async updateProduct(id, updateProductDto, user) {
+        const product = await this.productService.updateProduct(id, updateProductDto, user.id);
+        return {
+            success: true,
+            message: 'Product updated successfully',
+            data: product
+        };
+    }
+    async deleteProduct(id, user) {
+        const result = await this.productService.deleteProduct(id, user.id);
+        return {
+            success: true,
+            message: result.message,
+            data: result
+        };
+    }
+    async getProductsByShop(shopId, query) {
+        const result = await this.productService.getProductsByShop(shopId, query);
+        return {
+            success: true,
+            message: 'Shop products retrieved successfully',
+            data: result
+        };
+    }
+    async getFeaturedProducts(limit) {
+        const products = await this.productService.getFeaturedProducts(limit);
+        return {
+            success: true,
+            message: 'Featured products retrieved successfully',
+            data: products
+        };
+    }
+    async getProductsByCategory(categoryId, query) {
+        const result = await this.productService.getProductsByCategory(categoryId, query);
+        return {
+            success: true,
+            message: 'Category products retrieved successfully',
+            data: result
+        };
+    }
+};
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new product' }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'Product created successfully',
+        type: (product_response_dto_1.ApiResponseDTO)
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - validation failed' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - not shop owner' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof create_product_dto_1.CreateProductDTO !== "undefined" && create_product_dto_1.CreateProductDTO) === "function" ? _b : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "createProduct", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get product by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Product retrieved successfully',
+        type: (product_response_dto_1.ApiResponseDTO)
+    }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Product not found' }),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "getProductById", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all products with advanced filters' }),
+    (0, swagger_1.ApiQuery)({ name: 'shopId', required: false, description: 'Filter by shop ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'shopCategoryId', required: false, description: 'Filter by shop category ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'productCategoryId', required: false, description: 'Filter by product category ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'subCategoryId', required: false, description: 'Filter by subcategory ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: ['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK'] }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false, description: 'Search by name, description, or tags' }),
+    (0, swagger_1.ApiQuery)({ name: 'minPrice', required: false, description: 'Minimum price filter' }),
+    (0, swagger_1.ApiQuery)({ name: 'maxPrice', required: false, description: 'Maximum price filter' }),
+    (0, swagger_1.ApiQuery)({ name: 'createdFrom', required: false, description: 'Filter from creation date (ISO string)' }),
+    (0, swagger_1.ApiQuery)({ name: 'createdTo', required: false, description: 'Filter to creation date (ISO string)' }),
+    (0, swagger_1.ApiQuery)({ name: 'sortBy', required: false, enum: ['price', 'createdAt', 'updatedAt', 'stock', 'name', 'rating', 'soldCount', 'viewCount'] }),
+    (0, swagger_1.ApiQuery)({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, description: 'Number of products per page (1-100)' }),
+    (0, swagger_1.ApiQuery)({ name: 'offset', required: false, description: 'Number of products to skip' }),
+    (0, swagger_1.ApiQuery)({ name: 'isFeatured', required: false, description: 'Filter featured products' }),
+    (0, swagger_1.ApiQuery)({ name: 'condition', required: false, enum: ['NEW', 'USED', 'REFURBISHED'] }),
+    (0, swagger_1.ApiQuery)({ name: 'brand', required: false, description: 'Filter by brand' }),
+    (0, swagger_1.ApiQuery)({ name: 'color', required: false, description: 'Filter by color' }),
+    (0, swagger_1.ApiQuery)({ name: 'minRating', required: false, description: 'Minimum rating filter' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Products retrieved successfully',
+        type: (product_response_dto_1.ApiResponseDTO)
+    }),
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _c : Object]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "getAllProducts", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update product by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Product updated successfully',
+        type: (product_response_dto_1.ApiResponseDTO)
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - not product owner' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Product not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_d = typeof update_product_dto_1.UpdateProductDTO !== "undefined" && update_product_dto_1.UpdateProductDTO) === "function" ? _d : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "updateProduct", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Delete product by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Product deleted successfully',
+        type: (product_response_dto_1.ApiResponseDTO)
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - not product owner' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Product not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "deleteProduct", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get products by shop ID' }),
+    (0, swagger_1.ApiParam)({ name: 'shopId', description: 'Shop ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Shop products retrieved successfully',
+        type: (product_response_dto_1.ApiResponseDTO)
+    }),
+    (0, common_1.Get)('shop/:shopId'),
+    __param(0, (0, common_1.Param)('shopId')),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_e = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _e : Object]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "getProductsByShop", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get featured products' }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, description: 'Number of featured products to return' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Featured products retrieved successfully',
+        type: (product_response_dto_1.ApiResponseDTO)
+    }),
+    (0, common_1.Get)('featured/list'),
+    __param(0, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "getFeaturedProducts", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get products by category ID' }),
+    (0, swagger_1.ApiParam)({ name: 'categoryId', description: 'Category ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Category products retrieved successfully',
+        type: (product_response_dto_1.ApiResponseDTO)
+    }),
+    (0, common_1.Get)('category/:categoryId'),
+    __param(0, (0, common_1.Param)('categoryId')),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_f = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _f : Object]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "getProductsByCategory", null);
+exports.ProductController = ProductController = __decorate([
+    (0, swagger_1.ApiTags)('Products'),
+    (0, common_1.Controller)('products'),
+    __metadata("design:paramtypes", [typeof (_a = typeof product_service_1.ProductService !== "undefined" && product_service_1.ProductService) === "function" ? _a : Object])
+], ProductController);
+
+
+/***/ }),
+
+/***/ "./src/product/product.module.ts":
+/*!***************************************!*\
+  !*** ./src/product/product.module.ts ***!
+  \***************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProductModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const product_controller_1 = __webpack_require__(/*! ./product.controller */ "./src/product/product.controller.ts");
+const product_service_1 = __webpack_require__(/*! ./product.service */ "./src/product/product.service.ts");
+const product_schema_1 = __webpack_require__(/*! src/schema/product/product.schema */ "./src/schema/product/product.schema.ts");
+const shop_schema_1 = __webpack_require__(/*! src/schema/shop/shop.schema */ "./src/schema/shop/shop.schema.ts");
+const category_schema_1 = __webpack_require__(/*! src/schema/category/category.schema */ "./src/schema/category/category.schema.ts");
+let ProductModule = exports.ProductModule = class ProductModule {
+};
+exports.ProductModule = ProductModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([
+                { name: 'Product', schema: product_schema_1.ProductSchema },
+                { name: 'Shop', schema: shop_schema_1.ShopSchema },
+                { name: 'Category', schema: category_schema_1.CategorySchema },
+            ]),
+        ],
+        controllers: [product_controller_1.ProductController],
+        providers: [product_service_1.ProductService],
+        exports: [product_service_1.ProductService],
+    })
+], ProductModule);
+
+
+/***/ }),
+
+/***/ "./src/product/product.service.ts":
+/*!****************************************!*\
+  !*** ./src/product/product.service.ts ***!
+  \****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProductService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let ProductService = exports.ProductService = class ProductService {
+    constructor(productModel, shopModel, categoryModel) {
+        this.productModel = productModel;
+        this.shopModel = shopModel;
+        this.categoryModel = categoryModel;
+    }
+    async createProduct(createProductDto, userId) {
+        try {
+            const shop = await this.shopModel.findOne({
+                _id: createProductDto.shopId,
+                user: userId,
+                status: 'active'
+            });
+            if (!shop) {
+                throw new common_1.BadRequestException('Shop not found or you do not have permission to add products to this shop');
+            }
+            await this.validateCategories(createProductDto);
+            if (createProductDto.sku) {
+                const existingProduct = await this.productModel.findOne({ sku: createProductDto.sku });
+                if (existingProduct) {
+                    throw new common_1.BadRequestException('SKU already exists');
+                }
+            }
+            const product = await new this.productModel(createProductDto).save();
+            return await this.getProductById(product.id);
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to create product');
+        }
+    }
+    async getProductById(id) {
+        try {
+            const product = await this.productModel
+                .findById(id)
+                .populate({
+                path: 'shopId',
+                populate: {
+                    path: 'user',
+                    select: 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt'
+                }
+            })
+                .populate('shopCategoryId', 'id name type')
+                .populate('productCategoryId', 'id name type')
+                .populate('subCategoryId', 'id name type')
+                .exec();
+            if (!product) {
+                throw new common_1.NotFoundException('Product not found');
+            }
+            await this.productModel.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
+            return this.formatProductResponse(product);
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.NotFoundException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to get product');
+        }
+    }
+    async getAllProducts(query) {
+        try {
+            const filter = {};
+            const sort = {};
+            if (query.shopId)
+                filter.shopId = query.shopId;
+            if (query.shopCategoryId)
+                filter.shopCategoryId = query.shopCategoryId;
+            if (query.productCategoryId)
+                filter.productCategoryId = query.productCategoryId;
+            if (query.subCategoryId)
+                filter.subCategoryId = query.subCategoryId;
+            if (query.status)
+                filter.status = query.status;
+            if (query.isFeatured !== undefined)
+                filter.isFeatured = query.isFeatured;
+            if (query.condition)
+                filter.condition = query.condition;
+            if (query.brand)
+                filter.brand = { $regex: query.brand, $options: 'i' };
+            if (query.color)
+                filter.color = { $regex: query.color, $options: 'i' };
+            if (query.minRating)
+                filter.rating = { $gte: query.minRating };
+            if (query.minPrice || query.maxPrice) {
+                filter.price = {};
+                if (query.minPrice)
+                    filter.price.$gte = query.minPrice;
+                if (query.maxPrice)
+                    filter.price.$lte = query.maxPrice;
+            }
+            if (query.createdFrom || query.createdTo) {
+                filter.createdAt = {};
+                if (query.createdFrom)
+                    filter.createdAt.$gte = new Date(query.createdFrom);
+                if (query.createdTo)
+                    filter.createdAt.$lte = new Date(query.createdTo);
+            }
+            if (query.search) {
+                filter.$or = [
+                    { name: { $regex: query.search, $options: 'i' } },
+                    { description: { $regex: query.search, $options: 'i' } },
+                    { tags: { $in: [new RegExp(query.search, 'i')] } },
+                    { brand: { $regex: query.search, $options: 'i' } },
+                    { model: { $regex: query.search, $options: 'i' } }
+                ];
+            }
+            const sortBy = query.sortBy || 'createdAt';
+            const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+            sort[sortBy] = sortOrder;
+            const limit = query.limit || 10;
+            const offset = query.offset || 0;
+            const [products, total] = await Promise.all([
+                this.productModel
+                    .find(filter)
+                    .populate({
+                    path: 'shopId',
+                    populate: {
+                        path: 'user',
+                        select: 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt'
+                    }
+                })
+                    .populate('shopCategoryId', 'id name type')
+                    .populate('productCategoryId', 'id name type')
+                    .populate('subCategoryId', 'id name type')
+                    .sort(sort)
+                    .skip(offset)
+                    .limit(limit)
+                    .exec(),
+                this.productModel.countDocuments(filter)
+            ]);
+            const formattedProducts = products.map(product => this.formatProductResponse(product));
+            const totalPages = Math.ceil(total / limit);
+            const currentPage = Math.floor(offset / limit) + 1;
+            return {
+                products: formattedProducts,
+                total,
+                page: currentPage,
+                limit,
+                totalPages
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get products');
+        }
+    }
+    async updateProduct(id, updateProductDto, userId) {
+        try {
+            const product = await this.productModel.findById(id);
+            if (!product) {
+                throw new common_1.NotFoundException('Product not found');
+            }
+            const shop = await this.shopModel.findOne({
+                _id: product.shopId,
+                user: userId
+            });
+            if (!shop) {
+                throw new common_1.BadRequestException('You do not have permission to update this product');
+            }
+            if (updateProductDto.sku && updateProductDto.sku !== product.sku) {
+                const existingProduct = await this.productModel.findOne({
+                    sku: updateProductDto.sku,
+                    _id: { $ne: id }
+                });
+                if (existingProduct) {
+                    throw new common_1.BadRequestException('SKU already exists');
+                }
+            }
+            const updatedProduct = await this.productModel.findByIdAndUpdate(id, updateProductDto, { new: true }).populate({
+                path: 'shopId',
+                populate: {
+                    path: 'user',
+                    select: 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt'
+                }
+            })
+                .populate('shopCategoryId', 'id name type')
+                .populate('productCategoryId', 'id name type')
+                .populate('subCategoryId', 'id name type');
+            return this.formatProductResponse(updatedProduct);
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.NotFoundException || err instanceof common_1.BadRequestException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to update product');
+        }
+    }
+    async deleteProduct(id, userId) {
+        try {
+            const product = await this.productModel.findById(id);
+            if (!product) {
+                throw new common_1.NotFoundException('Product not found');
+            }
+            const shop = await this.shopModel.findOne({
+                _id: product.shopId,
+                user: userId
+            });
+            if (!shop) {
+                throw new common_1.BadRequestException('You do not have permission to delete this product');
+            }
+            await this.productModel.findByIdAndDelete(id);
+            return { message: 'Product deleted successfully' };
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.NotFoundException || err instanceof common_1.BadRequestException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to delete product');
+        }
+    }
+    async getProductsByShop(shopId, query) {
+        try {
+            const shopQuery = { ...query, shopId };
+            return await this.getAllProducts(shopQuery);
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get shop products');
+        }
+    }
+    async getFeaturedProducts(limit = 10) {
+        try {
+            const products = await this.productModel
+                .find({ isFeatured: true, status: 'ACTIVE' })
+                .populate({
+                path: 'shopId',
+                populate: {
+                    path: 'user',
+                    select: 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt'
+                }
+            })
+                .populate('shopCategoryId', 'id name type')
+                .populate('productCategoryId', 'id name type')
+                .populate('subCategoryId', 'id name type')
+                .sort({ createdAt: -1 })
+                .limit(limit)
+                .exec();
+            return products.map(product => this.formatProductResponse(product));
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get featured products');
+        }
+    }
+    async getProductsByCategory(categoryId, query) {
+        try {
+            const categoryQuery = { ...query, productCategoryId: categoryId };
+            return await this.getAllProducts(categoryQuery);
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get category products');
+        }
+    }
+    async validateCategories(createProductDto) {
+        const shopCategory = await this.categoryModel.findOne({
+            _id: createProductDto.shopCategoryId,
+            type: 'SHOP_CATEGORY',
+            status: 'ACTIVE'
+        });
+        if (!shopCategory) {
+            throw new common_1.BadRequestException('Invalid shop category');
+        }
+        const productCategory = await this.categoryModel.findOne({
+            _id: createProductDto.productCategoryId,
+            type: 'PRODUCT_CATEGORY',
+            status: 'ACTIVE'
+        });
+        if (!productCategory) {
+            throw new common_1.BadRequestException('Invalid product category');
+        }
+        if (createProductDto.subCategoryId) {
+            const subCategory = await this.categoryModel.findOne({
+                _id: createProductDto.subCategoryId,
+                type: 'SUBCATEGORY',
+                status: 'ACTIVE'
+            });
+            if (!subCategory) {
+                throw new common_1.BadRequestException('Invalid subcategory');
+            }
+        }
+    }
+    formatProductResponse(product) {
+        const response = {
+            id: product.id,
+            shopId: product.shopId,
+            shop: product.shopId,
+            shopCategoryId: product.shopCategoryId,
+            shopCategory: product.shopCategoryId,
+            productCategoryId: product.productCategoryId,
+            productCategory: product.productCategoryId,
+            subCategoryId: product.subCategoryId,
+            subCategory: product.subCategoryId,
+            name: product.name,
+            description: product.description,
+            images: product.images,
+            video: product.video,
+            price: product.price,
+            discountPrice: product.discountPrice,
+            currency: product.currency,
+            sku: product.sku,
+            stock: product.stock,
+            unit: product.unit,
+            status: product.status,
+            tags: product.tags,
+            isFeatured: product.isFeatured,
+            weight: product.weight,
+            dimensions: product.dimensions,
+            warranty: product.warranty,
+            brand: product.brand,
+            model: product.model,
+            color: product.color,
+            size: product.size,
+            material: product.material,
+            condition: product.condition,
+            rating: product.rating,
+            reviewCount: product.reviewCount,
+            viewCount: product.viewCount,
+            soldCount: product.soldCount,
+            createdAt: product.createdAt,
+            updatedAt: product.updatedAt,
+        };
+        if (product.shopId && typeof product.shopId === 'object') {
+            response.shop = product.shopId;
+            if (product.shopId.user && typeof product.shopId.user === 'object') {
+                const userObj = product.shopId.user;
+                delete userObj.password;
+            }
+        }
+        if (product.shopCategoryId && typeof product.shopCategoryId === 'object') {
+            response.shopCategory = product.shopCategoryId;
+        }
+        if (product.productCategoryId && typeof product.productCategoryId === 'object') {
+            response.productCategory = product.productCategoryId;
+        }
+        if (product.subCategoryId && typeof product.subCategoryId === 'object') {
+            response.subCategory = product.subCategoryId;
+        }
+        return response;
+    }
+};
+exports.ProductService = ProductService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)('Product')),
+    __param(1, (0, mongoose_1.InjectModel)('Shop')),
+    __param(2, (0, mongoose_1.InjectModel)('Category')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object])
+], ProductService);
+
+
+/***/ }),
+
+/***/ "./src/schema/category/category.schema.ts":
+/*!************************************************!*\
+  !*** ./src/schema/category/category.schema.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Category = exports.CategorySchema = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+exports.CategorySchema = new mongoose_1.Schema({
+    _id: { type: String, default: utils_1.generateStringId },
+    name: { type: String, required: true },
+    type: {
+        type: String,
+        required: true,
+        enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY'],
+        default: 'SHOP_CATEGORY'
+    },
+    parentCategoryId: { type: String, ref: 'Category', default: null },
+    shopCategoryId: { type: String, ref: 'Category', default: null },
+    productCategoryId: { type: String, ref: 'Category', default: null },
+    status: {
+        type: String,
+        enum: ['ACTIVE', 'INACTIVE'],
+        default: 'ACTIVE'
+    },
+    description: { type: String, default: '' },
+    icon: { type: String, default: '' },
+    sortOrder: { type: Number, default: 0 },
+}, {
+    collection: 'categories',
+    timestamps: true,
+});
+const Category = (0, mongoose_1.model)('Category', exports.CategorySchema);
+exports.Category = Category;
+exports.CategorySchema.pre('save', function (next) {
+    const category = this;
+    if (category.type === 'SHOP_CATEGORY') {
+        if (category.shopCategoryId || category.productCategoryId) {
+            return next(new Error('SHOP_CATEGORY cannot have parent categories'));
+        }
+    }
+    if (category.type === 'PRODUCT_CATEGORY') {
+        if (!category.shopCategoryId) {
+            return next(new Error('PRODUCT_CATEGORY must have shopCategoryId'));
+        }
+        if (category.productCategoryId) {
+            return next(new Error('PRODUCT_CATEGORY cannot have productCategoryId'));
+        }
+    }
+    if (category.type === 'SUBCATEGORY') {
+        if (!category.productCategoryId) {
+            return next(new Error('SUBCATEGORY must have productCategoryId'));
+        }
+        if (!category.shopCategoryId) {
+            return next(new Error('SUBCATEGORY must have shopCategoryId'));
+        }
+    }
+    next();
+});
+exports.CategorySchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+exports.CategorySchema.index({ name: 1 });
+exports.CategorySchema.index({ type: 1 });
+exports.CategorySchema.index({ status: 1 });
+exports.CategorySchema.index({ shopCategoryId: 1 });
+exports.CategorySchema.index({ productCategoryId: 1 });
+exports.CategorySchema.index({ parentCategoryId: 1 });
+exports.CategorySchema.index({ sortOrder: 1 });
+
+
+/***/ }),
+
 /***/ "./src/schema/comments/comments.schema.ts":
 /*!************************************************!*\
   !*** ./src/schema/comments/comments.schema.ts ***!
@@ -5343,6 +8938,196 @@ exports.PostSchema.set('toJSON', {
 
 /***/ }),
 
+/***/ "./src/schema/product/product.schema.ts":
+/*!**********************************************!*\
+  !*** ./src/schema/product/product.schema.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Product = exports.ProductSchema = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+exports.ProductSchema = new mongoose_1.Schema({
+    _id: { type: String, default: utils_1.generateStringId },
+    shopId: { type: String, required: true, ref: 'Shop' },
+    shopCategoryId: { type: String, required: true, ref: 'Category' },
+    productCategoryId: { type: String, required: true, ref: 'Category' },
+    subCategoryId: { type: String, ref: 'Category', default: null },
+    name: { type: String, required: true },
+    description: { type: String, default: '' },
+    images: [{ type: String, required: true }],
+    video: { type: String, default: '' },
+    price: { type: Number, required: true, min: 0 },
+    discountPrice: { type: Number, min: 0, default: null },
+    currency: { type: String, default: 'PKR' },
+    sku: { type: String, unique: true, sparse: true },
+    stock: { type: Number, required: true, default: 0, min: 0 },
+    unit: { type: String, default: 'piece' },
+    status: {
+        type: String,
+        enum: ['ACTIVE', 'INACTIVE', 'OUT_OF_STOCK'],
+        default: 'ACTIVE'
+    },
+    tags: [{ type: String }],
+    isFeatured: { type: Boolean, default: false },
+    weight: { type: Number, default: 0 },
+    dimensions: {
+        length: { type: Number, default: 0 },
+        width: { type: Number, default: 0 },
+        height: { type: Number, default: 0 }
+    },
+    warranty: { type: String, default: '' },
+    brand: { type: String, default: '' },
+    model: { type: String, default: '' },
+    color: { type: String, default: '' },
+    size: { type: String, default: '' },
+    material: { type: String, default: '' },
+    condition: {
+        type: String,
+        enum: ['NEW', 'USED', 'REFURBISHED'],
+        default: 'NEW'
+    },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+    reviewCount: { type: Number, default: 0 },
+    viewCount: { type: Number, default: 0 },
+    soldCount: { type: Number, default: 0 },
+}, {
+    collection: 'products',
+    timestamps: true,
+});
+const Product = (0, mongoose_1.model)('Product', exports.ProductSchema);
+exports.Product = Product;
+exports.ProductSchema.pre('save', function (next) {
+    const product = this;
+    if (product.discountPrice && product.discountPrice >= product.price) {
+        return next(new Error('Discount price must be less than regular price'));
+    }
+    if (product.stock === 0 && product.status === 'ACTIVE') {
+        product.status = 'OUT_OF_STOCK';
+    }
+    else if (product.stock > 0 && product.status === 'OUT_OF_STOCK') {
+        product.status = 'ACTIVE';
+    }
+    next();
+});
+exports.ProductSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+exports.ProductSchema.index({ shopId: 1 });
+exports.ProductSchema.index({ shopCategoryId: 1 });
+exports.ProductSchema.index({ productCategoryId: 1 });
+exports.ProductSchema.index({ subCategoryId: 1 });
+exports.ProductSchema.index({ price: 1 });
+exports.ProductSchema.index({ createdAt: -1 });
+exports.ProductSchema.index({ status: 1 });
+exports.ProductSchema.index({ name: 'text', description: 'text', tags: 'text' });
+exports.ProductSchema.index({ sku: 1 }, { unique: true, sparse: true });
+exports.ProductSchema.index({ isFeatured: 1 });
+exports.ProductSchema.index({ rating: -1 });
+exports.ProductSchema.index({ soldCount: -1 });
+exports.ProductSchema.index({ viewCount: -1 });
+
+
+/***/ }),
+
+/***/ "./src/schema/shop/shop-category.schema.ts":
+/*!*************************************************!*\
+  !*** ./src/schema/shop/shop-category.schema.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShopCategory = exports.ShopCategorySchema = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+exports.ShopCategorySchema = new mongoose_1.Schema({
+    _id: { type: String, default: utils_1.generateStringId },
+    name: { type: String, required: true },
+    description: { type: String, default: '' },
+    icon: { type: String, default: '' },
+    isActive: { type: Boolean, default: true },
+}, {
+    collection: 'shop_categories',
+    timestamps: true,
+});
+const ShopCategory = (0, mongoose_1.model)('ShopCategory', exports.ShopCategorySchema);
+exports.ShopCategory = ShopCategory;
+exports.ShopCategorySchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+exports.ShopCategorySchema.index({ name: 1 });
+exports.ShopCategorySchema.index({ isActive: 1 });
+
+
+/***/ }),
+
+/***/ "./src/schema/shop/shop.schema.ts":
+/*!****************************************!*\
+  !*** ./src/schema/shop/shop.schema.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Shop = exports.ShopSchema = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+exports.ShopSchema = new mongoose_1.Schema({
+    _id: { type: String, default: utils_1.generateStringId },
+    shopName: { type: String, required: true },
+    ownerId: { type: String, required: true, ref: 'User' },
+    user: { type: String, required: true, ref: 'User' },
+    villageId: { type: String, required: true, ref: 'Village' },
+    categoryId: { type: String, required: true, ref: 'ShopCategory' },
+    profileImage: { type: String, default: '' },
+    coverImage: { type: String, default: '' },
+    description: { type: String, default: '' },
+    likes: { type: Number, default: 0 },
+    followers: [{ type: String, ref: 'User' }],
+    products: [{ type: String, ref: 'Product' }],
+    rating: { type: Number, default: 0 },
+    reviews: [{ type: String, ref: 'Review' }],
+    isVerified: { type: Boolean, default: false },
+    status: {
+        type: String,
+        default: 'active',
+        enum: ['active', 'suspended', 'closed']
+    },
+}, {
+    collection: 'shops',
+    timestamps: true,
+});
+const Shop = (0, mongoose_1.model)('Shop', exports.ShopSchema);
+exports.Shop = Shop;
+exports.ShopSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+exports.ShopSchema.index({ shopName: 1 });
+exports.ShopSchema.index({ ownerId: 1 });
+exports.ShopSchema.index({ user: 1 });
+exports.ShopSchema.index({ villageId: 1 });
+exports.ShopSchema.index({ categoryId: 1 });
+exports.ShopSchema.index({ status: 1 });
+exports.ShopSchema.index({ isVerified: 1 });
+
+
+/***/ }),
+
 /***/ "./src/schema/user/user.schema.ts":
 /*!****************************************!*\
   !*** ./src/schema/user/user.schema.ts ***!
@@ -5366,8 +9151,26 @@ exports.UserSchema = new mongoose_1.Schema({
     color: { type: String, default: '' },
     isEmailVerified: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
+    fullName: { type: String, default: '' },
+    phoneNumber: { type: String, default: '' },
+    village: { type: String, default: '' },
+    country: { type: String, default: '' },
+    homeAddress: { type: String, default: '' },
+    profilePic: { type: String, default: '' },
+    zipcode: { type: String, default: '' },
+    userLevel: { type: String, default: 'beginner', enum: ['beginner', 'intermediate', 'advanced', 'expert'] },
+    userStatus: { type: String, default: 'active', enum: ['active', 'inactive', 'suspended'] },
+    userRole: { type: String, default: 'normal', enum: ['normal', 'seller', 'admin'] },
+    sellOrders: { type: Number, default: 0 },
+    buyOrders: { type: Number, default: 0 },
+    wishlist: { type: [String], default: [] },
+    cart: { type: [String], default: [] },
+    twoFactorSecret: { type: String, default: null },
+    isTwoFactorEnabled: { type: Boolean, default: false },
+    isBiometric: { type: Boolean, default: false },
 }, {
     collection: 'users',
+    timestamps: true,
 });
 (0, mongoose_1.model)('users', exports.UserSchema);
 exports.UserSchema.set('timestamps', true);
@@ -5475,6 +9278,716 @@ exports.VillageSchema.set('toJSON', {
     },
 });
 exports.VillageSchema.index({ name: 1 }, { unique: true });
+
+
+/***/ }),
+
+/***/ "./src/shop/dto/create-shop.dto.ts":
+/*!*****************************************!*\
+  !*** ./src/shop/dto/create-shop.dto.ts ***!
+  \*****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateShopDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class CreateShopDTO {
+}
+exports.CreateShopDTO = CreateShopDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the shop' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateShopDTO.prototype, "shopName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the village where the shop is located' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateShopDTO.prototype, "villageId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the shop category' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateShopDTO.prototype, "categoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Profile image URL', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUrl)({}, { message: 'Please provide a valid URL for profile image' }),
+    __metadata("design:type", String)
+], CreateShopDTO.prototype, "profileImage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Cover image URL', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUrl)({}, { message: 'Please provide a valid URL for cover image' }),
+    __metadata("design:type", String)
+], CreateShopDTO.prototype, "coverImage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Description of the shop', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateShopDTO.prototype, "description", void 0);
+
+
+/***/ }),
+
+/***/ "./src/shop/dto/shop-response.dto.ts":
+/*!*******************************************!*\
+  !*** ./src/shop/dto/shop-response.dto.ts ***!
+  \*******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShopResponseDTO = exports.CategoryResponseDTO = exports.VillageResponseDTO = exports.UserResponseDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class UserResponseDTO {
+}
+exports.UserResponseDTO = UserResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User ID' }),
+    __metadata("design:type", String)
+], UserResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Full name of the user' }),
+    __metadata("design:type", String)
+], UserResponseDTO.prototype, "fullName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Email address' }),
+    __metadata("design:type", String)
+], UserResponseDTO.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Phone number' }),
+    __metadata("design:type", String)
+], UserResponseDTO.prototype, "phoneNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User role', enum: ['normal', 'seller', 'admin'] }),
+    __metadata("design:type", String)
+], UserResponseDTO.prototype, "userRole", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User status', enum: ['active', 'inactive', 'suspended'] }),
+    __metadata("design:type", String)
+], UserResponseDTO.prototype, "userStatus", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Profile picture URL' }),
+    __metadata("design:type", String)
+], UserResponseDTO.prototype, "profilePic", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], UserResponseDTO.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last update timestamp' }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], UserResponseDTO.prototype, "updatedAt", void 0);
+class VillageResponseDTO {
+}
+exports.VillageResponseDTO = VillageResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Village ID' }),
+    __metadata("design:type", String)
+], VillageResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Village name' }),
+    __metadata("design:type", String)
+], VillageResponseDTO.prototype, "name", void 0);
+class CategoryResponseDTO {
+}
+exports.CategoryResponseDTO = CategoryResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category ID' }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category name' }),
+    __metadata("design:type", String)
+], CategoryResponseDTO.prototype, "name", void 0);
+class ShopResponseDTO {
+}
+exports.ShopResponseDTO = ShopResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop ID' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop name' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "shopName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop owner ID' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "ownerId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop owner details', type: UserResponseDTO }),
+    __metadata("design:type", UserResponseDTO)
+], ShopResponseDTO.prototype, "user", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Village details', type: VillageResponseDTO }),
+    __metadata("design:type", VillageResponseDTO)
+], ShopResponseDTO.prototype, "villageId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Category details', type: CategoryResponseDTO }),
+    __metadata("design:type", CategoryResponseDTO)
+], ShopResponseDTO.prototype, "categoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Profile image URL' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "profileImage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Cover image URL' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "coverImage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop description' }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Number of likes' }),
+    __metadata("design:type", Number)
+], ShopResponseDTO.prototype, "likes", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Array of follower user IDs' }),
+    __metadata("design:type", Array)
+], ShopResponseDTO.prototype, "followers", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Array of product IDs' }),
+    __metadata("design:type", Array)
+], ShopResponseDTO.prototype, "products", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop rating' }),
+    __metadata("design:type", Number)
+], ShopResponseDTO.prototype, "rating", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Array of review IDs' }),
+    __metadata("design:type", Array)
+], ShopResponseDTO.prototype, "reviews", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Verification status' }),
+    __metadata("design:type", Boolean)
+], ShopResponseDTO.prototype, "isVerified", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Shop status', enum: ['active', 'suspended', 'closed'] }),
+    __metadata("design:type", String)
+], ShopResponseDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], ShopResponseDTO.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last update timestamp' }),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], ShopResponseDTO.prototype, "updatedAt", void 0);
+
+
+/***/ }),
+
+/***/ "./src/shop/dto/update-shop.dto.ts":
+/*!*****************************************!*\
+  !*** ./src/shop/dto/update-shop.dto.ts ***!
+  \*****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateShopDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class UpdateShopDTO {
+}
+exports.UpdateShopDTO = UpdateShopDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the shop', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateShopDTO.prototype, "shopName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the village where the shop is located', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateShopDTO.prototype, "villageId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the shop category', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateShopDTO.prototype, "categoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Profile image URL', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUrl)({}, { message: 'Please provide a valid URL for profile image' }),
+    __metadata("design:type", String)
+], UpdateShopDTO.prototype, "profileImage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Cover image URL', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUrl)({}, { message: 'Please provide a valid URL for cover image' }),
+    __metadata("design:type", String)
+], UpdateShopDTO.prototype, "coverImage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Description of the shop', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateShopDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Status of the shop', enum: ['active', 'suspended', 'closed'], required: false }),
+    (0, class_validator_1.IsEnum)(['active', 'suspended', 'closed']),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateShopDTO.prototype, "status", void 0);
+
+
+/***/ }),
+
+/***/ "./src/shop/shop.controller.ts":
+/*!*************************************!*\
+  !*** ./src/shop/shop.controller.ts ***!
+  \*************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShopController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const shop_service_1 = __webpack_require__(/*! ./shop.service */ "./src/shop/shop.service.ts");
+const create_shop_dto_1 = __webpack_require__(/*! ./dto/create-shop.dto */ "./src/shop/dto/create-shop.dto.ts");
+const update_shop_dto_1 = __webpack_require__(/*! ./dto/update-shop.dto */ "./src/shop/dto/update-shop.dto.ts");
+const shop_response_dto_1 = __webpack_require__(/*! ./dto/shop-response.dto */ "./src/shop/dto/shop-response.dto.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+let ShopController = exports.ShopController = class ShopController {
+    constructor(shopService) {
+        this.shopService = shopService;
+    }
+    createShop(createShopDto, user) {
+        return this.shopService.createShop(createShopDto, user.id);
+    }
+    getShopById(id) {
+        return this.shopService.getShopById(id);
+    }
+    getAllShops() {
+        return this.shopService.getAllShops();
+    }
+    updateShop(id, updateShopDto, user) {
+        return this.shopService.updateShop(id, updateShopDto, user.id);
+    }
+    deleteShop(id, user) {
+        return this.shopService.deleteShop(id, user.id);
+    }
+    getMyShops(user) {
+        return this.shopService.getShopsByOwner(user.id);
+    }
+};
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new shop' }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'Shop created successfully',
+        type: shop_response_dto_1.ShopResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('create'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof create_shop_dto_1.CreateShopDTO !== "undefined" && create_shop_dto_1.CreateShopDTO) === "function" ? _b : Object, Object]),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "createShop", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get shop by ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Shop retrieved successfully',
+        type: shop_response_dto_1.ShopResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Shop not found' }),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "getShopById", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all active shops' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Shops retrieved successfully',
+        type: [shop_response_dto_1.ShopResponseDTO]
+    }),
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "getAllShops", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update shop by ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Shop updated successfully',
+        type: shop_response_dto_1.ShopResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Not shop owner' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Shop not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof update_shop_dto_1.UpdateShopDTO !== "undefined" && update_shop_dto_1.UpdateShopDTO) === "function" ? _c : Object, Object]),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "updateShop", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Delete shop by ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Shop deleted successfully',
+        type: shop_response_dto_1.ShopResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Not shop owner' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Shop not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "deleteShop", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get shops owned by the authenticated user' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'User shops retrieved successfully',
+        type: [shop_response_dto_1.ShopResponseDTO]
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('my-shops'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "getMyShops", null);
+exports.ShopController = ShopController = __decorate([
+    (0, swagger_1.ApiTags)('Shop'),
+    (0, common_1.Controller)('shop'),
+    __metadata("design:paramtypes", [typeof (_a = typeof shop_service_1.ShopService !== "undefined" && shop_service_1.ShopService) === "function" ? _a : Object])
+], ShopController);
+
+
+/***/ }),
+
+/***/ "./src/shop/shop.module.ts":
+/*!*********************************!*\
+  !*** ./src/shop/shop.module.ts ***!
+  \*********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShopModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const shop_controller_1 = __webpack_require__(/*! ./shop.controller */ "./src/shop/shop.controller.ts");
+const shop_service_1 = __webpack_require__(/*! ./shop.service */ "./src/shop/shop.service.ts");
+const shop_schema_1 = __webpack_require__(/*! src/schema/shop/shop.schema */ "./src/schema/shop/shop.schema.ts");
+const shop_category_schema_1 = __webpack_require__(/*! src/schema/shop/shop-category.schema */ "./src/schema/shop/shop-category.schema.ts");
+const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
+let ShopModule = exports.ShopModule = class ShopModule {
+};
+exports.ShopModule = ShopModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([
+                { name: 'Shop', schema: shop_schema_1.ShopSchema },
+                { name: 'ShopCategory', schema: shop_category_schema_1.ShopCategorySchema },
+                { name: 'User', schema: user_schema_1.UserSchema },
+            ]),
+        ],
+        controllers: [shop_controller_1.ShopController],
+        providers: [shop_service_1.ShopService],
+        exports: [shop_service_1.ShopService],
+    })
+], ShopModule);
+
+
+/***/ }),
+
+/***/ "./src/shop/shop.service.ts":
+/*!**********************************!*\
+  !*** ./src/shop/shop.service.ts ***!
+  \**********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShopService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let ShopService = exports.ShopService = class ShopService {
+    constructor(shopModel, userModel) {
+        this.shopModel = shopModel;
+        this.userModel = userModel;
+    }
+    async createShop(createShopDto, userId) {
+        try {
+            const existingShop = await this.shopModel.findOne({
+                user: userId,
+                status: { $ne: 'closed' }
+            });
+            if (existingShop) {
+                throw new Error('User already has an active shop');
+            }
+            const shopData = {
+                ...createShopDto,
+                ownerId: userId,
+                user: userId,
+                profileImage: createShopDto.profileImage || '',
+                coverImage: createShopDto.coverImage || '',
+                description: createShopDto.description || '',
+            };
+            const newShop = await new this.shopModel(shopData).save();
+            const updatedUser = await this.userModel.findByIdAndUpdate(userId, { userRole: 'seller' }, { new: true });
+            if (!updatedUser) {
+                throw new Error('User not found');
+            }
+            const populatedShop = await this.shopModel
+                .findById(newShop.id)
+                .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                .populate('villageId', 'id name')
+                .populate('categoryId', 'id name')
+                .exec();
+            if (populatedShop && populatedShop.user) {
+                const userObj = populatedShop.user;
+                delete userObj.password;
+            }
+            return {
+                shop: populatedShop,
+                message: 'Shop created successfully and user role updated to seller'
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to create shop');
+        }
+    }
+    async getShopById(shopId) {
+        try {
+            const shop = await this.shopModel
+                .findById(shopId)
+                .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                .populate('villageId', 'id name')
+                .populate('categoryId', 'id name')
+                .exec();
+            if (!shop) {
+                throw new Error('Shop not found');
+            }
+            if (shop && shop.user) {
+                const userObj = shop.user;
+                delete userObj.password;
+            }
+            return shop;
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get shop');
+        }
+    }
+    async getAllShops() {
+        try {
+            const shops = await this.shopModel
+                .find({ status: 'active' })
+                .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                .populate('villageId', 'id name')
+                .populate('categoryId', 'id name')
+                .sort({ createdAt: -1 })
+                .exec();
+            shops.forEach(shop => {
+                if (shop && shop.user) {
+                    const userObj = shop.user;
+                    delete userObj.password;
+                }
+            });
+            return shops;
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get shops');
+        }
+    }
+    async updateShop(shopId, updateShopDto, userId) {
+        try {
+            const shop = await this.shopModel.findOne({
+                _id: shopId,
+                user: userId,
+                status: { $ne: 'closed' }
+            });
+            if (!shop) {
+                throw new Error('Shop not found or you do not have permission to update this shop');
+            }
+            const updatedShop = await this.shopModel.findByIdAndUpdate(shopId, updateShopDto, { new: true }).populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                .populate('villageId', 'id name')
+                .populate('categoryId', 'id name');
+            if (updatedShop && updatedShop.user) {
+                const userObj = updatedShop.user;
+                delete userObj.password;
+            }
+            return {
+                shop: updatedShop,
+                message: 'Shop updated successfully'
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to update shop');
+        }
+    }
+    async deleteShop(shopId, userId) {
+        try {
+            const shop = await this.shopModel.findOne({
+                _id: shopId,
+                user: userId
+            });
+            if (!shop) {
+                throw new Error('Shop not found or you do not have permission to delete this shop');
+            }
+            const deletedShop = await this.shopModel.findByIdAndUpdate(shopId, { status: 'closed' }, { new: true }).populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                .populate('villageId', 'id name')
+                .populate('categoryId', 'id name');
+            if (deletedShop && deletedShop.user) {
+                const userObj = deletedShop.user;
+                delete userObj.password;
+            }
+            const activeShops = await this.shopModel.countDocuments({
+                user: userId,
+                status: { $ne: 'closed' }
+            });
+            if (activeShops === 0) {
+                await this.userModel.findByIdAndUpdate(userId, { userRole: 'normal' });
+            }
+            return {
+                message: 'Shop deleted successfully',
+                shop: deletedShop
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to delete shop');
+        }
+    }
+    async getShopsByOwner(userId) {
+        try {
+            const shops = await this.shopModel
+                .find({ user: userId })
+                .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                .populate('villageId', 'id name')
+                .populate('categoryId', 'id name')
+                .sort({ createdAt: -1 })
+                .exec();
+            shops.forEach(shop => {
+                if (shop && shop.user) {
+                    const userObj = shop.user;
+                    delete userObj.password;
+                }
+            });
+            return shops;
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get user shops');
+        }
+    }
+};
+exports.ShopService = ShopService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)('Shop')),
+    __param(1, (0, mongoose_1.InjectModel)('User')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
+], ShopService);
 
 
 /***/ }),
@@ -6322,6 +10835,16 @@ module.exports = require("passport-jwt");
 
 /***/ }),
 
+/***/ "qrcode":
+/*!*************************!*\
+  !*** external "qrcode" ***!
+  \*************************/
+/***/ ((module) => {
+
+module.exports = require("qrcode");
+
+/***/ }),
+
 /***/ "socket.io":
 /*!****************************!*\
   !*** external "socket.io" ***!
@@ -6329,6 +10852,16 @@ module.exports = require("passport-jwt");
 /***/ ((module) => {
 
 module.exports = require("socket.io");
+
+/***/ }),
+
+/***/ "speakeasy":
+/*!****************************!*\
+  !*** external "speakeasy" ***!
+  \****************************/
+/***/ ((module) => {
+
+module.exports = require("speakeasy");
 
 /***/ }),
 

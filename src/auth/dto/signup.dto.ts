@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { MinLength, Matches } from 'class-validator';
+import { MinLength, Matches, IsEmail, IsNotEmpty } from 'class-validator';
 
 const NUMBER = /\d/
 const CAPITAL_LETTER = /[A-Z]/;
@@ -8,25 +8,17 @@ const SPECIAL_CHARACTER = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
 const MIN_LENGTH = 8;
 
 export class SignupDTO {
-  @ApiProperty()
+  @ApiProperty({ description: 'Email address of the user' })
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  @IsNotEmpty()
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Password for the user account' })
   @MinLength(MIN_LENGTH, { message: 'Minimum 8 characters required' })
   @Matches(NUMBER, { message: 'Minimum 1 digit required' })
   @Matches(CAPITAL_LETTER, { message: 'Minimum 1 uppercase character required' })
   @Matches(SMALL_LETTER, { message: 'Minimum 1 lowercase character required' })
   @Matches(SPECIAL_CHARACTER, { message: 'Minimum 1 special character required' })
-
+  @IsNotEmpty()
   password: string;
-
-  @ApiProperty({ required: false })
-  name: string;
-
-  @ApiProperty({ required: false })
-  pic: string;
-
-  @ApiProperty({ required: false })
-  color: string;
-
 }

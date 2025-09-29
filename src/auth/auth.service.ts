@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { User } from 'src/interface/user/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { SignupDTO } from './dto/signup.dto';
+import { UpdateProfileDTO } from './dto/update-profile.dto';
 import { LoginDTO } from './dto/login.dto';
 var bcrypt = require('bcryptjs');
 //import * as otpGenerator from 'otp-generator';
@@ -19,6 +20,9 @@ import * as otpGenerator from 'otp-generator';
 import { getEmail } from './email';
 import { UtilsService } from '../utils/utils.service';
 import { ChatService } from '@app/chat/chat.service';
+import { Login2FADTO } from './dto/2fa.dto';
+import { TwoFactorService } from './2fa.service';
+import { UpdateBiometricStatusDTO } from './dto/biometric.dto';
 const GO_CARDLESS_ACTIVE = false;
 
 @Injectable()
@@ -29,6 +33,7 @@ export class AuthService {
     @InjectModel('Otp') private _otpModel: Model<Otp>,
     private chatService: ChatService,
     private utilsService: UtilsService,
+    private twoFactorService: TwoFactorService,
   ) {
   }
 
@@ -111,11 +116,14 @@ export class AuthService {
       const res = await this.utilsService.sendEmail({
         to: signupDto?.email,
         subject: "Confirm your email",
-        html: getEmail(`${signupDto?.name}`, otp)
+        html: getEmail(`${signupDto?.email}`, otp)
       })
 
+      // Return user data without password
+      const userResponse = JSON.parse(JSON.stringify(userData));
+      delete userResponse.password;
 
-      return { user: userData };
+      return { user: userResponse };
     } catch (err) {
       console.log(err);
       throw new BadRequestException(err?.message);
@@ -461,6 +469,131 @@ export class AuthService {
     } catch (err) {
       console.log(err);
       throw new BadRequestException(err?.message);
+    }
+  }
+
+  async updateProfile(updateProfileDto: UpdateProfileDTO, user) {
+    try {
+      const userData = await this._userModel.findOne({ _id: user.id, isDeleted: false });
+      
+      if (!userData) {
+        throw new Error('User not found');
+      }
+
+      // Update user profile with new data
+      const updatedUser = await this._userModel.findByIdAndUpdate(
+        user.id,
+        {
+          fullName: updateProfileDto.fullName,
+          phoneNumber: updateProfileDto.phoneNumber,
+          village: updateProfileDto.village,
+          country: updateProfileDto.country,
+          homeAddress: updateProfileDto.homeAddress,
+          profilePic: updateProfileDto.profilePic || userData.profilePic,
+          zipcode: updateProfileDto.zipcode,
+        },
+        { new: true }
+      );
+
+      // Return user data without password
+      const userResponse = JSON.parse(JSON.stringify(updatedUser));
+      delete userResponse.password;
+
+      return { user: userResponse };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message);
+    }
+  }
+
+  async loginWith2FA(login2FADto: Login2FADTO) {
+    try {
+      const { email, password, token } = login2FADto;
+
+      // First, validate email and password
+      const user = await this._userModel.findOne({
+        email: email.toLowerCase(),
+        isEmailVerified: true,
+        isDeleted: false,
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      // Check if user has 2FA enabled
+      if (user.isTwoFactorEnabled) {
+        if (!token) {
+          throw new BadRequestException('2FA token is required');
+        }
+
+        // Verify the 2FA token
+        const isTokenValid = await this.twoFactorService.verify2FAToken(user.id, token);
+        if (!isTokenValid) {
+          throw new UnauthorizedException('Invalid 2FA token');
+        }
+      }
+
+      // Generate JWT token
+      const payload = {
+        id: user.id,
+        email: user.email,
+        userRole: user.userRole,
+      };
+
+      const tokenResponse = this.generateToken(payload);
+
+      // Prepare user response (without password)
+      const userResponse = {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        userRole: user.userRole,
+        userStatus: user.userStatus,
+        isTwoFactorEnabled: user.isTwoFactorEnabled,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+
+      return {
+        success: true,
+        message: 'Login successful',
+        data: {
+          ...tokenResponse,
+          user: userResponse,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Login failed');
+    }
+  }
+
+  async updateBiometricStatus(userId: string, updateBiometricDto: UpdateBiometricStatusDTO) {
+    try {
+      const user = await this._userModel.findById(userId);
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
+
+      user.isBiometric = updateBiometricDto.isBiometric;
+      await user.save();
+
+      return {
+        success: true,
+        message: `Biometric authentication ${updateBiometricDto.isBiometric ? 'enabled' : 'disabled'} successfully`,
+        data: {
+          isBiometric: user.isBiometric,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to update biometric status');
     }
   }
 
