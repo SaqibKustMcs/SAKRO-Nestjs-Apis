@@ -9,6 +9,7 @@ import { MediaUploadModule } from './file-management/media-upload/media-upload.m
 import { PostModule } from './post/post.module';
 import { OrderModule } from './order/order.module';
 import { CommentsModule } from './comments/comments.module';
+import { VillageModule } from './village/village.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { CommentsModule } from './comments/comments.module';
     MediaUploadModule,
     PostModule,
     OrderModule,
-    CommentsModule
+    CommentsModule,
+    VillageModule
   ],
   controllers: [AppController],
   providers: [AppService],

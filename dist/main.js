@@ -1,26 +1,42 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	var __webpack_modules__ = ([
-/* 0 */,
-/* 1 */
-/***/ ((module) => {
+/******/ 	var __webpack_modules__ = ({
 
-module.exports = require("@nestjs/common");
+/***/ "./libs/chat/src/auth/firebaseAdmin.ts":
+/*!*********************************************!*\
+  !*** ./libs/chat/src/auth/firebaseAdmin.ts ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.defaultApp = void 0;
+var admin = __webpack_require__(/*! firebase-admin */ "firebase-admin");
+const defaultApp = admin.initializeApp({
+    credential: admin.credential.cert({
+        "type": "service_account",
+        "project_id": "chat-notification-a338e",
+        "private_key_id": "995b7528867d7cc2d322f3bfc892975d7ccf9724",
+        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCaGvABGbh6+G3y\n9bhU+gRzi2KuOGMt8/vZ+dtpNDF3vXompWUkkSh/WQ0X24yBtEsN3m6KY+uwnWrC\nnRYarkJ07EtbI8yFkKrrf6UCo4kt8fs5gyvImA8feAp01tNXrsrgv72Od7GQQwgd\n5p1t2CDsPweQmx9qn++doW2Hl5y47Dsl6CbP9Kt7JL+E1QD98HtwjOrL/4d/Waim\nnHpWQSC3IO8hxrDtgI/vwrYEpNaUOUOrDfSqAvHVBRZMNKuybw3Q4bL9owX5Rxgj\nuLuouX4FTpmYe2Y/P2pjvVZn+xYWdHh4z/KtXfZv0bnc2j/th96jEm5GYUYhAyZ4\nZE4ENoMNAgMBAAECggEAR8apJ5IPwzLHnySEnQuwHBL9PNElnKcplC6UW61EJxW4\n+ZwKflwfxSS4fPa0vEq5tHV3/fwpMCM5sPhSbc3hRS0zsfj8Du/BNBvJQu/hemVd\nEj3+nBj63jjegen3GL1gYAreYqdsLBmUg7zAcYN7Xh3DS758hQCGLeCcr81VYSlp\nFgblXY08d0NhtuILUUulRoE1YPhy4PEatwIYtewYWGmMIi2BCHU0DrOztjH8Ce9z\n7msBTgvMiASb/aLt1UB94vImIIfQwZTO01LH5yflpwzNLT8/3ZBwxlzmFcglAjLS\nio49Oav0lfwEiOqkso3xKDycSvLmfv2kgst6EC+BPwKBgQDLWYXJOlqzsIDt43qc\ngLgPjhhoXggQdLBi438FaqT0bg8jiutCFxnyG1mkJ4k7aga09lJ7oQwg01Fu/tsC\nvE0Oen9K7jaBpVGN9qYioP+k/LywTDRU048s8EbrlwwNQNau19VQCi1rTDvn6vjl\nqcTwHHjRqbI5RSSyiz32BPnMAwKBgQDCAWFGtLT13NT7X3X1PJSGDMMRmPZp6tit\nUw/WzSr9/aHKWbEXRbDBP2F0k3qzdSU2DAjFbMYAPw20qPz9yYrK1lGw8HCPo2fm\n0qm+yrbgVaTo1QPcOJ1yYIHU/YYfbfZYU1DYFjDY84ysmoTHeHQ2XFD0Cv8oBBPu\nPzsGy6qvrwKBgEstpKV5enD2LyRDtl/HwsSVbvae1PJogZF9s8cn3yYyzkwAnutH\nKSN18xUaPMUHdMVQT7w/FQHJvlB/zi5buU1CAm+MVABoQxdt+YvR49F2UrgG5E38\nDPG7Pyz4Ic+Aih4H02gM6y/A9mDOYQhfVFzE2fIBf89mfaO4kMa0njlLAoGAQtwq\n5C0++ESk+gTKKDw6i4A2cggfVB1lk0Y+/S40FNimO5Bxoa2Y3uCy+3QgI1zJ+Dhp\nhXCZRFh2pr5egjBFLuZxvOMAR+Bu3HPZoDFImUOq07sl221/hX2RARBmespwzbvY\n7r+nEf3Ni2atP/lZQ6rJE3H+wZG2NLOB6jOinW0CgYA6SVnKjQaaCjg7d28eAnSR\n+1iChcA8CLtcn7J+njYAZQg0eVsXTEBSk9WkW1k2ImLau+oHLaMBotfvjaEDYydt\njhYM+sAmdaS+0XCtXdf6cUa8217jyomf40dS+8fpKvfKCeeNMx2tN+4N1P5NXeHR\n2/HGnASy0cWX6yQcrCdcHA==\n-----END PRIVATE KEY-----\n",
+        "client_email": "firebase-adminsdk-zc7n4@chat-notification-a338e.iam.gserviceaccount.com",
+        "client_id": "104395492228038049799",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-zc7n4%40chat-notification-a338e.iam.gserviceaccount.com",
+        "universe_domain": "googleapis.com"
+    }),
+    databaseURL: "https://fir-auth-bd895.firebaseio.com"
+});
+exports.defaultApp = defaultApp;
+
 
 /***/ }),
-/* 2 */
-/***/ ((module) => {
 
-module.exports = require("@nestjs/core");
-
-/***/ }),
-/* 3 */
-/***/ ((module) => {
-
-module.exports = require("@nestjs/swagger");
-
-/***/ }),
-/* 4 */
+/***/ "./libs/chat/src/chat.controller.ts":
+/*!******************************************!*\
+  !*** ./libs/chat/src/chat.controller.ts ***!
+  \******************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30,47 +46,31 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppModule = void 0;
-const common_1 = __webpack_require__(1);
-const config_1 = __webpack_require__(5);
-const app_controller_1 = __webpack_require__(6);
-const app_service_1 = __webpack_require__(27);
-const chat_1 = __webpack_require__(28);
-const auth_module_1 = __webpack_require__(35);
-const mongoose_1 = __webpack_require__(8);
-const media_upload_module_1 = __webpack_require__(59);
-const post_module_1 = __webpack_require__(67);
-const order_module_1 = __webpack_require__(72);
-const comments_module_1 = __webpack_require__(77);
-let AppModule = exports.AppModule = class AppModule {
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-exports.AppModule = AppModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            config_1.ConfigModule.forRoot(),
-            mongoose_1.MongooseModule.forRoot(process.env.MONGO_URI),
-            auth_module_1.AuthModule.forRoot(),
-            chat_1.ChatModule,
-            media_upload_module_1.MediaUploadModule,
-            post_module_1.PostModule,
-            order_module_1.OrderModule,
-            comments_module_1.CommentsModule
-        ],
-        controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
-    })
-], AppModule);
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChatController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const chat_service_1 = __webpack_require__(/*! ./chat.service */ "./libs/chat/src/chat.service.ts");
+let ChatController = exports.ChatController = class ChatController {
+    constructor(chatService) {
+        this.chatService = chatService;
+    }
+};
+exports.ChatController = ChatController = __decorate([
+    (0, common_1.Controller)('chat'),
+    __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object])
+], ChatController);
 
 
 /***/ }),
-/* 5 */
-/***/ ((module) => {
 
-module.exports = require("@nestjs/config");
-
-/***/ }),
-/* 6 */
+/***/ "./libs/chat/src/chat.gateway.ts":
+/*!***************************************!*\
+  !*** ./libs/chat/src/chat.gateway.ts ***!
+  \***************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -86,237 +86,203 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppController = void 0;
-const chat_service_1 = __webpack_require__(7);
-const chat_dto_1 = __webpack_require__(22);
-const common_1 = __webpack_require__(1);
-const swagger_1 = __webpack_require__(3);
-const jwt_auth_guard_1 = __webpack_require__(24);
-const user_decorator_1 = __webpack_require__(26);
-let AppController = exports.AppController = class AppController {
+exports.ChatGateway = void 0;
+const websockets_1 = __webpack_require__(/*! @nestjs/websockets */ "@nestjs/websockets");
+const chat_service_1 = __webpack_require__(/*! ./chat.service */ "./libs/chat/src/chat.service.ts");
+const socket_io_1 = __webpack_require__(/*! socket.io */ "socket.io");
+const chat_dto_1 = __webpack_require__(/*! ./dto/chat.dto */ "./libs/chat/src/dto/chat.dto.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const ws_filter_1 = __webpack_require__(/*! ./filter/ws.filter */ "./libs/chat/src/filter/ws.filter.ts");
+let ChatGateway = exports.ChatGateway = class ChatGateway {
     constructor(chatService) {
         this.chatService = chatService;
     }
-    getHello() {
-        return "hello";
+    afterInit(server) {
+        this.chatService.removeDisconnectedUsers(server);
     }
-    create(createChatDTO, user) {
-        if (createChatDTO.ownerUserId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+    async handleConnection(socket) {
+        try {
+            const query = socket.handshake?.query;
+            const socketUserId = query?.userId;
+            if (!socketUserId) {
+                socket.disconnect();
+                return;
+            }
+            await this.chatService.userConnected(socket);
+            const chatIds = await this.chatService.getChatIds(socketUserId);
+            console.log("connected user chatIds: ", chatIds);
+            console.log(socket.rooms);
+            chatIds.forEach(chatId => {
+                socket.join(chatId.toString());
+            });
+            return;
         }
-        return this.chatService.create(createChatDTO);
-    }
-    addUserToChat(addUserToChatDTO, user) {
-        if (addUserToChatDTO.moderatorId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+        catch (err) {
+            console.log(err);
+            socket.disconnect();
         }
-        return this.chatService.addUserToChat(addUserToChatDTO);
     }
-    removeUserFromChat(addUserToChatDTO, user) {
-        if (addUserToChatDTO.moderatorId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+    async handleDisconnect(socket) {
+        try {
+            await this.chatService.userDisconnected(socket);
+            return;
         }
-        return this.chatService.removeUserFromChat(addUserToChatDTO);
-    }
-    leaveChat(userChatDTO, user) {
-        if (userChatDTO.userId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+        catch (err) {
+            console.log(err);
+            socket.disconnect();
         }
-        return this.chatService.leaveChat(userChatDTO);
     }
-    makeModerator(addUserToChatDTO, user) {
-        console.log(addUserToChatDTO, user.id);
-        if (addUserToChatDTO.moderatorId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+    async message(payload, socket) {
+        try {
+            const query = socket?.handshake?.query;
+            const socketUserId = query?.userId;
+            if (socketUserId?.toString() != payload.userId) {
+                throw new websockets_1.WsException('User not connected');
+            }
+            payload.time = new Date();
+            let chatDocument = await this.chatService.createMessage(payload);
+            socket.to(payload?.chatId).emit('message', payload);
+            return payload;
         }
-        return this.chatService.makeModerator(addUserToChatDTO);
-    }
-    updateUserStatus(userStatusDTO, user) {
-        if (userStatusDTO.userId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+        catch (err) {
+            console.log(err);
+            throw new websockets_1.WsException(err?.message);
         }
-        return this.chatService.updateUserStatus(userStatusDTO);
     }
-    addUser(addUserDTO, user) {
-        return this.chatService.addUser(addUserDTO);
-    }
-    markChatFavourtie(favouriteChatDTO, user) {
-        if (favouriteChatDTO.userId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+    async join(payload, socket) {
+        try {
+            const query = socket?.handshake?.query;
+            const socketUserId = query?.userId;
+            if (socketUserId?.toString() != payload.userId) {
+                throw new websockets_1.WsException('User not connected');
+            }
+            socket.join(payload.chatId.toString());
+            return payload;
         }
-        return this.chatService.markChatFavourtie(favouriteChatDTO);
-    }
-    getAllUsers(getAllUsersDTO, user) {
-        return this.chatService.getAllUsers(getAllUsersDTO, user?.id);
-    }
-    getAllChats(allChatQueryDTO, user) {
-        if (allChatQueryDTO.userId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+        catch (err) {
+            console.log(err);
+            throw new websockets_1.WsException(err?.message);
         }
-        return this.chatService.getAllChats(allChatQueryDTO);
     }
-    getChatMessages(chatHistoryQueryDTO, user) {
-        if (chatHistoryQueryDTO.userId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+    async read(payload, socket) {
+        try {
+            const query = socket?.handshake?.query;
+            const socketUserId = query?.userId;
+            if (socketUserId?.toString() != payload.userId) {
+                throw new websockets_1.WsException('User not connected');
+            }
+            await this.chatService.resetUnreadCount(payload);
+            return payload;
         }
-        return this.chatService.getChatMessages(chatHistoryQueryDTO);
-    }
-    getReadMessages(messageHistoryQueryDTO, user) {
-        if (messageHistoryQueryDTO.userId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
+        catch (err) {
+            console.log(err);
+            throw new websockets_1.WsException(err?.message);
         }
-        return this.chatService.getReadMessages(messageHistoryQueryDTO);
-    }
-    getUserProfile(user) {
-        return this.chatService.getUserProfile(user.id);
-    }
-    updateUserProfile(userProfileDTO, user) {
-        return this.chatService.updateUserProfile(user.id, userProfileDTO);
-    }
-    updateChat(updateChatDTO, user) {
-        if (updateChatDTO.moderatorId != user.id) {
-            throw new common_1.UnauthorizedException("not allowed");
-        }
-        return this.chatService.updateChat(updateChatDTO);
     }
 };
 __decorate([
-    (0, common_1.Get)(),
+    (0, websockets_1.SubscribeMessage)('message'),
+    __param(0, (0, websockets_1.MessageBody)()),
+    __param(1, (0, websockets_1.ConnectedSocket)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", String)
-], AppController.prototype, "getHello", null);
+    __metadata("design:paramtypes", [typeof (_b = typeof chat_dto_1.MessageDTO !== "undefined" && chat_dto_1.MessageDTO) === "function" ? _b : Object, typeof (_c = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _c : Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "message", null);
 __decorate([
-    (0, common_1.Post)('/create'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
+    (0, websockets_1.SubscribeMessage)('join'),
+    __param(0, (0, websockets_1.MessageBody)()),
+    __param(1, (0, websockets_1.ConnectedSocket)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof chat_dto_1.CreateChatDTO !== "undefined" && chat_dto_1.CreateChatDTO) === "function" ? _b : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "create", null);
+    __metadata("design:paramtypes", [typeof (_d = typeof chat_dto_1.UserChatDTO !== "undefined" && chat_dto_1.UserChatDTO) === "function" ? _d : Object, typeof (_e = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _e : Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "join", null);
 __decorate([
-    (0, common_1.Post)('/addUserToChat'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
+    (0, websockets_1.SubscribeMessage)('read'),
+    __param(0, (0, websockets_1.MessageBody)()),
+    __param(1, (0, websockets_1.ConnectedSocket)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof chat_dto_1.AddUserToChatDTO !== "undefined" && chat_dto_1.AddUserToChatDTO) === "function" ? _c : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "addUserToChat", null);
-__decorate([
-    (0, common_1.Post)('/removeUserFromChat'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof chat_dto_1.AddUserToChatDTO !== "undefined" && chat_dto_1.AddUserToChatDTO) === "function" ? _d : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "removeUserFromChat", null);
-__decorate([
-    (0, common_1.Post)('/leaveChat'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof chat_dto_1.UserChatDTO !== "undefined" && chat_dto_1.UserChatDTO) === "function" ? _e : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "leaveChat", null);
-__decorate([
-    (0, common_1.Post)('/makeModerator'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof chat_dto_1.AddUserToChatDTO !== "undefined" && chat_dto_1.AddUserToChatDTO) === "function" ? _f : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "makeModerator", null);
-__decorate([
-    (0, common_1.Post)('/updateUserStatus'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_g = typeof chat_dto_1.UserStatusDTO !== "undefined" && chat_dto_1.UserStatusDTO) === "function" ? _g : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "updateUserStatus", null);
-__decorate([
-    (0, common_1.Post)('/addUser'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_h = typeof chat_dto_1.AddUserDTO !== "undefined" && chat_dto_1.AddUserDTO) === "function" ? _h : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "addUser", null);
-__decorate([
-    (0, common_1.Post)('/markChatFavourtie'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_j = typeof chat_dto_1.FavouriteChatDTO !== "undefined" && chat_dto_1.FavouriteChatDTO) === "function" ? _j : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "markChatFavourtie", null);
-__decorate([
-    (0, common_1.Get)('/getAllUsers'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_k = typeof chat_dto_1.GetAllUsersDTO !== "undefined" && chat_dto_1.GetAllUsersDTO) === "function" ? _k : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "getAllUsers", null);
-__decorate([
-    (0, common_1.Get)('/getAllChats'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_l = typeof chat_dto_1.AllChatQueryDTO !== "undefined" && chat_dto_1.AllChatQueryDTO) === "function" ? _l : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "getAllChats", null);
-__decorate([
-    (0, common_1.Get)('/getChatMessages'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_m = typeof chat_dto_1.ChatHistoryQueryDTO !== "undefined" && chat_dto_1.ChatHistoryQueryDTO) === "function" ? _m : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "getChatMessages", null);
-__decorate([
-    (0, common_1.Get)('/getReadMessages'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_o = typeof chat_dto_1.MessageHistoryQueryDTO !== "undefined" && chat_dto_1.MessageHistoryQueryDTO) === "function" ? _o : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "getReadMessages", null);
-__decorate([
-    (0, common_1.Get)('/getUserProfile'),
-    __param(0, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "getUserProfile", null);
-__decorate([
-    (0, common_1.Post)('/updateUserProfile'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_p = typeof chat_dto_1.UserProfileDTO !== "undefined" && chat_dto_1.UserProfileDTO) === "function" ? _p : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "updateUserProfile", null);
-__decorate([
-    (0, common_1.Post)('/updateChat'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_q = typeof chat_dto_1.UpdateChatDTO !== "undefined" && chat_dto_1.UpdateChatDTO) === "function" ? _q : Object, Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "updateChat", null);
-exports.AppController = AppController = __decorate([
-    (0, common_1.Controller)(),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __metadata("design:paramtypes", [typeof (_f = typeof chat_dto_1.ReadChatDTO !== "undefined" && chat_dto_1.ReadChatDTO) === "function" ? _f : Object, typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "read", null);
+exports.ChatGateway = ChatGateway = __decorate([
+    (0, common_1.UseFilters)(ws_filter_1.WebsocketExceptionsFilter),
+    (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),
+    (0, websockets_1.WebSocketGateway)(),
     __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object])
-], AppController);
+], ChatGateway);
 
 
 /***/ }),
-/* 7 */
+
+/***/ "./libs/chat/src/chat.module.ts":
+/*!**************************************!*\
+  !*** ./libs/chat/src/chat.module.ts ***!
+  \**************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChatModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const chat_schema_1 = __webpack_require__(/*! ./schemas/chat.schema */ "./libs/chat/src/schemas/chat.schema.ts");
+const message_schema_1 = __webpack_require__(/*! ./schemas/message.schema */ "./libs/chat/src/schemas/message.schema.ts");
+const userTokens_schema_1 = __webpack_require__(/*! ./schemas/userTokens.schema */ "./libs/chat/src/schemas/userTokens.schema.ts");
+const chat_gateway_1 = __webpack_require__(/*! ./chat.gateway */ "./libs/chat/src/chat.gateway.ts");
+const chat_service_1 = __webpack_require__(/*! ./chat.service */ "./libs/chat/src/chat.service.ts");
+const user_schema_1 = __webpack_require__(/*! ./schemas/user.schema */ "./libs/chat/src/schemas/user.schema.ts");
+const chat_controller_1 = __webpack_require__(/*! ./chat.controller */ "./libs/chat/src/chat.controller.ts");
+const userChat_schema_1 = __webpack_require__(/*! ./schemas/userChat.schema */ "./libs/chat/src/schemas/userChat.schema.ts");
+const userMessage_schema_1 = __webpack_require__(/*! ./schemas/userMessage.schema */ "./libs/chat/src/schemas/userMessage.schema.ts");
+let ChatModule = exports.ChatModule = class ChatModule {
+};
+exports.ChatModule = ChatModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/whitelabelChat"),
+            mongoose_1.MongooseModule.forFeature([{
+                    name: chat_schema_1.Chat.name,
+                    schema: chat_schema_1.ChatSchema,
+                },
+                {
+                    name: userChat_schema_1.UserChat.name,
+                    schema: userChat_schema_1.UserChatSchema,
+                }, {
+                    name: message_schema_1.Message.name,
+                    schema: message_schema_1.MessageSchema,
+                }, {
+                    name: userMessage_schema_1.UserMessage.name,
+                    schema: userMessage_schema_1.UserMessageSchema,
+                }, {
+                    name: userTokens_schema_1.UserToken.name,
+                    schema: userTokens_schema_1.UserTokenSchema,
+                }, {
+                    name: user_schema_1.UserData.name,
+                    schema: user_schema_1.UserDataSchema,
+                }
+            ])
+        ],
+        controllers: [chat_controller_1.ChatController],
+        providers: [chat_gateway_1.ChatGateway, chat_service_1.ChatService],
+        exports: [chat_service_1.ChatService]
+    })
+], ChatModule);
+
+
+/***/ }),
+
+/***/ "./libs/chat/src/chat.service.ts":
+/*!***************************************!*\
+  !*** ./libs/chat/src/chat.service.ts ***!
+  \***************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -335,18 +301,18 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatService = void 0;
-const common_1 = __webpack_require__(1);
-const mongoose_1 = __webpack_require__(8);
-const mongoose_2 = __webpack_require__(9);
-const chat_schema_1 = __webpack_require__(10);
-const message_schema_1 = __webpack_require__(12);
-const userTokens_schema_1 = __webpack_require__(14);
-const firebaseAdmin_1 = __webpack_require__(15);
-const user_schema_1 = __webpack_require__(17);
-const userChat_schema_1 = __webpack_require__(19);
-const userMessage_schema_1 = __webpack_require__(20);
-const message_evetn_enum_1 = __webpack_require__(13);
-var cron = __webpack_require__(21);
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const chat_schema_1 = __webpack_require__(/*! ./schemas/chat.schema */ "./libs/chat/src/schemas/chat.schema.ts");
+const message_schema_1 = __webpack_require__(/*! ./schemas/message.schema */ "./libs/chat/src/schemas/message.schema.ts");
+const userTokens_schema_1 = __webpack_require__(/*! ./schemas/userTokens.schema */ "./libs/chat/src/schemas/userTokens.schema.ts");
+const firebaseAdmin_1 = __webpack_require__(/*! ./auth/firebaseAdmin */ "./libs/chat/src/auth/firebaseAdmin.ts");
+const user_schema_1 = __webpack_require__(/*! ./schemas/user.schema */ "./libs/chat/src/schemas/user.schema.ts");
+const userChat_schema_1 = __webpack_require__(/*! ./schemas/userChat.schema */ "./libs/chat/src/schemas/userChat.schema.ts");
+const userMessage_schema_1 = __webpack_require__(/*! ./schemas/userMessage.schema */ "./libs/chat/src/schemas/userMessage.schema.ts");
+const message_evetn_enum_1 = __webpack_require__(/*! ./enum/message-evetn.enum */ "./libs/chat/src/enum/message-evetn.enum.ts");
+var cron = __webpack_require__(/*! node-cron */ "node-cron");
 let ChatService = exports.ChatService = class ChatService {
     constructor(chatModel, userChatModel, messageModel, userMessageModel, userTokenModel, userModel) {
         this.chatModel = chatModel;
@@ -1588,501 +1554,11 @@ exports.ChatService = ChatService = __decorate([
 
 
 /***/ }),
-/* 8 */
-/***/ ((module) => {
 
-module.exports = require("@nestjs/mongoose");
-
-/***/ }),
-/* 9 */
-/***/ ((module) => {
-
-module.exports = require("mongoose");
-
-/***/ }),
-/* 10 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChatSchema = exports.Chat = void 0;
-const mongoose_1 = __webpack_require__(8);
-const utils_1 = __webpack_require__(11);
-let Chat = exports.Chat = class Chat {
-};
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
-    __metadata("design:type", String)
-], Chat.prototype, "_id", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Chat.prototype, "ownerUserId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Chat.prototype, "title", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Chat.prototype, "image", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Chat.prototype, "purposeDetail", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Chat.prototype, "userIds", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], Chat.prototype, "isMultiple", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], Chat.prototype, "isDeleted", void 0);
-exports.Chat = Chat = __decorate([
-    (0, mongoose_1.Schema)()
-], Chat);
-exports.ChatSchema = mongoose_1.SchemaFactory.createForClass(Chat);
-exports.ChatSchema.set('timestamps', true);
-exports.ChatSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 11 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateStringId = void 0;
-const mongoose_1 = __webpack_require__(9);
-const generateStringId = () => {
-    return new mongoose_1.Types.ObjectId().toString();
-};
-exports.generateStringId = generateStringId;
-
-
-/***/ }),
-/* 12 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MessageSchema = exports.Message = void 0;
-const mongoose_1 = __webpack_require__(8);
-const message_evetn_enum_1 = __webpack_require__(13);
-const utils_1 = __webpack_require__(11);
-let Message = exports.Message = class Message {
-};
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
-    __metadata("design:type", String)
-], Message.prototype, "_id", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Message.prototype, "chatId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Message.prototype, "userId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Message.prototype, "message", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Object, default: {} }),
-    __metadata("design:type", Object)
-], Message.prototype, "messageBody", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Array, default: [] }),
-    __metadata("design:type", Array)
-], Message.prototype, "attachments", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Date, default: new Date() }),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
-], Message.prototype, "time", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: message_evetn_enum_1.MessageEventEnum.MESSAGE }),
-    __metadata("design:type", String)
-], Message.prototype, "eventType", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: null }),
-    __metadata("design:type", String)
-], Message.prototype, "eventId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], Message.prototype, "isDeleted", void 0);
-exports.Message = Message = __decorate([
-    (0, mongoose_1.Schema)()
-], Message);
-exports.MessageSchema = mongoose_1.SchemaFactory.createForClass(Message);
-exports.MessageSchema.set('timestamps', true);
-exports.MessageSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 13 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MessageEventEnum = void 0;
-var MessageEventEnum;
-(function (MessageEventEnum) {
-    MessageEventEnum["MESSAGE"] = "Message";
-    MessageEventEnum["MILESTONE"] = "Milestone";
-    MessageEventEnum["NEWCHAT"] = "NewChat";
-    MessageEventEnum["JOINCHAT"] = "JoinChat";
-    MessageEventEnum["REMOVECHAT"] = "RemoveChat";
-    MessageEventEnum["LEAVECHAT"] = "LeaveChat";
-})(MessageEventEnum || (exports.MessageEventEnum = MessageEventEnum = {}));
-
-
-/***/ }),
-/* 14 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserTokenSchema = exports.UserToken = void 0;
-const mongoose_1 = __webpack_require__(8);
-const utils_1 = __webpack_require__(11);
-let UserToken = exports.UserToken = class UserToken {
-};
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
-    __metadata("design:type", String)
-], UserToken.prototype, "_id", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserToken.prototype, "userId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserToken.prototype, "registrationToken", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], UserToken.prototype, "isConnected", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], UserToken.prototype, "isDeleted", void 0);
-exports.UserToken = UserToken = __decorate([
-    (0, mongoose_1.Schema)()
-], UserToken);
-exports.UserTokenSchema = mongoose_1.SchemaFactory.createForClass(UserToken);
-exports.UserTokenSchema.set('timestamps', true);
-exports.UserTokenSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 15 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.defaultApp = void 0;
-var admin = __webpack_require__(16);
-const defaultApp = admin.initializeApp({
-    credential: admin.credential.cert({
-        "type": "service_account",
-        "project_id": "chat-notification-a338e",
-        "private_key_id": "995b7528867d7cc2d322f3bfc892975d7ccf9724",
-        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCaGvABGbh6+G3y\n9bhU+gRzi2KuOGMt8/vZ+dtpNDF3vXompWUkkSh/WQ0X24yBtEsN3m6KY+uwnWrC\nnRYarkJ07EtbI8yFkKrrf6UCo4kt8fs5gyvImA8feAp01tNXrsrgv72Od7GQQwgd\n5p1t2CDsPweQmx9qn++doW2Hl5y47Dsl6CbP9Kt7JL+E1QD98HtwjOrL/4d/Waim\nnHpWQSC3IO8hxrDtgI/vwrYEpNaUOUOrDfSqAvHVBRZMNKuybw3Q4bL9owX5Rxgj\nuLuouX4FTpmYe2Y/P2pjvVZn+xYWdHh4z/KtXfZv0bnc2j/th96jEm5GYUYhAyZ4\nZE4ENoMNAgMBAAECggEAR8apJ5IPwzLHnySEnQuwHBL9PNElnKcplC6UW61EJxW4\n+ZwKflwfxSS4fPa0vEq5tHV3/fwpMCM5sPhSbc3hRS0zsfj8Du/BNBvJQu/hemVd\nEj3+nBj63jjegen3GL1gYAreYqdsLBmUg7zAcYN7Xh3DS758hQCGLeCcr81VYSlp\nFgblXY08d0NhtuILUUulRoE1YPhy4PEatwIYtewYWGmMIi2BCHU0DrOztjH8Ce9z\n7msBTgvMiASb/aLt1UB94vImIIfQwZTO01LH5yflpwzNLT8/3ZBwxlzmFcglAjLS\nio49Oav0lfwEiOqkso3xKDycSvLmfv2kgst6EC+BPwKBgQDLWYXJOlqzsIDt43qc\ngLgPjhhoXggQdLBi438FaqT0bg8jiutCFxnyG1mkJ4k7aga09lJ7oQwg01Fu/tsC\nvE0Oen9K7jaBpVGN9qYioP+k/LywTDRU048s8EbrlwwNQNau19VQCi1rTDvn6vjl\nqcTwHHjRqbI5RSSyiz32BPnMAwKBgQDCAWFGtLT13NT7X3X1PJSGDMMRmPZp6tit\nUw/WzSr9/aHKWbEXRbDBP2F0k3qzdSU2DAjFbMYAPw20qPz9yYrK1lGw8HCPo2fm\n0qm+yrbgVaTo1QPcOJ1yYIHU/YYfbfZYU1DYFjDY84ysmoTHeHQ2XFD0Cv8oBBPu\nPzsGy6qvrwKBgEstpKV5enD2LyRDtl/HwsSVbvae1PJogZF9s8cn3yYyzkwAnutH\nKSN18xUaPMUHdMVQT7w/FQHJvlB/zi5buU1CAm+MVABoQxdt+YvR49F2UrgG5E38\nDPG7Pyz4Ic+Aih4H02gM6y/A9mDOYQhfVFzE2fIBf89mfaO4kMa0njlLAoGAQtwq\n5C0++ESk+gTKKDw6i4A2cggfVB1lk0Y+/S40FNimO5Bxoa2Y3uCy+3QgI1zJ+Dhp\nhXCZRFh2pr5egjBFLuZxvOMAR+Bu3HPZoDFImUOq07sl221/hX2RARBmespwzbvY\n7r+nEf3Ni2atP/lZQ6rJE3H+wZG2NLOB6jOinW0CgYA6SVnKjQaaCjg7d28eAnSR\n+1iChcA8CLtcn7J+njYAZQg0eVsXTEBSk9WkW1k2ImLau+oHLaMBotfvjaEDYydt\njhYM+sAmdaS+0XCtXdf6cUa8217jyomf40dS+8fpKvfKCeeNMx2tN+4N1P5NXeHR\n2/HGnASy0cWX6yQcrCdcHA==\n-----END PRIVATE KEY-----\n",
-        "client_email": "firebase-adminsdk-zc7n4@chat-notification-a338e.iam.gserviceaccount.com",
-        "client_id": "104395492228038049799",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-zc7n4%40chat-notification-a338e.iam.gserviceaccount.com",
-        "universe_domain": "googleapis.com"
-    }),
-    databaseURL: "https://fir-auth-bd895.firebaseio.com"
-});
-exports.defaultApp = defaultApp;
-
-
-/***/ }),
-/* 16 */
-/***/ ((module) => {
-
-module.exports = require("firebase-admin");
-
-/***/ }),
-/* 17 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserDataSchema = exports.UserData = void 0;
-const mongoose_1 = __webpack_require__(8);
-const user_status_enum_1 = __webpack_require__(18);
-const utils_1 = __webpack_require__(11);
-let UserData = exports.UserData = class UserData {
-};
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
-    __metadata("design:type", String)
-], UserData.prototype, "_id", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '', required: true }),
-    __metadata("design:type", String)
-], UserData.prototype, "userId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserData.prototype, "name", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserData.prototype, "pic", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserData.prototype, "color", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: user_status_enum_1.UserStatusEnum.AVAILABLE }),
-    __metadata("design:type", String)
-], UserData.prototype, "status", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], UserData.prototype, "isOnline", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], UserData.prototype, "isDeleted", void 0);
-exports.UserData = UserData = __decorate([
-    (0, mongoose_1.Schema)()
-], UserData);
-exports.UserDataSchema = mongoose_1.SchemaFactory.createForClass(UserData);
-exports.UserDataSchema.set('timestamps', true);
-exports.UserDataSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 18 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserStatusEnum = void 0;
-var UserStatusEnum;
-(function (UserStatusEnum) {
-    UserStatusEnum["AVAILABLE"] = "Available";
-    UserStatusEnum["OUT"] = "Out Of Office";
-})(UserStatusEnum || (exports.UserStatusEnum = UserStatusEnum = {}));
-
-
-/***/ }),
-/* 19 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserChatSchema = exports.UserChat = void 0;
-const mongoose_1 = __webpack_require__(8);
-const utils_1 = __webpack_require__(11);
-let UserChat = exports.UserChat = class UserChat {
-};
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
-    __metadata("design:type", String)
-], UserChat.prototype, "_id", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserChat.prototype, "chatId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserChat.prototype, "userId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Number, default: 0 }),
-    __metadata("design:type", Number)
-], UserChat.prototype, "unreadCount", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Date, default: null }),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
-], UserChat.prototype, "lastMessageReadTime", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserChat.prototype, "lastMessageReadId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], UserChat.prototype, "isFavourite", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], UserChat.prototype, "isModerator", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], UserChat.prototype, "isDeleted", void 0);
-exports.UserChat = UserChat = __decorate([
-    (0, mongoose_1.Schema)()
-], UserChat);
-exports.UserChatSchema = mongoose_1.SchemaFactory.createForClass(UserChat);
-exports.UserChatSchema.set('timestamps', true);
-exports.UserChatSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 20 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserMessageSchema = exports.UserMessage = void 0;
-const mongoose_1 = __webpack_require__(8);
-const utils_1 = __webpack_require__(11);
-let UserMessage = exports.UserMessage = class UserMessage {
-};
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
-    __metadata("design:type", String)
-], UserMessage.prototype, "_id", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserMessage.prototype, "chatId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserMessage.prototype, "userId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], UserMessage.prototype, "messageId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Date, default: new Date() }),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
-], UserMessage.prototype, "time", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Date, default: null }),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
-], UserMessage.prototype, "readTime", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], UserMessage.prototype, "isDeleted", void 0);
-exports.UserMessage = UserMessage = __decorate([
-    (0, mongoose_1.Schema)()
-], UserMessage);
-exports.UserMessageSchema = mongoose_1.SchemaFactory.createForClass(UserMessage);
-exports.UserMessageSchema.set('timestamps', true);
-exports.UserMessageSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 21 */
-/***/ ((module) => {
-
-module.exports = require("node-cron");
-
-/***/ }),
-/* 22 */
+/***/ "./libs/chat/src/dto/chat.dto.ts":
+/*!***************************************!*\
+  !*** ./libs/chat/src/dto/chat.dto.ts ***!
+  \***************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2098,10 +1574,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateChatDTO = exports.UserProfileDTO = exports.UserStatusDTO = exports.AllChatQueryDTO = exports.MessageHistoryQueryDTO = exports.ChatHistoryQueryDTO = exports.GetAllUsersDTO = exports.PaginationDTO = exports.AddUserDTO = exports.FavouriteChatDTO = exports.ReadChatDTO = exports.AddUserToChatDTO = exports.UserChatDTO = exports.CreateChatDTO = exports.MessageDTO = void 0;
-const swagger_1 = __webpack_require__(3);
-const class_validator_1 = __webpack_require__(23);
-const message_evetn_enum_1 = __webpack_require__(13);
-const user_status_enum_1 = __webpack_require__(18);
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const message_evetn_enum_1 = __webpack_require__(/*! ../enum/message-evetn.enum */ "./libs/chat/src/enum/message-evetn.enum.ts");
+const user_status_enum_1 = __webpack_require__(/*! ../enum/user-status.enum */ "./libs/chat/src/enum/user-status.enum.ts");
 class MessageDTO {
 }
 exports.MessageDTO = MessageDTO;
@@ -2319,13 +1795,51 @@ __decorate([
 
 
 /***/ }),
-/* 23 */
-/***/ ((module) => {
 
-module.exports = require("class-validator");
+/***/ "./libs/chat/src/enum/message-evetn.enum.ts":
+/*!**************************************************!*\
+  !*** ./libs/chat/src/enum/message-evetn.enum.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MessageEventEnum = void 0;
+var MessageEventEnum;
+(function (MessageEventEnum) {
+    MessageEventEnum["MESSAGE"] = "Message";
+    MessageEventEnum["MILESTONE"] = "Milestone";
+    MessageEventEnum["NEWCHAT"] = "NewChat";
+    MessageEventEnum["JOINCHAT"] = "JoinChat";
+    MessageEventEnum["REMOVECHAT"] = "RemoveChat";
+    MessageEventEnum["LEAVECHAT"] = "LeaveChat";
+})(MessageEventEnum || (exports.MessageEventEnum = MessageEventEnum = {}));
+
 
 /***/ }),
-/* 24 */
+
+/***/ "./libs/chat/src/enum/user-status.enum.ts":
+/*!************************************************!*\
+  !*** ./libs/chat/src/enum/user-status.enum.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserStatusEnum = void 0;
+var UserStatusEnum;
+(function (UserStatusEnum) {
+    UserStatusEnum["AVAILABLE"] = "Available";
+    UserStatusEnum["OUT"] = "Out Of Office";
+})(UserStatusEnum || (exports.UserStatusEnum = UserStatusEnum = {}));
+
+
+/***/ }),
+
+/***/ "./libs/chat/src/filter/ws.filter.ts":
+/*!*******************************************!*\
+  !*** ./libs/chat/src/filter/ws.filter.ts ***!
+  \*******************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2336,65 +1850,30 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.JwtAuthGuard = void 0;
-const common_1 = __webpack_require__(1);
-const passport_1 = __webpack_require__(25);
-let JwtAuthGuard = exports.JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
-};
-exports.JwtAuthGuard = JwtAuthGuard = __decorate([
-    (0, common_1.Injectable)()
-], JwtAuthGuard);
-
-
-/***/ }),
-/* 25 */
-/***/ ((module) => {
-
-module.exports = require("@nestjs/passport");
-
-/***/ }),
-/* 26 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.User = void 0;
-const common_1 = __webpack_require__(1);
-exports.User = (0, common_1.createParamDecorator)((data, ctx) => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user;
-});
-
-
-/***/ }),
-/* 27 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppService = void 0;
-const common_1 = __webpack_require__(1);
-let AppService = exports.AppService = class AppService {
-    constructor() {
+exports.WebsocketExceptionsFilter = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const websockets_1 = __webpack_require__(/*! @nestjs/websockets */ "@nestjs/websockets");
+let WebsocketExceptionsFilter = exports.WebsocketExceptionsFilter = class WebsocketExceptionsFilter extends websockets_1.BaseWsExceptionFilter {
+    catch(exception, host) {
+        debugger;
+        const client = host.switchToWs().getClient();
+        const data = host.switchToWs().getData();
+        const error = exception instanceof websockets_1.WsException ? exception.getError() : exception.getResponse();
+        const details = error instanceof Object ? { ...error } : { message: error };
+        client.send(JSON.stringify(details));
     }
 };
-exports.AppService = AppService = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
-], AppService);
+exports.WebsocketExceptionsFilter = WebsocketExceptionsFilter = __decorate([
+    (0, common_1.Catch)(websockets_1.WsException, common_1.HttpException)
+], WebsocketExceptionsFilter);
 
 
 /***/ }),
-/* 28 */
+
+/***/ "./libs/chat/src/index.ts":
+/*!********************************!*\
+  !*** ./libs/chat/src/index.ts ***!
+  \********************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2413,11 +1892,15 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(29), exports);
+__exportStar(__webpack_require__(/*! ./chat.module */ "./libs/chat/src/chat.module.ts"), exports);
 
 
 /***/ }),
-/* 29 */
+
+/***/ "./libs/chat/src/schemas/chat.schema.ts":
+/*!**********************************************!*\
+  !*** ./libs/chat/src/schemas/chat.schema.ts ***!
+  \**********************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2427,56 +1910,436 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChatModule = void 0;
-const common_1 = __webpack_require__(1);
-const mongoose_1 = __webpack_require__(8);
-const chat_schema_1 = __webpack_require__(10);
-const message_schema_1 = __webpack_require__(12);
-const userTokens_schema_1 = __webpack_require__(14);
-const chat_gateway_1 = __webpack_require__(30);
-const chat_service_1 = __webpack_require__(7);
-const user_schema_1 = __webpack_require__(17);
-const chat_controller_1 = __webpack_require__(34);
-const userChat_schema_1 = __webpack_require__(19);
-const userMessage_schema_1 = __webpack_require__(20);
-let ChatModule = exports.ChatModule = class ChatModule {
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-exports.ChatModule = ChatModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/whitelabelChat"),
-            mongoose_1.MongooseModule.forFeature([{
-                    name: chat_schema_1.Chat.name,
-                    schema: chat_schema_1.ChatSchema,
-                },
-                {
-                    name: userChat_schema_1.UserChat.name,
-                    schema: userChat_schema_1.UserChatSchema,
-                }, {
-                    name: message_schema_1.Message.name,
-                    schema: message_schema_1.MessageSchema,
-                }, {
-                    name: userMessage_schema_1.UserMessage.name,
-                    schema: userMessage_schema_1.UserMessageSchema,
-                }, {
-                    name: userTokens_schema_1.UserToken.name,
-                    schema: userTokens_schema_1.UserTokenSchema,
-                }, {
-                    name: user_schema_1.UserData.name,
-                    schema: user_schema_1.UserDataSchema,
-                }
-            ])
-        ],
-        controllers: [chat_controller_1.ChatController],
-        providers: [chat_gateway_1.ChatGateway, chat_service_1.ChatService],
-        exports: [chat_service_1.ChatService]
-    })
-], ChatModule);
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChatSchema = exports.Chat = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! ../utils/utils */ "./libs/chat/src/utils/utils.ts");
+let Chat = exports.Chat = class Chat {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], Chat.prototype, "_id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Chat.prototype, "ownerUserId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Chat.prototype, "title", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Chat.prototype, "image", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Chat.prototype, "purposeDetail", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Chat.prototype, "userIds", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], Chat.prototype, "isMultiple", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], Chat.prototype, "isDeleted", void 0);
+exports.Chat = Chat = __decorate([
+    (0, mongoose_1.Schema)()
+], Chat);
+exports.ChatSchema = mongoose_1.SchemaFactory.createForClass(Chat);
+exports.ChatSchema.set('timestamps', true);
+exports.ChatSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
 
 
 /***/ }),
-/* 30 */
+
+/***/ "./libs/chat/src/schemas/message.schema.ts":
+/*!*************************************************!*\
+  !*** ./libs/chat/src/schemas/message.schema.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MessageSchema = exports.Message = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const message_evetn_enum_1 = __webpack_require__(/*! ../enum/message-evetn.enum */ "./libs/chat/src/enum/message-evetn.enum.ts");
+const utils_1 = __webpack_require__(/*! ../utils/utils */ "./libs/chat/src/utils/utils.ts");
+let Message = exports.Message = class Message {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], Message.prototype, "_id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Message.prototype, "chatId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Message.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Message.prototype, "message", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Object, default: {} }),
+    __metadata("design:type", Object)
+], Message.prototype, "messageBody", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Array, default: [] }),
+    __metadata("design:type", Array)
+], Message.prototype, "attachments", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, default: new Date() }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], Message.prototype, "time", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: message_evetn_enum_1.MessageEventEnum.MESSAGE }),
+    __metadata("design:type", String)
+], Message.prototype, "eventType", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: null }),
+    __metadata("design:type", String)
+], Message.prototype, "eventId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], Message.prototype, "isDeleted", void 0);
+exports.Message = Message = __decorate([
+    (0, mongoose_1.Schema)()
+], Message);
+exports.MessageSchema = mongoose_1.SchemaFactory.createForClass(Message);
+exports.MessageSchema.set('timestamps', true);
+exports.MessageSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
+/***/ "./libs/chat/src/schemas/user.schema.ts":
+/*!**********************************************!*\
+  !*** ./libs/chat/src/schemas/user.schema.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserDataSchema = exports.UserData = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const user_status_enum_1 = __webpack_require__(/*! ../enum/user-status.enum */ "./libs/chat/src/enum/user-status.enum.ts");
+const utils_1 = __webpack_require__(/*! ../utils/utils */ "./libs/chat/src/utils/utils.ts");
+let UserData = exports.UserData = class UserData {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], UserData.prototype, "_id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '', required: true }),
+    __metadata("design:type", String)
+], UserData.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserData.prototype, "name", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserData.prototype, "pic", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserData.prototype, "color", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: user_status_enum_1.UserStatusEnum.AVAILABLE }),
+    __metadata("design:type", String)
+], UserData.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], UserData.prototype, "isOnline", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], UserData.prototype, "isDeleted", void 0);
+exports.UserData = UserData = __decorate([
+    (0, mongoose_1.Schema)()
+], UserData);
+exports.UserDataSchema = mongoose_1.SchemaFactory.createForClass(UserData);
+exports.UserDataSchema.set('timestamps', true);
+exports.UserDataSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
+/***/ "./libs/chat/src/schemas/userChat.schema.ts":
+/*!**************************************************!*\
+  !*** ./libs/chat/src/schemas/userChat.schema.ts ***!
+  \**************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserChatSchema = exports.UserChat = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! ../utils/utils */ "./libs/chat/src/utils/utils.ts");
+let UserChat = exports.UserChat = class UserChat {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], UserChat.prototype, "_id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserChat.prototype, "chatId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserChat.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, default: 0 }),
+    __metadata("design:type", Number)
+], UserChat.prototype, "unreadCount", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, default: null }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], UserChat.prototype, "lastMessageReadTime", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserChat.prototype, "lastMessageReadId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], UserChat.prototype, "isFavourite", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], UserChat.prototype, "isModerator", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], UserChat.prototype, "isDeleted", void 0);
+exports.UserChat = UserChat = __decorate([
+    (0, mongoose_1.Schema)()
+], UserChat);
+exports.UserChatSchema = mongoose_1.SchemaFactory.createForClass(UserChat);
+exports.UserChatSchema.set('timestamps', true);
+exports.UserChatSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
+/***/ "./libs/chat/src/schemas/userMessage.schema.ts":
+/*!*****************************************************!*\
+  !*** ./libs/chat/src/schemas/userMessage.schema.ts ***!
+  \*****************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserMessageSchema = exports.UserMessage = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! ../utils/utils */ "./libs/chat/src/utils/utils.ts");
+let UserMessage = exports.UserMessage = class UserMessage {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], UserMessage.prototype, "_id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserMessage.prototype, "chatId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserMessage.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserMessage.prototype, "messageId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, default: new Date() }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], UserMessage.prototype, "time", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, default: null }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], UserMessage.prototype, "readTime", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], UserMessage.prototype, "isDeleted", void 0);
+exports.UserMessage = UserMessage = __decorate([
+    (0, mongoose_1.Schema)()
+], UserMessage);
+exports.UserMessageSchema = mongoose_1.SchemaFactory.createForClass(UserMessage);
+exports.UserMessageSchema.set('timestamps', true);
+exports.UserMessageSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
+/***/ "./libs/chat/src/schemas/userTokens.schema.ts":
+/*!****************************************************!*\
+  !*** ./libs/chat/src/schemas/userTokens.schema.ts ***!
+  \****************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserTokenSchema = exports.UserToken = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! ../utils/utils */ "./libs/chat/src/utils/utils.ts");
+let UserToken = exports.UserToken = class UserToken {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], UserToken.prototype, "_id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserToken.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], UserToken.prototype, "registrationToken", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], UserToken.prototype, "isConnected", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], UserToken.prototype, "isDeleted", void 0);
+exports.UserToken = UserToken = __decorate([
+    (0, mongoose_1.Schema)()
+], UserToken);
+exports.UserTokenSchema = mongoose_1.SchemaFactory.createForClass(UserToken);
+exports.UserTokenSchema.set('timestamps', true);
+exports.UserTokenSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
+/***/ "./libs/chat/src/utils/utils.ts":
+/*!**************************************!*\
+  !*** ./libs/chat/src/utils/utils.ts ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.generateStringId = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const generateStringId = () => {
+    return new mongoose_1.Types.ObjectId().toString();
+};
+exports.generateStringId = generateStringId;
+
+
+/***/ }),
+
+/***/ "./src/app.controller.ts":
+/*!*******************************!*\
+  !*** ./src/app.controller.ts ***!
+  \*******************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2492,148 +2355,241 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChatGateway = void 0;
-const websockets_1 = __webpack_require__(31);
-const chat_service_1 = __webpack_require__(7);
-const socket_io_1 = __webpack_require__(32);
-const chat_dto_1 = __webpack_require__(22);
-const common_1 = __webpack_require__(1);
-const ws_filter_1 = __webpack_require__(33);
-let ChatGateway = exports.ChatGateway = class ChatGateway {
+exports.AppController = void 0;
+const chat_service_1 = __webpack_require__(/*! @app/chat/chat.service */ "./libs/chat/src/chat.service.ts");
+const chat_dto_1 = __webpack_require__(/*! @app/chat/dto/chat.dto */ "./libs/chat/src/dto/chat.dto.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! ./auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const user_decorator_1 = __webpack_require__(/*! ./decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+let AppController = exports.AppController = class AppController {
     constructor(chatService) {
         this.chatService = chatService;
     }
-    afterInit(server) {
-        this.chatService.removeDisconnectedUsers(server);
+    getHello() {
+        return "hello";
     }
-    async handleConnection(socket) {
-        try {
-            const query = socket.handshake?.query;
-            const socketUserId = query?.userId;
-            if (!socketUserId) {
-                socket.disconnect();
-                return;
-            }
-            await this.chatService.userConnected(socket);
-            const chatIds = await this.chatService.getChatIds(socketUserId);
-            console.log("connected user chatIds: ", chatIds);
-            console.log(socket.rooms);
-            chatIds.forEach(chatId => {
-                socket.join(chatId.toString());
-            });
-            return;
+    create(createChatDTO, user) {
+        if (createChatDTO.ownerUserId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
         }
-        catch (err) {
-            console.log(err);
-            socket.disconnect();
-        }
+        return this.chatService.create(createChatDTO);
     }
-    async handleDisconnect(socket) {
-        try {
-            await this.chatService.userDisconnected(socket);
-            return;
+    addUserToChat(addUserToChatDTO, user) {
+        if (addUserToChatDTO.moderatorId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
         }
-        catch (err) {
-            console.log(err);
-            socket.disconnect();
-        }
+        return this.chatService.addUserToChat(addUserToChatDTO);
     }
-    async message(payload, socket) {
-        try {
-            const query = socket?.handshake?.query;
-            const socketUserId = query?.userId;
-            if (socketUserId?.toString() != payload.userId) {
-                throw new websockets_1.WsException('User not connected');
-            }
-            payload.time = new Date();
-            let chatDocument = await this.chatService.createMessage(payload);
-            socket.to(payload?.chatId).emit('message', payload);
-            return payload;
+    removeUserFromChat(addUserToChatDTO, user) {
+        if (addUserToChatDTO.moderatorId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
         }
-        catch (err) {
-            console.log(err);
-            throw new websockets_1.WsException(err?.message);
-        }
+        return this.chatService.removeUserFromChat(addUserToChatDTO);
     }
-    async join(payload, socket) {
-        try {
-            const query = socket?.handshake?.query;
-            const socketUserId = query?.userId;
-            if (socketUserId?.toString() != payload.userId) {
-                throw new websockets_1.WsException('User not connected');
-            }
-            socket.join(payload.chatId.toString());
-            return payload;
+    leaveChat(userChatDTO, user) {
+        if (userChatDTO.userId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
         }
-        catch (err) {
-            console.log(err);
-            throw new websockets_1.WsException(err?.message);
-        }
+        return this.chatService.leaveChat(userChatDTO);
     }
-    async read(payload, socket) {
-        try {
-            const query = socket?.handshake?.query;
-            const socketUserId = query?.userId;
-            if (socketUserId?.toString() != payload.userId) {
-                throw new websockets_1.WsException('User not connected');
-            }
-            await this.chatService.resetUnreadCount(payload);
-            return payload;
+    makeModerator(addUserToChatDTO, user) {
+        console.log(addUserToChatDTO, user.id);
+        if (addUserToChatDTO.moderatorId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
         }
-        catch (err) {
-            console.log(err);
-            throw new websockets_1.WsException(err?.message);
+        return this.chatService.makeModerator(addUserToChatDTO);
+    }
+    updateUserStatus(userStatusDTO, user) {
+        if (userStatusDTO.userId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
         }
+        return this.chatService.updateUserStatus(userStatusDTO);
+    }
+    addUser(addUserDTO, user) {
+        return this.chatService.addUser(addUserDTO);
+    }
+    markChatFavourtie(favouriteChatDTO, user) {
+        if (favouriteChatDTO.userId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
+        }
+        return this.chatService.markChatFavourtie(favouriteChatDTO);
+    }
+    getAllUsers(getAllUsersDTO, user) {
+        return this.chatService.getAllUsers(getAllUsersDTO, user?.id);
+    }
+    getAllChats(allChatQueryDTO, user) {
+        if (allChatQueryDTO.userId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
+        }
+        return this.chatService.getAllChats(allChatQueryDTO);
+    }
+    getChatMessages(chatHistoryQueryDTO, user) {
+        if (chatHistoryQueryDTO.userId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
+        }
+        return this.chatService.getChatMessages(chatHistoryQueryDTO);
+    }
+    getReadMessages(messageHistoryQueryDTO, user) {
+        if (messageHistoryQueryDTO.userId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
+        }
+        return this.chatService.getReadMessages(messageHistoryQueryDTO);
+    }
+    getUserProfile(user) {
+        return this.chatService.getUserProfile(user.id);
+    }
+    updateUserProfile(userProfileDTO, user) {
+        return this.chatService.updateUserProfile(user.id, userProfileDTO);
+    }
+    updateChat(updateChatDTO, user) {
+        if (updateChatDTO.moderatorId != user.id) {
+            throw new common_1.UnauthorizedException("not allowed");
+        }
+        return this.chatService.updateChat(updateChatDTO);
     }
 };
 __decorate([
-    (0, websockets_1.SubscribeMessage)('message'),
-    __param(0, (0, websockets_1.MessageBody)()),
-    __param(1, (0, websockets_1.ConnectedSocket)()),
+    (0, common_1.Get)(),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof chat_dto_1.MessageDTO !== "undefined" && chat_dto_1.MessageDTO) === "function" ? _b : Object, typeof (_c = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _c : Object]),
-    __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "message", null);
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", String)
+], AppController.prototype, "getHello", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('join'),
-    __param(0, (0, websockets_1.MessageBody)()),
-    __param(1, (0, websockets_1.ConnectedSocket)()),
+    (0, common_1.Post)('/create'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof chat_dto_1.UserChatDTO !== "undefined" && chat_dto_1.UserChatDTO) === "function" ? _d : Object, typeof (_e = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _e : Object]),
-    __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "join", null);
+    __metadata("design:paramtypes", [typeof (_b = typeof chat_dto_1.CreateChatDTO !== "undefined" && chat_dto_1.CreateChatDTO) === "function" ? _b : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "create", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('read'),
-    __param(0, (0, websockets_1.MessageBody)()),
-    __param(1, (0, websockets_1.ConnectedSocket)()),
+    (0, common_1.Post)('/addUserToChat'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof chat_dto_1.ReadChatDTO !== "undefined" && chat_dto_1.ReadChatDTO) === "function" ? _f : Object, typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object]),
-    __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "read", null);
-exports.ChatGateway = ChatGateway = __decorate([
-    (0, common_1.UseFilters)(ws_filter_1.WebsocketExceptionsFilter),
-    (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),
-    (0, websockets_1.WebSocketGateway)(),
+    __metadata("design:paramtypes", [typeof (_c = typeof chat_dto_1.AddUserToChatDTO !== "undefined" && chat_dto_1.AddUserToChatDTO) === "function" ? _c : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "addUserToChat", null);
+__decorate([
+    (0, common_1.Post)('/removeUserFromChat'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof chat_dto_1.AddUserToChatDTO !== "undefined" && chat_dto_1.AddUserToChatDTO) === "function" ? _d : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "removeUserFromChat", null);
+__decorate([
+    (0, common_1.Post)('/leaveChat'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof chat_dto_1.UserChatDTO !== "undefined" && chat_dto_1.UserChatDTO) === "function" ? _e : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "leaveChat", null);
+__decorate([
+    (0, common_1.Post)('/makeModerator'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_f = typeof chat_dto_1.AddUserToChatDTO !== "undefined" && chat_dto_1.AddUserToChatDTO) === "function" ? _f : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "makeModerator", null);
+__decorate([
+    (0, common_1.Post)('/updateUserStatus'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_g = typeof chat_dto_1.UserStatusDTO !== "undefined" && chat_dto_1.UserStatusDTO) === "function" ? _g : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "updateUserStatus", null);
+__decorate([
+    (0, common_1.Post)('/addUser'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_h = typeof chat_dto_1.AddUserDTO !== "undefined" && chat_dto_1.AddUserDTO) === "function" ? _h : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "addUser", null);
+__decorate([
+    (0, common_1.Post)('/markChatFavourtie'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_j = typeof chat_dto_1.FavouriteChatDTO !== "undefined" && chat_dto_1.FavouriteChatDTO) === "function" ? _j : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "markChatFavourtie", null);
+__decorate([
+    (0, common_1.Get)('/getAllUsers'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_k = typeof chat_dto_1.GetAllUsersDTO !== "undefined" && chat_dto_1.GetAllUsersDTO) === "function" ? _k : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "getAllUsers", null);
+__decorate([
+    (0, common_1.Get)('/getAllChats'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_l = typeof chat_dto_1.AllChatQueryDTO !== "undefined" && chat_dto_1.AllChatQueryDTO) === "function" ? _l : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "getAllChats", null);
+__decorate([
+    (0, common_1.Get)('/getChatMessages'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_m = typeof chat_dto_1.ChatHistoryQueryDTO !== "undefined" && chat_dto_1.ChatHistoryQueryDTO) === "function" ? _m : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "getChatMessages", null);
+__decorate([
+    (0, common_1.Get)('/getReadMessages'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_o = typeof chat_dto_1.MessageHistoryQueryDTO !== "undefined" && chat_dto_1.MessageHistoryQueryDTO) === "function" ? _o : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "getReadMessages", null);
+__decorate([
+    (0, common_1.Get)('/getUserProfile'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "getUserProfile", null);
+__decorate([
+    (0, common_1.Post)('/updateUserProfile'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_p = typeof chat_dto_1.UserProfileDTO !== "undefined" && chat_dto_1.UserProfileDTO) === "function" ? _p : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "updateUserProfile", null);
+__decorate([
+    (0, common_1.Post)('/updateChat'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_q = typeof chat_dto_1.UpdateChatDTO !== "undefined" && chat_dto_1.UpdateChatDTO) === "function" ? _q : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "updateChat", null);
+exports.AppController = AppController = __decorate([
+    (0, common_1.Controller)(),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object])
-], ChatGateway);
+], AppController);
 
 
 /***/ }),
-/* 31 */
-/***/ ((module) => {
 
-module.exports = require("@nestjs/websockets");
-
-/***/ }),
-/* 32 */
-/***/ ((module) => {
-
-module.exports = require("socket.io");
-
-/***/ }),
-/* 33 */
+/***/ "./src/app.module.ts":
+/*!***************************!*\
+  !*** ./src/app.module.ts ***!
+  \***************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2644,26 +2600,46 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.WebsocketExceptionsFilter = void 0;
-const common_1 = __webpack_require__(1);
-const websockets_1 = __webpack_require__(31);
-let WebsocketExceptionsFilter = exports.WebsocketExceptionsFilter = class WebsocketExceptionsFilter extends websockets_1.BaseWsExceptionFilter {
-    catch(exception, host) {
-        debugger;
-        const client = host.switchToWs().getClient();
-        const data = host.switchToWs().getData();
-        const error = exception instanceof websockets_1.WsException ? exception.getError() : exception.getResponse();
-        const details = error instanceof Object ? { ...error } : { message: error };
-        client.send(JSON.stringify(details));
-    }
+exports.AppModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+const app_controller_1 = __webpack_require__(/*! ./app.controller */ "./src/app.controller.ts");
+const app_service_1 = __webpack_require__(/*! ./app.service */ "./src/app.service.ts");
+const chat_1 = __webpack_require__(/*! @app/chat */ "./libs/chat/src/index.ts");
+const auth_module_1 = __webpack_require__(/*! ./auth/auth.module */ "./src/auth/auth.module.ts");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const media_upload_module_1 = __webpack_require__(/*! ./file-management/media-upload/media-upload.module */ "./src/file-management/media-upload/media-upload.module.ts");
+const post_module_1 = __webpack_require__(/*! ./post/post.module */ "./src/post/post.module.ts");
+const order_module_1 = __webpack_require__(/*! ./order/order.module */ "./src/order/order.module.ts");
+const comments_module_1 = __webpack_require__(/*! ./comments/comments.module */ "./src/comments/comments.module.ts");
+const village_module_1 = __webpack_require__(/*! ./village/village.module */ "./src/village/village.module.ts");
+let AppModule = exports.AppModule = class AppModule {
 };
-exports.WebsocketExceptionsFilter = WebsocketExceptionsFilter = __decorate([
-    (0, common_1.Catch)(websockets_1.WsException, common_1.HttpException)
-], WebsocketExceptionsFilter);
+exports.AppModule = AppModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            config_1.ConfigModule.forRoot(),
+            mongoose_1.MongooseModule.forRoot(process.env.MONGO_URI),
+            auth_module_1.AuthModule.forRoot(),
+            chat_1.ChatModule,
+            media_upload_module_1.MediaUploadModule,
+            post_module_1.PostModule,
+            order_module_1.OrderModule,
+            comments_module_1.CommentsModule,
+            village_module_1.VillageModule
+        ],
+        controllers: [app_controller_1.AppController],
+        providers: [app_service_1.AppService],
+    })
+], AppModule);
 
 
 /***/ }),
-/* 34 */
+
+/***/ "./src/app.service.ts":
+/*!****************************!*\
+  !*** ./src/app.service.ts ***!
+  \****************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2676,79 +2652,25 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChatController = void 0;
-const common_1 = __webpack_require__(1);
-const chat_service_1 = __webpack_require__(7);
-let ChatController = exports.ChatController = class ChatController {
-    constructor(chatService) {
-        this.chatService = chatService;
+exports.AppService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+let AppService = exports.AppService = class AppService {
+    constructor() {
     }
 };
-exports.ChatController = ChatController = __decorate([
-    (0, common_1.Controller)('chat'),
-    __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object])
-], ChatController);
+exports.AppService = AppService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [])
+], AppService);
 
 
 /***/ }),
-/* 35 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var AuthModule_1;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AuthModule = void 0;
-const common_1 = __webpack_require__(1);
-const jwt_1 = __webpack_require__(36);
-const auth_controller_1 = __webpack_require__(37);
-const auth_service_1 = __webpack_require__(38);
-const jwt_strategy_1 = __webpack_require__(53);
-const mongoose_1 = __webpack_require__(8);
-const user_schema_1 = __webpack_require__(55);
-const otp_schema_1 = __webpack_require__(58);
-const utils_service_1 = __webpack_require__(44);
-const chat_1 = __webpack_require__(28);
-let AuthModule = exports.AuthModule = AuthModule_1 = class AuthModule {
-    static forRoot() {
-        return {
-            imports: [
-                jwt_1.JwtModule.register({
-                    secret: process.env.JWT_SECRET,
-                    signOptions: { expiresIn: '9999999999s' },
-                }),
-                mongoose_1.MongooseModule.forFeature([
-                    { name: 'User', schema: user_schema_1.UserSchema },
-                    { name: 'Otp', schema: otp_schema_1.OtpSchema },
-                ]),
-                chat_1.ChatModule,
-            ],
-            controllers: [auth_controller_1.AuthController],
-            providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, utils_service_1.UtilsService],
-            module: AuthModule_1,
-        };
-    }
-};
-exports.AuthModule = AuthModule = AuthModule_1 = __decorate([
-    (0, common_1.Module)({})
-], AuthModule);
-
-
-/***/ }),
-/* 36 */
-/***/ ((module) => {
-
-module.exports = require("@nestjs/jwt");
-
-/***/ }),
-/* 37 */
+/***/ "./src/auth/auth.controller.ts":
+/*!*************************************!*\
+  !*** ./src/auth/auth.controller.ts ***!
+  \*************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2767,16 +2689,16 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
-const common_1 = __webpack_require__(1);
-const auth_service_1 = __webpack_require__(38);
-const login_dto_1 = __webpack_require__(48);
-const otp_dto_1 = __webpack_require__(49);
-const signup_dto_1 = __webpack_require__(50);
-const swagger_1 = __webpack_require__(3);
-const email_dto_1 = __webpack_require__(51);
-const password_dto_1 = __webpack_require__(52);
-const jwt_auth_guard_1 = __webpack_require__(24);
-const user_decorator_1 = __webpack_require__(26);
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/auth/auth.service.ts");
+const login_dto_1 = __webpack_require__(/*! ./dto/login.dto */ "./src/auth/dto/login.dto.ts");
+const otp_dto_1 = __webpack_require__(/*! ./dto/otp.dto */ "./src/auth/dto/otp.dto.ts");
+const signup_dto_1 = __webpack_require__(/*! ./dto/signup.dto */ "./src/auth/dto/signup.dto.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const email_dto_1 = __webpack_require__(/*! ./dto/email.dto */ "./src/auth/dto/email.dto.ts");
+const password_dto_1 = __webpack_require__(/*! ./dto/password.dto */ "./src/auth/dto/password.dto.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! ./jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
 let AuthController = exports.AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -2885,7 +2807,64 @@ exports.AuthController = AuthController = __decorate([
 
 
 /***/ }),
-/* 38 */
+
+/***/ "./src/auth/auth.module.ts":
+/*!*********************************!*\
+  !*** ./src/auth/auth.module.ts ***!
+  \*********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var AuthModule_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AuthModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
+const auth_controller_1 = __webpack_require__(/*! ./auth.controller */ "./src/auth/auth.controller.ts");
+const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/auth/auth.service.ts");
+const jwt_strategy_1 = __webpack_require__(/*! ./jwt.strategy */ "./src/auth/jwt.strategy.ts");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
+const otp_schema_1 = __webpack_require__(/*! src/schema/otp/otp.schema */ "./src/schema/otp/otp.schema.ts");
+const utils_service_1 = __webpack_require__(/*! ../utils/utils.service */ "./src/utils/utils.service.ts");
+const chat_1 = __webpack_require__(/*! @app/chat */ "./libs/chat/src/index.ts");
+let AuthModule = exports.AuthModule = AuthModule_1 = class AuthModule {
+    static forRoot() {
+        return {
+            imports: [
+                jwt_1.JwtModule.register({
+                    secret: process.env.JWT_SECRET,
+                    signOptions: { expiresIn: '9999999999s' },
+                }),
+                mongoose_1.MongooseModule.forFeature([
+                    { name: 'User', schema: user_schema_1.UserSchema },
+                    { name: 'Otp', schema: otp_schema_1.OtpSchema },
+                ]),
+                chat_1.ChatModule,
+            ],
+            controllers: [auth_controller_1.AuthController],
+            providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, utils_service_1.UtilsService],
+            module: AuthModule_1,
+        };
+    }
+};
+exports.AuthModule = AuthModule = AuthModule_1 = __decorate([
+    (0, common_1.Module)({})
+], AuthModule);
+
+
+/***/ }),
+
+/***/ "./src/auth/auth.service.ts":
+/*!**********************************!*\
+  !*** ./src/auth/auth.service.ts ***!
+  \**********************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2904,16 +2883,16 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
-const common_1 = __webpack_require__(1);
-const dist_1 = __webpack_require__(39);
-const mongoose_1 = __webpack_require__(9);
-const mongoose_2 = __webpack_require__(8);
-var bcrypt = __webpack_require__(40);
-const otp_enum_1 = __webpack_require__(41);
-const otpGenerator = __webpack_require__(42);
-const email_1 = __webpack_require__(43);
-const utils_service_1 = __webpack_require__(44);
-const chat_service_1 = __webpack_require__(7);
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const dist_1 = __webpack_require__(/*! @nestjs/jwt/dist */ "@nestjs/jwt/dist");
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const mongoose_2 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+var bcrypt = __webpack_require__(/*! bcryptjs */ "bcryptjs");
+const otp_enum_1 = __webpack_require__(/*! src/enum/otp.enum */ "./src/enum/otp.enum.ts");
+const otpGenerator = __webpack_require__(/*! otp-generator */ "otp-generator");
+const email_1 = __webpack_require__(/*! ./email */ "./src/auth/email.ts");
+const utils_service_1 = __webpack_require__(/*! ../utils/utils.service */ "./src/utils/utils.service.ts");
+const chat_service_1 = __webpack_require__(/*! @app/chat/chat.service */ "./libs/chat/src/chat.service.ts");
 const GO_CARDLESS_ACTIVE = false;
 let AuthService = exports.AuthService = class AuthService {
     constructor(jwtService, _userModel, _otpModel, chatService, utilsService) {
@@ -3248,39 +3227,196 @@ exports.AuthService = AuthService = __decorate([
 
 
 /***/ }),
-/* 39 */
-/***/ ((module) => {
 
-module.exports = require("@nestjs/jwt/dist");
-
-/***/ }),
-/* 40 */
-/***/ ((module) => {
-
-module.exports = require("bcryptjs");
-
-/***/ }),
-/* 41 */
-/***/ ((__unused_webpack_module, exports) => {
+/***/ "./src/auth/dto/email.dto.ts":
+/*!***********************************!*\
+  !*** ./src/auth/dto/email.dto.ts ***!
+  \***********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.OtpTypeEnum = void 0;
-var OtpTypeEnum;
-(function (OtpTypeEnum) {
-    OtpTypeEnum["SIGNUP"] = "SIGNUP";
-    OtpTypeEnum["FORGOT_PASSWORD"] = "FORGOT_PASSWORD";
-})(OtpTypeEnum || (exports.OtpTypeEnum = OtpTypeEnum = {}));
+exports.EmailDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class EmailDTO {
+}
+exports.EmailDTO = EmailDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], EmailDTO.prototype, "email", void 0);
 
 
 /***/ }),
-/* 42 */
-/***/ ((module) => {
 
-module.exports = require("otp-generator");
+/***/ "./src/auth/dto/login.dto.ts":
+/*!***********************************!*\
+  !*** ./src/auth/dto/login.dto.ts ***!
+  \***********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class LoginDTO {
+}
+exports.LoginDTO = LoginDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "password", void 0);
+
 
 /***/ }),
-/* 43 */
+
+/***/ "./src/auth/dto/otp.dto.ts":
+/*!*********************************!*\
+  !*** ./src/auth/dto/otp.dto.ts ***!
+  \*********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OtpDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class OtpDTO {
+}
+exports.OtpDTO = OtpDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "otp", void 0);
+
+
+/***/ }),
+
+/***/ "./src/auth/dto/password.dto.ts":
+/*!**************************************!*\
+  !*** ./src/auth/dto/password.dto.ts ***!
+  \**************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PasswordDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class PasswordDTO {
+}
+exports.PasswordDTO = PasswordDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], PasswordDTO.prototype, "password", void 0);
+
+
+/***/ }),
+
+/***/ "./src/auth/dto/signup.dto.ts":
+/*!************************************!*\
+  !*** ./src/auth/dto/signup.dto.ts ***!
+  \************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SignupDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const NUMBER = /\d/;
+const CAPITAL_LETTER = /[A-Z]/;
+const SMALL_LETTER = /[a-z]/;
+const SPECIAL_CHARACTER = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+const MIN_LENGTH = 8;
+class SignupDTO {
+}
+exports.SignupDTO = SignupDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], SignupDTO.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.MinLength)(MIN_LENGTH, { message: 'Minimum 8 characters required' }),
+    (0, class_validator_1.Matches)(NUMBER, { message: 'Minimum 1 digit required' }),
+    (0, class_validator_1.Matches)(CAPITAL_LETTER, { message: 'Minimum 1 uppercase character required' }),
+    (0, class_validator_1.Matches)(SMALL_LETTER, { message: 'Minimum 1 lowercase character required' }),
+    (0, class_validator_1.Matches)(SPECIAL_CHARACTER, { message: 'Minimum 1 special character required' }),
+    __metadata("design:type", String)
+], SignupDTO.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    __metadata("design:type", String)
+], SignupDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    __metadata("design:type", String)
+], SignupDTO.prototype, "pic", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    __metadata("design:type", String)
+], SignupDTO.prototype, "color", void 0);
+
+
+/***/ }),
+
+/***/ "./src/auth/email.ts":
+/*!***************************!*\
+  !*** ./src/auth/email.ts ***!
+  \***************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -3438,7 +3574,11 @@ exports.getEmail = getEmail;
 
 
 /***/ }),
-/* 44 */
+
+/***/ "./src/auth/jwt-auth.guard.ts":
+/*!************************************!*\
+  !*** ./src/auth/jwt-auth.guard.ts ***!
+  \************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3448,243 +3588,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UtilsService = void 0;
-const common_1 = __webpack_require__(1);
-const Mailgun = __webpack_require__(45);
-const formData = __webpack_require__(46);
-const Mailjet = __webpack_require__(47);
-let UtilsService = exports.UtilsService = class UtilsService {
-    constructor() {
-        this.mailjet = new Mailjet({
-            apiKey: process.env.MAILJET_API_KEY,
-            apiSecret: process.env.MAILJET_API_SECRET,
-        });
-    }
-    async sendEmail(emailDto) {
-        try {
-            debugger;
-            const request = await this.mailjet.post('send', { version: 'v3.1' }).request({
-                Messages: [
-                    {
-                        From: {
-                            Email: process.env.MAILJET_EMAIL,
-                            Name: process.env.MAILJET_NAME,
-                        },
-                        To: [
-                            {
-                                Email: emailDto.to,
-                                Name: "Blockyfy",
-                            },
-                        ],
-                        Subject: emailDto.subject,
-                        TextPart: emailDto.text,
-                        HTMLPart: emailDto.html,
-                    }
-                ]
-            });
-            return request.body;
-        }
-        catch (err) {
-            console.log(err);
-            throw new Error(err?.message);
-        }
-    }
+exports.JwtAuthGuard = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+let JwtAuthGuard = exports.JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
 };
-exports.UtilsService = UtilsService = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
-], UtilsService);
+exports.JwtAuthGuard = JwtAuthGuard = __decorate([
+    (0, common_1.Injectable)()
+], JwtAuthGuard);
 
 
 /***/ }),
-/* 45 */
-/***/ ((module) => {
 
-module.exports = require("mailgun.js");
-
-/***/ }),
-/* 46 */
-/***/ ((module) => {
-
-module.exports = require("form-data");
-
-/***/ }),
-/* 47 */
-/***/ ((module) => {
-
-module.exports = require("node-mailjet");
-
-/***/ }),
-/* 48 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LoginDTO = void 0;
-const swagger_1 = __webpack_require__(3);
-class LoginDTO {
-}
-exports.LoginDTO = LoginDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], LoginDTO.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], LoginDTO.prototype, "password", void 0);
-
-
-/***/ }),
-/* 49 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.OtpDTO = void 0;
-const swagger_1 = __webpack_require__(3);
-class OtpDTO {
-}
-exports.OtpDTO = OtpDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], OtpDTO.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], OtpDTO.prototype, "otp", void 0);
-
-
-/***/ }),
-/* 50 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SignupDTO = void 0;
-const swagger_1 = __webpack_require__(3);
-const class_validator_1 = __webpack_require__(23);
-const NUMBER = /\d/;
-const CAPITAL_LETTER = /[A-Z]/;
-const SMALL_LETTER = /[a-z]/;
-const SPECIAL_CHARACTER = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
-const MIN_LENGTH = 8;
-class SignupDTO {
-}
-exports.SignupDTO = SignupDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], SignupDTO.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    (0, class_validator_1.MinLength)(MIN_LENGTH, { message: 'Minimum 8 characters required' }),
-    (0, class_validator_1.Matches)(NUMBER, { message: 'Minimum 1 digit required' }),
-    (0, class_validator_1.Matches)(CAPITAL_LETTER, { message: 'Minimum 1 uppercase character required' }),
-    (0, class_validator_1.Matches)(SMALL_LETTER, { message: 'Minimum 1 lowercase character required' }),
-    (0, class_validator_1.Matches)(SPECIAL_CHARACTER, { message: 'Minimum 1 special character required' }),
-    __metadata("design:type", String)
-], SignupDTO.prototype, "password", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
-], SignupDTO.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
-], SignupDTO.prototype, "pic", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
-], SignupDTO.prototype, "color", void 0);
-
-
-/***/ }),
-/* 51 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.EmailDTO = void 0;
-const swagger_1 = __webpack_require__(3);
-class EmailDTO {
-}
-exports.EmailDTO = EmailDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], EmailDTO.prototype, "email", void 0);
-
-
-/***/ }),
-/* 52 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PasswordDTO = void 0;
-const swagger_1 = __webpack_require__(3);
-class PasswordDTO {
-}
-exports.PasswordDTO = PasswordDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], PasswordDTO.prototype, "password", void 0);
-
-
-/***/ }),
-/* 53 */
+/***/ "./src/auth/jwt.strategy.ts":
+/*!**********************************!*\
+  !*** ./src/auth/jwt.strategy.ts ***!
+  \**********************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3699,9 +3619,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JwtStrategy = void 0;
-const passport_jwt_1 = __webpack_require__(54);
-const passport_1 = __webpack_require__(25);
-const common_1 = __webpack_require__(1);
+const passport_jwt_1 = __webpack_require__(/*! passport-jwt */ "passport-jwt");
+const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 let JwtStrategy = exports.JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
     constructor() {
         super({
@@ -3721,128 +3641,11 @@ exports.JwtStrategy = JwtStrategy = __decorate([
 
 
 /***/ }),
-/* 54 */
-/***/ ((module) => {
 
-module.exports = require("passport-jwt");
-
-/***/ }),
-/* 55 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.User = exports.UserSchema = void 0;
-const mongoose_1 = __webpack_require__(9);
-const utils_1 = __webpack_require__(56);
-var bcrypt = __webpack_require__(40);
-const user_interface_1 = __webpack_require__(57);
-Object.defineProperty(exports, "User", ({ enumerable: true, get: function () { return user_interface_1.User; } }));
-exports.UserSchema = new mongoose_1.Schema({
-    _id: { type: String, default: utils_1.generateStringId },
-    email: { type: String, default: '' },
-    password: { type: String, default: '' },
-    name: { type: String, default: '' },
-    pic: { type: String, default: '' },
-    color: { type: String, default: '' },
-    isEmailVerified: { type: Boolean, default: false },
-    isDeleted: { type: Boolean, default: false },
-}, {
-    collection: 'users',
-});
-(0, mongoose_1.model)('users', exports.UserSchema);
-exports.UserSchema.set('timestamps', true);
-exports.UserSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-exports.UserSchema.index({ email: 1 });
-exports.UserSchema.index({ fullname: 1 });
-exports.UserSchema.index({ email: 1, publicKey: 1 });
-exports.UserSchema.index({ publicKey: 1 });
-exports.UserSchema.pre('save', async function (next) {
-    try {
-        if (this.password && this.isModified('password')) {
-            const saltRounds = 10;
-            this.password = await bcrypt.hash(this.password, saltRounds);
-        }
-        next();
-    }
-    catch (err) {
-        next();
-    }
-});
-exports.UserSchema.pre('updateOne', async function (next) {
-    try {
-        if (this._update.password) {
-            const saltRounds = 10;
-            this._update.password = await bcrypt.hash(this._update.password, saltRounds);
-        }
-        next();
-    }
-    catch (err) {
-        next();
-    }
-});
-
-
-/***/ }),
-/* 56 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateStringId = void 0;
-const mongoose_1 = __webpack_require__(9);
-const generateStringId = () => {
-    return new mongoose_1.Types.ObjectId().toHexString();
-};
-exports.generateStringId = generateStringId;
-
-
-/***/ }),
-/* 57 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
-
-/***/ }),
-/* 58 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.OtpSchema = void 0;
-const mongoose_1 = __webpack_require__(9);
-const utils_1 = __webpack_require__(56);
-exports.OtpSchema = new mongoose_1.Schema({
-    _id: { type: String, default: utils_1.generateStringId },
-    otp: { type: String, default: '' },
-    type: { type: String, default: '' },
-    userID: { type: String, default: '' },
-    expiryTime: { type: Number, default: 0 },
-    isUsed: { type: Boolean, default: false },
-}, {
-    collection: 'otp',
-});
-(0, mongoose_1.model)('otp', exports.OtpSchema);
-exports.OtpSchema.set('timestamps', true);
-exports.OtpSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 59 */
+/***/ "./src/comments/comments.controller.ts":
+/*!*********************************************!*\
+  !*** ./src/comments/comments.controller.ts ***!
+  \*********************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3852,23 +3655,379 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MediaUploadModule = void 0;
-const common_1 = __webpack_require__(1);
-const media_upload_controller_1 = __webpack_require__(60);
-const media_upload_service_1 = __webpack_require__(66);
-let MediaUploadModule = exports.MediaUploadModule = class MediaUploadModule {
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-exports.MediaUploadModule = MediaUploadModule = __decorate([
-    (0, common_1.Module)({
-        controllers: [media_upload_controller_1.MediaUploadController],
-        providers: [media_upload_service_1.MediaUploadService],
-    })
-], MediaUploadModule);
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommentsController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const comments_service_1 = __webpack_require__(/*! ./comments.service */ "./src/comments/comments.service.ts");
+const comments_dto_1 = __webpack_require__(/*! ./dto/comments.dto */ "./src/comments/dto/comments.dto.ts");
+let CommentsController = exports.CommentsController = class CommentsController {
+    constructor(commentService) {
+        this.commentService = commentService;
+    }
+    createComment(createCommentDTO) {
+        return this.commentService.createComments(createCommentDTO);
+    }
+    getAllComments(getAllCommentsDTO, user) {
+        return this.commentService.getAllComments(getAllCommentsDTO);
+    }
+    getCommentById(getCommentIdDTO, user) {
+        return this.commentService.getCommentsById(getCommentIdDTO);
+    }
+    deleteCommentById(getCommentIdDTO, user) {
+        return this.commentService.deleteCommentsById(getCommentIdDTO);
+    }
+    updateCommentById(updateCommentDTO, user) {
+        return this.commentService.updateCommentsById(updateCommentDTO.id, updateCommentDTO);
+    }
+};
+__decorate([
+    (0, common_1.Post)('createComment'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof comments_dto_1.CreateCommentsDTO !== "undefined" && comments_dto_1.CreateCommentsDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], CommentsController.prototype, "createComment", null);
+__decorate([
+    (0, common_1.Get)('getAllComments'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof comments_dto_1.GetAllCommmentDTO !== "undefined" && comments_dto_1.GetAllCommmentDTO) === "function" ? _c : Object, Object]),
+    __metadata("design:returntype", void 0)
+], CommentsController.prototype, "getAllComments", null);
+__decorate([
+    (0, common_1.Get)('getCommentById'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof comments_dto_1.GetCommentsIdDTO !== "undefined" && comments_dto_1.GetCommentsIdDTO) === "function" ? _d : Object, Object]),
+    __metadata("design:returntype", void 0)
+], CommentsController.prototype, "getCommentById", null);
+__decorate([
+    (0, common_1.Post)('deleteCommentById'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof comments_dto_1.DeleteCommentIdDTO !== "undefined" && comments_dto_1.DeleteCommentIdDTO) === "function" ? _e : Object, Object]),
+    __metadata("design:returntype", void 0)
+], CommentsController.prototype, "deleteCommentById", null);
+__decorate([
+    (0, common_1.Post)('updateCommentById'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_f = typeof comments_dto_1.UpdateCommentsDTO !== "undefined" && comments_dto_1.UpdateCommentsDTO) === "function" ? _f : Object, Object]),
+    __metadata("design:returntype", void 0)
+], CommentsController.prototype, "updateCommentById", null);
+exports.CommentsController = CommentsController = __decorate([
+    (0, swagger_1.ApiTags)('Comments'),
+    (0, common_1.Controller)('comment'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __metadata("design:paramtypes", [typeof (_a = typeof comments_service_1.CommentsService !== "undefined" && comments_service_1.CommentsService) === "function" ? _a : Object])
+], CommentsController);
 
 
 /***/ }),
-/* 60 */
+
+/***/ "./src/comments/comments.module.ts":
+/*!*****************************************!*\
+  !*** ./src/comments/comments.module.ts ***!
+  \*****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var CommentsModule_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommentsModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
+const comments_controller_1 = __webpack_require__(/*! ./comments.controller */ "./src/comments/comments.controller.ts");
+const comments_service_1 = __webpack_require__(/*! ./comments.service */ "./src/comments/comments.service.ts");
+let CommentsModule = exports.CommentsModule = CommentsModule_1 = class CommentsModule {
+};
+exports.CommentsModule = CommentsModule = CommentsModule_1 = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
+            mongoose_1.MongooseModule.forFeature([{
+                    name: comments_schema_1.Comments.name,
+                    schema: comments_schema_1.CommentsSchema,
+                },
+            ]),
+            CommentsModule_1
+        ],
+        controllers: [comments_controller_1.CommentsController],
+        providers: [comments_service_1.CommentsService, comments_schema_1.Comments],
+        exports: [comments_service_1.CommentsService]
+    })
+], CommentsModule);
+
+
+/***/ }),
+
+/***/ "./src/comments/comments.service.ts":
+/*!******************************************!*\
+  !*** ./src/comments/comments.service.ts ***!
+  \******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommentsService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
+let CommentsService = exports.CommentsService = class CommentsService {
+    constructor(commentsModel) {
+        this.commentsModel = commentsModel;
+    }
+    async createComments(createCommentsDTO) {
+        try {
+            let commmentDocument = await new this.commentsModel(createCommentsDTO).save();
+            return commmentDocument;
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+    async getAllComments(getAllCommentsDto) {
+        try {
+            console.log(getAllCommentsDto.limit);
+            console.log(getAllCommentsDto.offset);
+            let pagination = [];
+            let commentsData = await this.commentsModel
+                .find({ isDeleted: false, postId: getAllCommentsDto.postId })
+                .sort({ sort: 1 })
+                .populate('postId')
+                .skip(parseInt(getAllCommentsDto.offset))
+                .limit(parseInt(getAllCommentsDto.limit));
+            let commment = await Promise.all(commentsData.map(async (Item) => {
+                return {
+                    comment: Item,
+                };
+            }));
+            return commment;
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+    async getCommentsById(getCommentsIdDTO) {
+        try {
+            let commentsData = await this.commentsModel
+                .find({ id: getCommentsIdDTO.id, }).exec();
+            let commentReturn = JSON.parse(JSON.stringify(commentsData[0]));
+            return commentReturn;
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+    async deleteCommentsById(deleteCommentIdDTO) {
+        try {
+            let postData = await this.commentsModel
+                .deleteOne({ id: deleteCommentIdDTO.id, }).exec();
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+    async updateCommentsById(postId, updateCommentsDTO) {
+        try {
+            console.log(postId);
+            console.log("updated post ", updateCommentsDTO);
+            const comments = await this.commentsModel
+                .updateOne({ id: postId }, { $set: updateCommentsDTO });
+            console.log("updated post nnn ", comments);
+            return comments;
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+};
+exports.CommentsService = CommentsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(comments_schema_1.Comments.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], CommentsService);
+
+
+/***/ }),
+
+/***/ "./src/comments/dto/comments.dto.ts":
+/*!******************************************!*\
+  !*** ./src/comments/dto/comments.dto.ts ***!
+  \******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateCommentsDTO = exports.DeleteCommentIdDTO = exports.GetCommentsIdDTO = exports.GetAllCommmentDTO = exports.PaginationDTO = exports.CreateCommentsDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class CreateCommentsDTO {
+    static find() {
+        throw new Error('Method not implemented.');
+    }
+}
+exports.CreateCommentsDTO = CreateCommentsDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], CreateCommentsDTO.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], CreateCommentsDTO.prototype, "postId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], CreateCommentsDTO.prototype, "text", void 0);
+class PaginationDTO {
+}
+exports.PaginationDTO = PaginationDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 0 }),
+    __metadata("design:type", String)
+], PaginationDTO.prototype, "offset", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 10 }),
+    __metadata("design:type", String)
+], PaginationDTO.prototype, "limit", void 0);
+class GetAllCommmentDTO extends PaginationDTO {
+}
+exports.GetAllCommmentDTO = GetAllCommmentDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: true }),
+    __metadata("design:type", String)
+], GetAllCommmentDTO.prototype, "postId", void 0);
+class GetCommentsIdDTO {
+}
+exports.GetCommentsIdDTO = GetCommentsIdDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], GetCommentsIdDTO.prototype, "id", void 0);
+class DeleteCommentIdDTO {
+}
+exports.DeleteCommentIdDTO = DeleteCommentIdDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], DeleteCommentIdDTO.prototype, "id", void 0);
+class UpdateCommentsDTO {
+}
+exports.UpdateCommentsDTO = UpdateCommentsDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], UpdateCommentsDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], UpdateCommentsDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], UpdateCommentsDTO.prototype, "pic", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], UpdateCommentsDTO.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", Boolean)
+], UpdateCommentsDTO.prototype, "isDeleted", void 0);
+
+
+/***/ }),
+
+/***/ "./src/decorators/user.decorator.ts":
+/*!******************************************!*\
+  !*** ./src/decorators/user.decorator.ts ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.User = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+exports.User = (0, common_1.createParamDecorator)((data, ctx) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user;
+});
+
+
+/***/ }),
+
+/***/ "./src/enum/otp.enum.ts":
+/*!******************************!*\
+  !*** ./src/enum/otp.enum.ts ***!
+  \******************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OtpTypeEnum = void 0;
+var OtpTypeEnum;
+(function (OtpTypeEnum) {
+    OtpTypeEnum["SIGNUP"] = "SIGNUP";
+    OtpTypeEnum["FORGOT_PASSWORD"] = "FORGOT_PASSWORD";
+})(OtpTypeEnum || (exports.OtpTypeEnum = OtpTypeEnum = {}));
+
+
+/***/ }),
+
+/***/ "./src/file-management/media-upload/media-upload.controller.ts":
+/*!*********************************************************************!*\
+  !*** ./src/file-management/media-upload/media-upload.controller.ts ***!
+  \*********************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3887,16 +4046,16 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MediaUploadController = void 0;
-const common_1 = __webpack_require__(1);
-const path_1 = __webpack_require__(61);
-const multer_1 = __webpack_require__(62);
-const path = __webpack_require__(61);
-const platform_express_1 = __webpack_require__(63);
-const swagger_1 = __webpack_require__(3);
-const fs = __webpack_require__(64);
-const jimp = __webpack_require__(65);
-const media_upload_service_1 = __webpack_require__(66);
-const jwt_auth_guard_1 = __webpack_require__(24);
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const path_1 = __webpack_require__(/*! path */ "path");
+const multer_1 = __webpack_require__(/*! multer */ "multer");
+const path = __webpack_require__(/*! path */ "path");
+const platform_express_1 = __webpack_require__(/*! @nestjs/platform-express */ "@nestjs/platform-express");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const fs = __webpack_require__(/*! fs */ "fs");
+const jimp = __webpack_require__(/*! jimp */ "jimp");
+const media_upload_service_1 = __webpack_require__(/*! ./media-upload.service */ "./src/file-management/media-upload/media-upload.service.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
 const fileFilter = (req, file, callback) => {
     let ext = path.extname(file.originalname);
     if (!process.env.whiteListedExtensions.includes(ext.toLowerCase())) {
@@ -4026,37 +4185,41 @@ exports.MediaUploadController = MediaUploadController = __decorate([
 
 
 /***/ }),
-/* 61 */
-/***/ ((module) => {
 
-module.exports = require("path");
+/***/ "./src/file-management/media-upload/media-upload.module.ts":
+/*!*****************************************************************!*\
+  !*** ./src/file-management/media-upload/media-upload.module.ts ***!
+  \*****************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MediaUploadModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const media_upload_controller_1 = __webpack_require__(/*! ./media-upload.controller */ "./src/file-management/media-upload/media-upload.controller.ts");
+const media_upload_service_1 = __webpack_require__(/*! ./media-upload.service */ "./src/file-management/media-upload/media-upload.service.ts");
+let MediaUploadModule = exports.MediaUploadModule = class MediaUploadModule {
+};
+exports.MediaUploadModule = MediaUploadModule = __decorate([
+    (0, common_1.Module)({
+        controllers: [media_upload_controller_1.MediaUploadController],
+        providers: [media_upload_service_1.MediaUploadService],
+    })
+], MediaUploadModule);
+
 
 /***/ }),
-/* 62 */
-/***/ ((module) => {
 
-module.exports = require("multer");
-
-/***/ }),
-/* 63 */
-/***/ ((module) => {
-
-module.exports = require("@nestjs/platform-express");
-
-/***/ }),
-/* 64 */
-/***/ ((module) => {
-
-module.exports = require("fs");
-
-/***/ }),
-/* 65 */
-/***/ ((module) => {
-
-module.exports = require("jimp");
-
-/***/ }),
-/* 66 */
+/***/ "./src/file-management/media-upload/media-upload.service.ts":
+/*!******************************************************************!*\
+  !*** ./src/file-management/media-upload/media-upload.service.ts ***!
+  \******************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4068,9 +4231,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MediaUploadService = void 0;
-const common_1 = __webpack_require__(1);
-const jimp = __webpack_require__(65);
-const fs = __webpack_require__(64);
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const jimp = __webpack_require__(/*! jimp */ "jimp");
+const fs = __webpack_require__(/*! fs */ "fs");
 let MediaUploadService = exports.MediaUploadService = class MediaUploadService {
     async compressImageTo300(file) {
         const img = await jimp.read(file['path']);
@@ -4119,666 +4282,23 @@ exports.MediaUploadService = MediaUploadService = __decorate([
 
 
 /***/ }),
-/* 67 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+/***/ "./src/interface/user/user.interface.ts":
+/*!**********************************************!*\
+  !*** ./src/interface/user/user.interface.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, exports) => {
 
 
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PostModule = void 0;
-const common_1 = __webpack_require__(1);
-const mongoose_1 = __webpack_require__(8);
-const post_schema_1 = __webpack_require__(68);
-const post_controller_1 = __webpack_require__(69);
-const post_service_1 = __webpack_require__(70);
-const user_schema_1 = __webpack_require__(17);
-let PostModule = exports.PostModule = class PostModule {
-};
-exports.PostModule = PostModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
-            mongoose_1.MongooseModule.forFeature([{
-                    name: post_schema_1.Post.name,
-                    schema: post_schema_1.PostSchema,
-                },
-                {
-                    name: user_schema_1.UserData.name,
-                    schema: user_schema_1.UserDataSchema,
-                }
-            ])
-        ],
-        controllers: [post_controller_1.PostController],
-        providers: [post_service_1.PostService, post_schema_1.Post],
-        exports: [post_service_1.PostService]
-    })
-], PostModule);
 
 
 /***/ }),
-/* 68 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PostSchema = exports.Post = void 0;
-const mongoose_1 = __webpack_require__(8);
-const utils_1 = __webpack_require__(56);
-let Post = exports.Post = class Post {
-};
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
-    __metadata("design:type", String)
-], Post.prototype, "id", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Post.prototype, "name", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Post.prototype, "pic", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Post.prototype, "color", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Post.prototype, "userId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], Post.prototype, "isEmailVerified", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], Post.prototype, "isDeleted", void 0);
-exports.Post = Post = __decorate([
-    (0, mongoose_1.Schema)()
-], Post);
-exports.PostSchema = mongoose_1.SchemaFactory.createForClass(Post);
-exports.PostSchema.set('timestamps', true);
-exports.PostSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 69 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c, _d, _e, _f;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PostController = void 0;
-const common_1 = __webpack_require__(1);
-const post_service_1 = __webpack_require__(70);
-const post_dto_1 = __webpack_require__(71);
-const swagger_1 = __webpack_require__(3);
-const user_decorator_1 = __webpack_require__(26);
-let PostController = exports.PostController = class PostController {
-    constructor(postService) {
-        this.postService = postService;
-    }
-    createPost(createPostDTO) {
-        return this.postService.createPost(createPostDTO);
-    }
-    getAllPosts(getAllPostsDTO, user) {
-        return this.postService.getAllPosts(getAllPostsDTO);
-    }
-    getPostById(getPostIdDTO, user) {
-        return this.postService.getPostById(getPostIdDTO);
-    }
-    deletePostById(getPostIdDTO, user) {
-        return this.postService.deletePostById(getPostIdDTO);
-    }
-    updatePostById(updatePostDTO, user) {
-        return this.postService.updatePostById(updatePostDTO.id, updatePostDTO);
-    }
-};
-__decorate([
-    (0, common_1.Post)('createPost'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof post_dto_1.CreatePostDTO !== "undefined" && post_dto_1.CreatePostDTO) === "function" ? _b : Object]),
-    __metadata("design:returntype", void 0)
-], PostController.prototype, "createPost", null);
-__decorate([
-    (0, common_1.Get)('getAllPosts'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof post_dto_1.GetAllPostsDTO !== "undefined" && post_dto_1.GetAllPostsDTO) === "function" ? _c : Object, Object]),
-    __metadata("design:returntype", void 0)
-], PostController.prototype, "getAllPosts", null);
-__decorate([
-    (0, common_1.Get)('getPostById'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof post_dto_1.GetPostIdDTO !== "undefined" && post_dto_1.GetPostIdDTO) === "function" ? _d : Object, Object]),
-    __metadata("design:returntype", void 0)
-], PostController.prototype, "getPostById", null);
-__decorate([
-    (0, common_1.Post)('deletePostById'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof post_dto_1.DeletePostIdDTO !== "undefined" && post_dto_1.DeletePostIdDTO) === "function" ? _e : Object, Object]),
-    __metadata("design:returntype", void 0)
-], PostController.prototype, "deletePostById", null);
-__decorate([
-    (0, common_1.Post)('updatePostById'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof post_dto_1.UpdatePostDTO !== "undefined" && post_dto_1.UpdatePostDTO) === "function" ? _f : Object, Object]),
-    __metadata("design:returntype", void 0)
-], PostController.prototype, "updatePostById", null);
-exports.PostController = PostController = __decorate([
-    (0, swagger_1.ApiTags)('Post'),
-    (0, common_1.Controller)('post'),
-    __metadata("design:paramtypes", [typeof (_a = typeof post_service_1.PostService !== "undefined" && post_service_1.PostService) === "function" ? _a : Object])
-], PostController);
-
-
-/***/ }),
-/* 70 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PostService = void 0;
-const common_1 = __webpack_require__(1);
-const mongoose_1 = __webpack_require__(8);
-const mongoose_2 = __webpack_require__(9);
-const post_schema_1 = __webpack_require__(68);
-const user_schema_1 = __webpack_require__(17);
-let PostService = exports.PostService = class PostService {
-    constructor(postModel, userModel) {
-        this.postModel = postModel;
-        this.userModel = userModel;
-    }
-    async createPost(createPostDTO) {
-        try {
-            let postDocument = await new this.postModel(createPostDTO).save();
-            return postDocument;
-        }
-        catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
-        }
-    }
-    async getAllPosts(getAllPostsDto) {
-        try {
-            console.log(getAllPostsDto.limit);
-            console.log(getAllPostsDto.offset);
-            let pagination = [];
-            let postData = await this.postModel
-                .find({ isDeleted: false, })
-                .sort({ sort: 1 })
-                .populate('name')
-                .skip(parseInt(getAllPostsDto.offset))
-                .limit(parseInt(getAllPostsDto.limit));
-            let posts = await Promise.all(postData.map(async (postItem) => {
-                let user = postItem.userId;
-                console.log('user id=====>', user);
-                let createdBy = await this.userModel.findOne({ userId: user }).select('name isOnline userId')
-                    .exec();
-                ;
-                console.log('user id=====>console', createdBy);
-                return {
-                    post: postItem,
-                    user: createdBy
-                };
-            }));
-            return posts;
-        }
-        catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
-        }
-    }
-    async getPostById(getPostIdDTO) {
-        try {
-            let postData = await this.postModel
-                .find({ id: getPostIdDTO.id, }).exec();
-            let postReturn = JSON.parse(JSON.stringify(postData[0]));
-            return postReturn;
-        }
-        catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
-        }
-    }
-    async deletePostById(deletePostIdDTO) {
-        try {
-            let postData = await this.postModel
-                .deleteOne({ id: deletePostIdDTO.id, }).exec();
-        }
-        catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
-        }
-    }
-    async updatePostById(postId, updatePostByDto) {
-        try {
-            console.log(postId);
-            console.log("updated post ", updatePostByDto);
-            const updatedPost = await this.postModel
-                .updateOne({ id: postId }, { $set: updatePostByDto });
-            console.log("updated post nnn ", updatedPost);
-            return updatedPost;
-        }
-        catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
-        }
-    }
-};
-exports.PostService = PostService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
-    __param(1, (0, mongoose_1.InjectModel)(user_schema_1.UserData.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
-], PostService);
-
-
-/***/ }),
-/* 71 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UpdatePostDTO = exports.DeletePostIdDTO = exports.GetPostIdDTO = exports.GetAllPostsDTO = exports.PaginationDTO = exports.CreatePostDTO = void 0;
-const swagger_1 = __webpack_require__(3);
-class CreatePostDTO {
-    static find() {
-        throw new Error('Method not implemented.');
-    }
-}
-exports.CreatePostDTO = CreatePostDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], CreatePostDTO.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], CreatePostDTO.prototype, "userId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], CreatePostDTO.prototype, "pic", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], CreatePostDTO.prototype, "color", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", Boolean)
-], CreatePostDTO.prototype, "isEmailVerified", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", Boolean)
-], CreatePostDTO.prototype, "isDeleted", void 0);
-class PaginationDTO {
-}
-exports.PaginationDTO = PaginationDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)({ default: 0 }),
-    __metadata("design:type", String)
-], PaginationDTO.prototype, "offset", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ default: 10 }),
-    __metadata("design:type", String)
-], PaginationDTO.prototype, "limit", void 0);
-class GetAllPostsDTO extends PaginationDTO {
-}
-exports.GetAllPostsDTO = GetAllPostsDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
-], GetAllPostsDTO.prototype, "name", void 0);
-class GetPostIdDTO {
-}
-exports.GetPostIdDTO = GetPostIdDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], GetPostIdDTO.prototype, "id", void 0);
-class DeletePostIdDTO {
-}
-exports.DeletePostIdDTO = DeletePostIdDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], DeletePostIdDTO.prototype, "id", void 0);
-class UpdatePostDTO {
-}
-exports.UpdatePostDTO = UpdatePostDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], UpdatePostDTO.prototype, "id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], UpdatePostDTO.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], UpdatePostDTO.prototype, "pic", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], UpdatePostDTO.prototype, "color", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", Boolean)
-], UpdatePostDTO.prototype, "isDeleted", void 0);
-
-
-/***/ }),
-/* 72 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.OrderModule = void 0;
-const common_1 = __webpack_require__(1);
-const mongoose_1 = __webpack_require__(8);
-const order_schema_1 = __webpack_require__(73);
-const order_controller_1 = __webpack_require__(74);
-const order_service_1 = __webpack_require__(76);
-let OrderModule = exports.OrderModule = class OrderModule {
-};
-exports.OrderModule = OrderModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
-            mongoose_1.MongooseModule.forFeature([{
-                    name: order_schema_1.Order.name,
-                    schema: order_schema_1.OrderSchema,
-                },
-            ])
-        ],
-        controllers: [order_controller_1.OrderController],
-        providers: [order_service_1.OrderService, order_schema_1.Order],
-        exports: [order_service_1.OrderService]
-    })
-], OrderModule);
-
-
-/***/ }),
-/* 73 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.OrderSchema = exports.Order = void 0;
-const mongoose_1 = __webpack_require__(8);
-const utils_1 = __webpack_require__(56);
-let Order = exports.Order = class Order {
-};
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
-    __metadata("design:type", String)
-], Order.prototype, "id", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "deliveryType", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "flightType", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "flightNumber", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "airlineName", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "departureCountry", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "departureCity", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "departureAirport", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "departureDate", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "departureTime", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "ticketImage", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "arrivalCountry", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "arrivalCity", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "arrivalAirport", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "arrivalDate", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
-    __metadata("design:type", String)
-], Order.prototype, "arrivalTime", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Number, default: '' }),
-    __metadata("design:type", Number)
-], Order.prototype, "luggageWeight", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], Order.prototype, "isDropPackage", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], Order.prototype, "isPickupPackage", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
-    __metadata("design:type", Boolean)
-], Order.prototype, "isDeleted", void 0);
-exports.Order = Order = __decorate([
-    (0, mongoose_1.Schema)()
-], Order);
-exports.OrderSchema = mongoose_1.SchemaFactory.createForClass(Order);
-exports.OrderSchema.set('timestamps', true);
-exports.OrderSchema.set('toJSON', {
-    virtuals: true,
-    versionKey: false,
-    transform: function (doc, ret) {
-        delete ret._id;
-    },
-});
-
-
-/***/ }),
-/* 74 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c, _d, _e, _f;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.OrderController = void 0;
-const common_1 = __webpack_require__(1);
-const swagger_1 = __webpack_require__(3);
-const user_decorator_1 = __webpack_require__(26);
-const jwt_auth_guard_1 = __webpack_require__(24);
-const order_dto_1 = __webpack_require__(75);
-const order_service_1 = __webpack_require__(76);
-let OrderController = exports.OrderController = class OrderController {
-    constructor(orderService) {
-        this.orderService = orderService;
-    }
-    createOrder(createPostDTO) {
-        return this.orderService.createOrder(createPostDTO);
-    }
-    getAllOrders(getAllOrdersDTO, user) {
-        return this.orderService.getAllOrders(getAllOrdersDTO);
-    }
-    getOrderById(getOrderIdDTO, user) {
-        return this.orderService.getOrderById(getOrderIdDTO);
-    }
-    deleteOrderById(getOrderIdDTO, user) {
-        return this.orderService.deleteOrderById(getOrderIdDTO);
-    }
-    updateOrderById(updateOrderDTO, user) {
-        return this.orderService.updateOrderById(updateOrderDTO.id, updateOrderDTO);
-    }
-};
-__decorate([
-    (0, common_1.Post)('createOrder'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof order_dto_1.CreateOrderDTO !== "undefined" && order_dto_1.CreateOrderDTO) === "function" ? _b : Object]),
-    __metadata("design:returntype", void 0)
-], OrderController.prototype, "createOrder", null);
-__decorate([
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Get)('getAllOrders'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof order_dto_1.GetAllOrdersDTO !== "undefined" && order_dto_1.GetAllOrdersDTO) === "function" ? _c : Object, Object]),
-    __metadata("design:returntype", void 0)
-], OrderController.prototype, "getAllOrders", null);
-__decorate([
-    (0, common_1.Get)('getOrderById'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof order_dto_1.GetOrderIdDTO !== "undefined" && order_dto_1.GetOrderIdDTO) === "function" ? _d : Object, Object]),
-    __metadata("design:returntype", void 0)
-], OrderController.prototype, "getOrderById", null);
-__decorate([
-    (0, common_1.Post)('deleteOrderById'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof order_dto_1.DeleteOrderIdDTO !== "undefined" && order_dto_1.DeleteOrderIdDTO) === "function" ? _e : Object, Object]),
-    __metadata("design:returntype", void 0)
-], OrderController.prototype, "deleteOrderById", null);
-__decorate([
-    (0, common_1.Post)('updateOrderById'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof order_dto_1.UpdateOrderDTO !== "undefined" && order_dto_1.UpdateOrderDTO) === "function" ? _f : Object, Object]),
-    __metadata("design:returntype", void 0)
-], OrderController.prototype, "updateOrderById", null);
-exports.OrderController = OrderController = __decorate([
-    (0, swagger_1.ApiTags)('Order'),
-    (0, common_1.Controller)('order'),
-    __metadata("design:paramtypes", [typeof (_a = typeof order_service_1.OrderService !== "undefined" && order_service_1.OrderService) === "function" ? _a : Object])
-], OrderController);
-
-
-/***/ }),
-/* 75 */
+/***/ "./src/order/dto/order.dto.ts":
+/*!************************************!*\
+  !*** ./src/order/dto/order.dto.ts ***!
+  \************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4793,7 +4313,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateOrderDTO = exports.DeleteOrderIdDTO = exports.GetOrderIdDTO = exports.GetAllOrdersDTO = exports.PaginationDTO = exports.CreateOrderDTO = void 0;
-const swagger_1 = __webpack_require__(3);
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateOrderDTO {
     static find() {
         throw new Error('Method not implemented.');
@@ -4930,7 +4450,150 @@ __decorate([
 
 
 /***/ }),
-/* 76 */
+
+/***/ "./src/order/order.controller.ts":
+/*!***************************************!*\
+  !*** ./src/order/order.controller.ts ***!
+  \***************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OrderController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const order_dto_1 = __webpack_require__(/*! ./dto/order.dto */ "./src/order/dto/order.dto.ts");
+const order_service_1 = __webpack_require__(/*! ./order.service */ "./src/order/order.service.ts");
+let OrderController = exports.OrderController = class OrderController {
+    constructor(orderService) {
+        this.orderService = orderService;
+    }
+    createOrder(createPostDTO) {
+        return this.orderService.createOrder(createPostDTO);
+    }
+    getAllOrders(getAllOrdersDTO, user) {
+        return this.orderService.getAllOrders(getAllOrdersDTO);
+    }
+    getOrderById(getOrderIdDTO, user) {
+        return this.orderService.getOrderById(getOrderIdDTO);
+    }
+    deleteOrderById(getOrderIdDTO, user) {
+        return this.orderService.deleteOrderById(getOrderIdDTO);
+    }
+    updateOrderById(updateOrderDTO, user) {
+        return this.orderService.updateOrderById(updateOrderDTO.id, updateOrderDTO);
+    }
+};
+__decorate([
+    (0, common_1.Post)('createOrder'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof order_dto_1.CreateOrderDTO !== "undefined" && order_dto_1.CreateOrderDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], OrderController.prototype, "createOrder", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('getAllOrders'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof order_dto_1.GetAllOrdersDTO !== "undefined" && order_dto_1.GetAllOrdersDTO) === "function" ? _c : Object, Object]),
+    __metadata("design:returntype", void 0)
+], OrderController.prototype, "getAllOrders", null);
+__decorate([
+    (0, common_1.Get)('getOrderById'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof order_dto_1.GetOrderIdDTO !== "undefined" && order_dto_1.GetOrderIdDTO) === "function" ? _d : Object, Object]),
+    __metadata("design:returntype", void 0)
+], OrderController.prototype, "getOrderById", null);
+__decorate([
+    (0, common_1.Post)('deleteOrderById'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof order_dto_1.DeleteOrderIdDTO !== "undefined" && order_dto_1.DeleteOrderIdDTO) === "function" ? _e : Object, Object]),
+    __metadata("design:returntype", void 0)
+], OrderController.prototype, "deleteOrderById", null);
+__decorate([
+    (0, common_1.Post)('updateOrderById'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_f = typeof order_dto_1.UpdateOrderDTO !== "undefined" && order_dto_1.UpdateOrderDTO) === "function" ? _f : Object, Object]),
+    __metadata("design:returntype", void 0)
+], OrderController.prototype, "updateOrderById", null);
+exports.OrderController = OrderController = __decorate([
+    (0, swagger_1.ApiTags)('Order'),
+    (0, common_1.Controller)('order'),
+    __metadata("design:paramtypes", [typeof (_a = typeof order_service_1.OrderService !== "undefined" && order_service_1.OrderService) === "function" ? _a : Object])
+], OrderController);
+
+
+/***/ }),
+
+/***/ "./src/order/order.module.ts":
+/*!***********************************!*\
+  !*** ./src/order/order.module.ts ***!
+  \***********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OrderModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const order_schema_1 = __webpack_require__(/*! src/schema/order/order.schema */ "./src/schema/order/order.schema.ts");
+const order_controller_1 = __webpack_require__(/*! ./order.controller */ "./src/order/order.controller.ts");
+const order_service_1 = __webpack_require__(/*! ./order.service */ "./src/order/order.service.ts");
+let OrderModule = exports.OrderModule = class OrderModule {
+};
+exports.OrderModule = OrderModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
+            mongoose_1.MongooseModule.forFeature([{
+                    name: order_schema_1.Order.name,
+                    schema: order_schema_1.OrderSchema,
+                },
+            ])
+        ],
+        controllers: [order_controller_1.OrderController],
+        providers: [order_service_1.OrderService, order_schema_1.Order],
+        exports: [order_service_1.OrderService]
+    })
+], OrderModule);
+
+
+/***/ }),
+
+/***/ "./src/order/order.service.ts":
+/*!************************************!*\
+  !*** ./src/order/order.service.ts ***!
+  \************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4949,10 +4612,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrderService = void 0;
-const common_1 = __webpack_require__(1);
-const mongoose_1 = __webpack_require__(8);
-const mongoose_2 = __webpack_require__(9);
-const order_schema_1 = __webpack_require__(73);
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const order_schema_1 = __webpack_require__(/*! src/schema/order/order.schema */ "./src/schema/order/order.schema.ts");
 let OrderService = exports.OrderService = class OrderService {
     constructor(orderModel) {
         this.orderModel = orderModel;
@@ -5035,7 +4698,11 @@ exports.OrderService = OrderService = __decorate([
 
 
 /***/ }),
-/* 77 */
+
+/***/ "./src/post/dto/post.dto.ts":
+/*!**********************************!*\
+  !*** ./src/post/dto/post.dto.ts ***!
+  \**********************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5045,36 +4712,365 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var CommentsModule_1;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CommentsModule = void 0;
-const common_1 = __webpack_require__(1);
-const mongoose_1 = __webpack_require__(8);
-const comments_schema_1 = __webpack_require__(78);
-const comments_controller_1 = __webpack_require__(79);
-const comments_service_1 = __webpack_require__(80);
-let CommentsModule = exports.CommentsModule = CommentsModule_1 = class CommentsModule {
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-exports.CommentsModule = CommentsModule = CommentsModule_1 = __decorate([
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdatePostDTO = exports.DeletePostIdDTO = exports.GetPostIdDTO = exports.GetAllPostsDTO = exports.PaginationDTO = exports.CreatePostDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class CreatePostDTO {
+    static find() {
+        throw new Error('Method not implemented.');
+    }
+}
+exports.CreatePostDTO = CreatePostDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], CreatePostDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], CreatePostDTO.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], CreatePostDTO.prototype, "pic", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], CreatePostDTO.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", Boolean)
+], CreatePostDTO.prototype, "isEmailVerified", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", Boolean)
+], CreatePostDTO.prototype, "isDeleted", void 0);
+class PaginationDTO {
+}
+exports.PaginationDTO = PaginationDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 0 }),
+    __metadata("design:type", String)
+], PaginationDTO.prototype, "offset", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 10 }),
+    __metadata("design:type", String)
+], PaginationDTO.prototype, "limit", void 0);
+class GetAllPostsDTO extends PaginationDTO {
+}
+exports.GetAllPostsDTO = GetAllPostsDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    __metadata("design:type", String)
+], GetAllPostsDTO.prototype, "name", void 0);
+class GetPostIdDTO {
+}
+exports.GetPostIdDTO = GetPostIdDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], GetPostIdDTO.prototype, "id", void 0);
+class DeletePostIdDTO {
+}
+exports.DeletePostIdDTO = DeletePostIdDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], DeletePostIdDTO.prototype, "id", void 0);
+class UpdatePostDTO {
+}
+exports.UpdatePostDTO = UpdatePostDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], UpdatePostDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], UpdatePostDTO.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], UpdatePostDTO.prototype, "pic", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], UpdatePostDTO.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", Boolean)
+], UpdatePostDTO.prototype, "isDeleted", void 0);
+
+
+/***/ }),
+
+/***/ "./src/post/post.controller.ts":
+/*!*************************************!*\
+  !*** ./src/post/post.controller.ts ***!
+  \*************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PostController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const post_service_1 = __webpack_require__(/*! ./post.service */ "./src/post/post.service.ts");
+const post_dto_1 = __webpack_require__(/*! ./dto/post.dto */ "./src/post/dto/post.dto.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+let PostController = exports.PostController = class PostController {
+    constructor(postService) {
+        this.postService = postService;
+    }
+    createPost(createPostDTO) {
+        return this.postService.createPost(createPostDTO);
+    }
+    getAllPosts(getAllPostsDTO, user) {
+        return this.postService.getAllPosts(getAllPostsDTO);
+    }
+    getPostById(getPostIdDTO, user) {
+        return this.postService.getPostById(getPostIdDTO);
+    }
+    deletePostById(getPostIdDTO, user) {
+        return this.postService.deletePostById(getPostIdDTO);
+    }
+    updatePostById(updatePostDTO, user) {
+        return this.postService.updatePostById(updatePostDTO.id, updatePostDTO);
+    }
+};
+__decorate([
+    (0, common_1.Post)('createPost'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof post_dto_1.CreatePostDTO !== "undefined" && post_dto_1.CreatePostDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "createPost", null);
+__decorate([
+    (0, common_1.Get)('getAllPosts'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof post_dto_1.GetAllPostsDTO !== "undefined" && post_dto_1.GetAllPostsDTO) === "function" ? _c : Object, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "getAllPosts", null);
+__decorate([
+    (0, common_1.Get)('getPostById'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof post_dto_1.GetPostIdDTO !== "undefined" && post_dto_1.GetPostIdDTO) === "function" ? _d : Object, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "getPostById", null);
+__decorate([
+    (0, common_1.Post)('deletePostById'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof post_dto_1.DeletePostIdDTO !== "undefined" && post_dto_1.DeletePostIdDTO) === "function" ? _e : Object, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "deletePostById", null);
+__decorate([
+    (0, common_1.Post)('updatePostById'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_f = typeof post_dto_1.UpdatePostDTO !== "undefined" && post_dto_1.UpdatePostDTO) === "function" ? _f : Object, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "updatePostById", null);
+exports.PostController = PostController = __decorate([
+    (0, swagger_1.ApiTags)('Post'),
+    (0, common_1.Controller)('post'),
+    __metadata("design:paramtypes", [typeof (_a = typeof post_service_1.PostService !== "undefined" && post_service_1.PostService) === "function" ? _a : Object])
+], PostController);
+
+
+/***/ }),
+
+/***/ "./src/post/post.module.ts":
+/*!*********************************!*\
+  !*** ./src/post/post.module.ts ***!
+  \*********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PostModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const post_schema_1 = __webpack_require__(/*! src/schema/post/post.schema */ "./src/schema/post/post.schema.ts");
+const post_controller_1 = __webpack_require__(/*! ./post.controller */ "./src/post/post.controller.ts");
+const post_service_1 = __webpack_require__(/*! ./post.service */ "./src/post/post.service.ts");
+const user_schema_1 = __webpack_require__(/*! @app/chat/schemas/user.schema */ "./libs/chat/src/schemas/user.schema.ts");
+let PostModule = exports.PostModule = class PostModule {
+};
+exports.PostModule = PostModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
             mongoose_1.MongooseModule.forFeature([{
-                    name: comments_schema_1.Comments.name,
-                    schema: comments_schema_1.CommentsSchema,
+                    name: post_schema_1.Post.name,
+                    schema: post_schema_1.PostSchema,
                 },
-            ]),
-            CommentsModule_1
+                {
+                    name: user_schema_1.UserData.name,
+                    schema: user_schema_1.UserDataSchema,
+                }
+            ])
         ],
-        controllers: [comments_controller_1.CommentsController],
-        providers: [comments_service_1.CommentsService, comments_schema_1.Comments],
-        exports: [comments_service_1.CommentsService]
+        controllers: [post_controller_1.PostController],
+        providers: [post_service_1.PostService, post_schema_1.Post],
+        exports: [post_service_1.PostService]
     })
-], CommentsModule);
+], PostModule);
 
 
 /***/ }),
-/* 78 */
+
+/***/ "./src/post/post.service.ts":
+/*!**********************************!*\
+  !*** ./src/post/post.service.ts ***!
+  \**********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PostService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const post_schema_1 = __webpack_require__(/*! src/schema/post/post.schema */ "./src/schema/post/post.schema.ts");
+const user_schema_1 = __webpack_require__(/*! @app/chat/schemas/user.schema */ "./libs/chat/src/schemas/user.schema.ts");
+let PostService = exports.PostService = class PostService {
+    constructor(postModel, userModel) {
+        this.postModel = postModel;
+        this.userModel = userModel;
+    }
+    async createPost(createPostDTO) {
+        try {
+            let postDocument = await new this.postModel(createPostDTO).save();
+            return postDocument;
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+    async getAllPosts(getAllPostsDto) {
+        try {
+            console.log(getAllPostsDto.limit);
+            console.log(getAllPostsDto.offset);
+            let pagination = [];
+            let postData = await this.postModel
+                .find({ isDeleted: false, })
+                .sort({ sort: 1 })
+                .populate('name')
+                .skip(parseInt(getAllPostsDto.offset))
+                .limit(parseInt(getAllPostsDto.limit));
+            let posts = await Promise.all(postData.map(async (postItem) => {
+                let user = postItem.userId;
+                console.log('user id=====>', user);
+                let createdBy = await this.userModel.findOne({ userId: user }).select('name isOnline userId')
+                    .exec();
+                ;
+                console.log('user id=====>console', createdBy);
+                return {
+                    post: postItem,
+                    user: createdBy
+                };
+            }));
+            return posts;
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+    async getPostById(getPostIdDTO) {
+        try {
+            let postData = await this.postModel
+                .find({ id: getPostIdDTO.id, }).exec();
+            let postReturn = JSON.parse(JSON.stringify(postData[0]));
+            return postReturn;
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+    async deletePostById(deletePostIdDTO) {
+        try {
+            let postData = await this.postModel
+                .deleteOne({ id: deletePostIdDTO.id, }).exec();
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+    async updatePostById(postId, updatePostByDto) {
+        try {
+            console.log(postId);
+            console.log("updated post ", updatePostByDto);
+            const updatedPost = await this.postModel
+                .updateOne({ id: postId }, { $set: updatePostByDto });
+            console.log("updated post nnn ", updatedPost);
+            return updatedPost;
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message);
+        }
+    }
+};
+exports.PostService = PostService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
+    __param(1, (0, mongoose_1.InjectModel)(user_schema_1.UserData.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
+], PostService);
+
+
+/***/ }),
+
+/***/ "./src/schema/comments/comments.schema.ts":
+/*!************************************************!*\
+  !*** ./src/schema/comments/comments.schema.ts ***!
+  \************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5089,8 +5085,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommentsSchema = exports.Comments = void 0;
-const mongoose_1 = __webpack_require__(8);
-const utils_1 = __webpack_require__(56);
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
 let Comments = exports.Comments = class Comments {
 };
 __decorate([
@@ -5128,7 +5124,614 @@ exports.CommentsSchema.set('toJSON', {
 
 
 /***/ }),
-/* 79 */
+
+/***/ "./src/schema/order/order.schema.ts":
+/*!******************************************!*\
+  !*** ./src/schema/order/order.schema.ts ***!
+  \******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OrderSchema = exports.Order = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+let Order = exports.Order = class Order {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], Order.prototype, "id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "deliveryType", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "flightType", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "flightNumber", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "airlineName", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "departureCountry", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "departureCity", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "departureAirport", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "departureDate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "departureTime", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "ticketImage", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "arrivalCountry", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "arrivalCity", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "arrivalAirport", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "arrivalDate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Order.prototype, "arrivalTime", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, default: '' }),
+    __metadata("design:type", Number)
+], Order.prototype, "luggageWeight", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], Order.prototype, "isDropPackage", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], Order.prototype, "isPickupPackage", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], Order.prototype, "isDeleted", void 0);
+exports.Order = Order = __decorate([
+    (0, mongoose_1.Schema)()
+], Order);
+exports.OrderSchema = mongoose_1.SchemaFactory.createForClass(Order);
+exports.OrderSchema.set('timestamps', true);
+exports.OrderSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
+/***/ "./src/schema/otp/otp.schema.ts":
+/*!**************************************!*\
+  !*** ./src/schema/otp/otp.schema.ts ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OtpSchema = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+exports.OtpSchema = new mongoose_1.Schema({
+    _id: { type: String, default: utils_1.generateStringId },
+    otp: { type: String, default: '' },
+    type: { type: String, default: '' },
+    userID: { type: String, default: '' },
+    expiryTime: { type: Number, default: 0 },
+    isUsed: { type: Boolean, default: false },
+}, {
+    collection: 'otp',
+});
+(0, mongoose_1.model)('otp', exports.OtpSchema);
+exports.OtpSchema.set('timestamps', true);
+exports.OtpSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
+/***/ "./src/schema/post/post.schema.ts":
+/*!****************************************!*\
+  !*** ./src/schema/post/post.schema.ts ***!
+  \****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PostSchema = exports.Post = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+let Post = exports.Post = class Post {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], Post.prototype, "id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Post.prototype, "name", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Post.prototype, "pic", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Post.prototype, "color", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Post.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], Post.prototype, "isEmailVerified", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], Post.prototype, "isDeleted", void 0);
+exports.Post = Post = __decorate([
+    (0, mongoose_1.Schema)()
+], Post);
+exports.PostSchema = mongoose_1.SchemaFactory.createForClass(Post);
+exports.PostSchema.set('timestamps', true);
+exports.PostSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
+/***/ "./src/schema/user/user.schema.ts":
+/*!****************************************!*\
+  !*** ./src/schema/user/user.schema.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.User = exports.UserSchema = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+var bcrypt = __webpack_require__(/*! bcryptjs */ "bcryptjs");
+const user_interface_1 = __webpack_require__(/*! src/interface/user/user.interface */ "./src/interface/user/user.interface.ts");
+Object.defineProperty(exports, "User", ({ enumerable: true, get: function () { return user_interface_1.User; } }));
+exports.UserSchema = new mongoose_1.Schema({
+    _id: { type: String, default: utils_1.generateStringId },
+    email: { type: String, default: '' },
+    password: { type: String, default: '' },
+    name: { type: String, default: '' },
+    pic: { type: String, default: '' },
+    color: { type: String, default: '' },
+    isEmailVerified: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false },
+}, {
+    collection: 'users',
+});
+(0, mongoose_1.model)('users', exports.UserSchema);
+exports.UserSchema.set('timestamps', true);
+exports.UserSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+exports.UserSchema.index({ email: 1 });
+exports.UserSchema.index({ fullname: 1 });
+exports.UserSchema.index({ email: 1, publicKey: 1 });
+exports.UserSchema.index({ publicKey: 1 });
+exports.UserSchema.pre('save', async function (next) {
+    try {
+        if (this.password && this.isModified('password')) {
+            const saltRounds = 10;
+            this.password = await bcrypt.hash(this.password, saltRounds);
+        }
+        next();
+    }
+    catch (err) {
+        next();
+    }
+});
+exports.UserSchema.pre('updateOne', async function (next) {
+    try {
+        if (this._update.password) {
+            const saltRounds = 10;
+            this._update.password = await bcrypt.hash(this._update.password, saltRounds);
+        }
+        next();
+    }
+    catch (err) {
+        next();
+    }
+});
+
+
+/***/ }),
+
+/***/ "./src/schema/village/village.schema.ts":
+/*!**********************************************!*\
+  !*** ./src/schema/village/village.schema.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.VillageSchema = exports.Village = exports.VillageStatus = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+var VillageStatus;
+(function (VillageStatus) {
+    VillageStatus["ACTIVE"] = "active";
+    VillageStatus["INACTIVE"] = "inactive";
+})(VillageStatus || (exports.VillageStatus = VillageStatus = {}));
+let Village = exports.Village = class Village {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], Village.prototype, "_id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true, unique: true }),
+    __metadata("design:type", String)
+], Village.prototype, "name", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Village.prototype, "description", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        enum: VillageStatus,
+        default: VillageStatus.ACTIVE
+    }),
+    __metadata("design:type", String)
+], Village.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, default: Date.now }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], Village.prototype, "createdAt", void 0);
+exports.Village = Village = __decorate([
+    (0, mongoose_1.Schema)()
+], Village);
+exports.VillageSchema = mongoose_1.SchemaFactory.createForClass(Village);
+exports.VillageSchema.set('timestamps', true);
+exports.VillageSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+exports.VillageSchema.index({ name: 1 }, { unique: true });
+
+
+/***/ }),
+
+/***/ "./src/utils/utils.service.ts":
+/*!************************************!*\
+  !*** ./src/utils/utils.service.ts ***!
+  \************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UtilsService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const Mailgun = __webpack_require__(/*! mailgun.js */ "mailgun.js");
+const formData = __webpack_require__(/*! form-data */ "form-data");
+const Mailjet = __webpack_require__(/*! node-mailjet */ "node-mailjet");
+let UtilsService = exports.UtilsService = class UtilsService {
+    constructor() {
+        this.mailjet = new Mailjet({
+            apiKey: process.env.MAILJET_API_KEY,
+            apiSecret: process.env.MAILJET_API_SECRET,
+        });
+    }
+    async sendEmail(emailDto) {
+        try {
+            debugger;
+            const request = await this.mailjet.post('send', { version: 'v3.1' }).request({
+                Messages: [
+                    {
+                        From: {
+                            Email: process.env.MAILJET_EMAIL,
+                            Name: process.env.MAILJET_NAME,
+                        },
+                        To: [
+                            {
+                                Email: emailDto.to,
+                                Name: "Blockyfy",
+                            },
+                        ],
+                        Subject: emailDto.subject,
+                        TextPart: emailDto.text,
+                        HTMLPart: emailDto.html,
+                    }
+                ]
+            });
+            return request.body;
+        }
+        catch (err) {
+            console.log(err);
+            throw new Error(err?.message);
+        }
+    }
+};
+exports.UtilsService = UtilsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [])
+], UtilsService);
+
+
+/***/ }),
+
+/***/ "./src/utils/utils.ts":
+/*!****************************!*\
+  !*** ./src/utils/utils.ts ***!
+  \****************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.generateStringId = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const generateStringId = () => {
+    return new mongoose_1.Types.ObjectId().toHexString();
+};
+exports.generateStringId = generateStringId;
+
+
+/***/ }),
+
+/***/ "./src/village/dto/village.dto.ts":
+/*!****************************************!*\
+  !*** ./src/village/dto/village.dto.ts ***!
+  \****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DeleteVillageResponseDto = exports.UpdateVillageDto = exports.VillageResponseDto = exports.GetVillagesQueryDto = exports.CreateVillageDto = exports.VillageStatus = void 0;
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+var VillageStatus;
+(function (VillageStatus) {
+    VillageStatus["ACTIVE"] = "active";
+    VillageStatus["INACTIVE"] = "inactive";
+})(VillageStatus || (exports.VillageStatus = VillageStatus = {}));
+class CreateVillageDto {
+}
+exports.CreateVillageDto = CreateVillageDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Name of the village',
+        example: 'Green Valley',
+        type: String
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateVillageDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Description of the village',
+        example: 'A peaceful village surrounded by mountains',
+        type: String
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateVillageDto.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Status of the village',
+        enum: VillageStatus,
+        default: VillageStatus.ACTIVE,
+        example: VillageStatus.ACTIVE
+    }),
+    (0, class_validator_1.IsEnum)(VillageStatus),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateVillageDto.prototype, "status", void 0);
+class GetVillagesQueryDto {
+}
+exports.GetVillagesQueryDto = GetVillagesQueryDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Filter villages by status',
+        enum: VillageStatus,
+        example: VillageStatus.ACTIVE
+    }),
+    (0, class_validator_1.IsEnum)(VillageStatus),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => value?.toLowerCase()),
+    __metadata("design:type", String)
+], GetVillagesQueryDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Search villages by name (case-insensitive partial match)',
+        example: 'green',
+        type: String
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => value?.trim()),
+    __metadata("design:type", String)
+], GetVillagesQueryDto.prototype, "search", void 0);
+class VillageResponseDto {
+}
+exports.VillageResponseDto = VillageResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Village unique identifier' }),
+    __metadata("design:type", String)
+], VillageResponseDto.prototype, "_id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the village' }),
+    __metadata("design:type", String)
+], VillageResponseDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Description of the village' }),
+    __metadata("design:type", String)
+], VillageResponseDto.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Status of the village', enum: VillageStatus }),
+    __metadata("design:type", String)
+], VillageResponseDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Creation date' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], VillageResponseDto.prototype, "createdAt", void 0);
+class UpdateVillageDto {
+}
+exports.UpdateVillageDto = UpdateVillageDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Name of the village',
+        example: 'Updated Village Name',
+        type: String
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateVillageDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Description of the village',
+        example: 'Updated description of the village',
+        type: String
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateVillageDto.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Status of the village',
+        enum: VillageStatus,
+        example: VillageStatus.ACTIVE
+    }),
+    (0, class_validator_1.IsEnum)(VillageStatus),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateVillageDto.prototype, "status", void 0);
+class DeleteVillageResponseDto {
+}
+exports.DeleteVillageResponseDto = DeleteVillageResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Indicates if the operation was successful',
+        example: true
+    }),
+    __metadata("design:type", Boolean)
+], DeleteVillageResponseDto.prototype, "success", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Success message',
+        example: 'Village deleted successfully'
+    }),
+    __metadata("design:type", String)
+], DeleteVillageResponseDto.prototype, "message", void 0);
+
+
+/***/ }),
+
+/***/ "./src/village/village.controller.ts":
+/*!*******************************************!*\
+  !*** ./src/village/village.controller.ts ***!
+  \*******************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5144,85 +5747,233 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CommentsController = void 0;
-const common_1 = __webpack_require__(1);
-const swagger_1 = __webpack_require__(3);
-const user_decorator_1 = __webpack_require__(26);
-const jwt_auth_guard_1 = __webpack_require__(24);
-const comments_service_1 = __webpack_require__(80);
-const comments_dto_1 = __webpack_require__(81);
-let CommentsController = exports.CommentsController = class CommentsController {
-    constructor(commentService) {
-        this.commentService = commentService;
+exports.VillageController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const village_service_1 = __webpack_require__(/*! ./village.service */ "./src/village/village.service.ts");
+const village_dto_1 = __webpack_require__(/*! ./dto/village.dto */ "./src/village/dto/village.dto.ts");
+let VillageController = exports.VillageController = class VillageController {
+    constructor(villageService) {
+        this.villageService = villageService;
     }
-    createComment(createCommentDTO) {
-        return this.commentService.createComments(createCommentDTO);
+    async createVillage(createVillageDto) {
+        return await this.villageService.createVillage(createVillageDto);
     }
-    getAllComments(getAllCommentsDTO, user) {
-        return this.commentService.getAllComments(getAllCommentsDTO);
+    async getAllVillages(queryDto) {
+        return await this.villageService.findAll(queryDto);
     }
-    getCommentById(getCommentIdDTO, user) {
-        return this.commentService.getCommentsById(getCommentIdDTO);
+    async getVillageById(id) {
+        return await this.villageService.findOne(id);
     }
-    deleteCommentById(getCommentIdDTO, user) {
-        return this.commentService.deleteCommentsById(getCommentIdDTO);
+    async updateVillage(id, updateVillageDto) {
+        return await this.villageService.updateVillage(id, updateVillageDto);
     }
-    updateCommentById(updateCommentDTO, user) {
-        return this.commentService.updateCommentsById(updateCommentDTO.id, updateCommentDTO);
+    async deleteVillage(id) {
+        return await this.villageService.deleteVillage(id);
     }
 };
 __decorate([
-    (0, common_1.Post)('createComment'),
+    (0, common_1.Post)(),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create a new village',
+        description: 'Creates a new village with the provided information'
+    }),
+    (0, swagger_1.ApiBody)({
+        type: village_dto_1.CreateVillageDto,
+        description: 'Village data to create'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'Village successfully created',
+        type: village_dto_1.VillageResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 409,
+        description: 'Village with this name already exists'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid input data'
+    }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof comments_dto_1.CreateCommentsDTO !== "undefined" && comments_dto_1.CreateCommentsDTO) === "function" ? _b : Object]),
-    __metadata("design:returntype", void 0)
-], CommentsController.prototype, "createComment", null);
+    __metadata("design:paramtypes", [typeof (_b = typeof village_dto_1.CreateVillageDto !== "undefined" && village_dto_1.CreateVillageDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
+], VillageController.prototype, "createVillage", null);
 __decorate([
-    (0, common_1.Get)('getAllComments'),
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get villages with optional filters',
+        description: 'Retrieves villages from the database with optional filtering by status and search by name'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'status',
+        required: false,
+        enum: ['active', 'inactive'],
+        description: 'Filter villages by status'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'search',
+        required: false,
+        type: String,
+        description: 'Search villages by name (case-insensitive partial match)'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'List of villages matching the criteria',
+        type: [village_dto_1.VillageResponseDto]
+    }),
     __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof comments_dto_1.GetAllCommmentDTO !== "undefined" && comments_dto_1.GetAllCommmentDTO) === "function" ? _c : Object, Object]),
-    __metadata("design:returntype", void 0)
-], CommentsController.prototype, "getAllComments", null);
+    __metadata("design:paramtypes", [typeof (_d = typeof village_dto_1.GetVillagesQueryDto !== "undefined" && village_dto_1.GetVillagesQueryDto) === "function" ? _d : Object]),
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+], VillageController.prototype, "getAllVillages", null);
 __decorate([
-    (0, common_1.Get)('getCommentById'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get village by ID',
+        description: 'Retrieves a specific village by its ID'
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'Village ID',
+        type: String
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Village found',
+        type: village_dto_1.VillageResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'Village not found'
+    }),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof comments_dto_1.GetCommentsIdDTO !== "undefined" && comments_dto_1.GetCommentsIdDTO) === "function" ? _d : Object, Object]),
-    __metadata("design:returntype", void 0)
-], CommentsController.prototype, "getCommentById", null);
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+], VillageController.prototype, "getVillageById", null);
 __decorate([
-    (0, common_1.Post)('deleteCommentById'),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, user_decorator_1.User)()),
+    (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update village by ID',
+        description: 'Updates a specific village with the provided information'
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'Village ID',
+        type: String
+    }),
+    (0, swagger_1.ApiBody)({
+        type: village_dto_1.UpdateVillageDto,
+        description: 'Village data to update (only provided fields will be updated)'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Village successfully updated',
+        type: village_dto_1.VillageResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'Village not found'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 409,
+        description: 'Village with this name already exists'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid input data'
+    }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof comments_dto_1.DeleteCommentIdDTO !== "undefined" && comments_dto_1.DeleteCommentIdDTO) === "function" ? _e : Object, Object]),
-    __metadata("design:returntype", void 0)
-], CommentsController.prototype, "deleteCommentById", null);
+    __metadata("design:paramtypes", [String, typeof (_g = typeof village_dto_1.UpdateVillageDto !== "undefined" && village_dto_1.UpdateVillageDto) === "function" ? _g : Object]),
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+], VillageController.prototype, "updateVillage", null);
 __decorate([
-    (0, common_1.Post)('updateCommentById'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, user_decorator_1.User)()),
+    (0, common_1.Delete)(':id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Delete village by ID',
+        description: 'Deletes a specific village by its ID'
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'Village ID',
+        type: String
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Village successfully deleted',
+        type: village_dto_1.DeleteVillageResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'Village not found'
+    }),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof comments_dto_1.UpdateCommentsDTO !== "undefined" && comments_dto_1.UpdateCommentsDTO) === "function" ? _f : Object, Object]),
-    __metadata("design:returntype", void 0)
-], CommentsController.prototype, "updateCommentById", null);
-exports.CommentsController = CommentsController = __decorate([
-    (0, swagger_1.ApiTags)('Comments'),
-    (0, common_1.Controller)('comment'),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof comments_service_1.CommentsService !== "undefined" && comments_service_1.CommentsService) === "function" ? _a : Object])
-], CommentsController);
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
+], VillageController.prototype, "deleteVillage", null);
+exports.VillageController = VillageController = __decorate([
+    (0, swagger_1.ApiTags)('Villages'),
+    (0, common_1.Controller)('villages'),
+    __metadata("design:paramtypes", [typeof (_a = typeof village_service_1.VillageService !== "undefined" && village_service_1.VillageService) === "function" ? _a : Object])
+], VillageController);
 
 
 /***/ }),
-/* 80 */
+
+/***/ "./src/village/village.module.ts":
+/*!***************************************!*\
+  !*** ./src/village/village.module.ts ***!
+  \***************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.VillageModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const village_controller_1 = __webpack_require__(/*! ./village.controller */ "./src/village/village.controller.ts");
+const village_service_1 = __webpack_require__(/*! ./village.service */ "./src/village/village.service.ts");
+const village_schema_1 = __webpack_require__(/*! ../schema/village/village.schema */ "./src/schema/village/village.schema.ts");
+let VillageModule = exports.VillageModule = class VillageModule {
+};
+exports.VillageModule = VillageModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([
+                {
+                    name: village_schema_1.Village.name,
+                    schema: village_schema_1.VillageSchema
+                }
+            ])
+        ],
+        controllers: [village_controller_1.VillageController],
+        providers: [village_service_1.VillageService],
+        exports: [village_service_1.VillageService]
+    })
+], VillageModule);
+
+
+/***/ }),
+
+/***/ "./src/village/village.service.ts":
+/*!****************************************!*\
+  !*** ./src/village/village.service.ts ***!
+  \****************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5240,186 +5991,368 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CommentsService = void 0;
-const common_1 = __webpack_require__(1);
-const mongoose_1 = __webpack_require__(8);
-const mongoose_2 = __webpack_require__(9);
-const comments_schema_1 = __webpack_require__(78);
-let CommentsService = exports.CommentsService = class CommentsService {
-    constructor(commentsModel) {
-        this.commentsModel = commentsModel;
+exports.VillageService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const village_schema_1 = __webpack_require__(/*! ../schema/village/village.schema */ "./src/schema/village/village.schema.ts");
+let VillageService = exports.VillageService = class VillageService {
+    constructor(villageModel) {
+        this.villageModel = villageModel;
     }
-    async createComments(createCommentsDTO) {
+    async createVillage(createVillageDto) {
         try {
-            let commmentDocument = await new this.commentsModel(createCommentsDTO).save();
-            return commmentDocument;
+            const villageData = {
+                ...createVillageDto,
+                status: createVillageDto.status || village_schema_1.VillageStatus.ACTIVE,
+                createdAt: new Date(),
+            };
+            const createdVillage = new this.villageModel(villageData);
+            return await createdVillage.save();
         }
         catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
+            if (error.code === 11000 && error.keyPattern?.name) {
+                throw new common_1.ConflictException(`Village with name '${createVillageDto.name}' already exists`);
+            }
+            throw error;
         }
     }
-    async getAllComments(getAllCommentsDto) {
+    async findAll(queryDto) {
+        const filter = {};
+        if (queryDto?.status) {
+            filter.status = queryDto.status;
+        }
+        if (queryDto?.search) {
+            filter.name = { $regex: queryDto.search, $options: 'i' };
+        }
+        return this.villageModel
+            .find(filter)
+            .select('_id name description status createdAt')
+            .sort({ createdAt: -1 })
+            .exec();
+    }
+    async findOne(id) {
+        return this.villageModel.findById(id).exec();
+    }
+    async findByName(name) {
+        return this.villageModel.findOne({ name }).exec();
+    }
+    async updateVillage(id, updateVillageDto) {
         try {
-            console.log(getAllCommentsDto.limit);
-            console.log(getAllCommentsDto.offset);
-            let pagination = [];
-            let commentsData = await this.commentsModel
-                .find({ isDeleted: false, postId: getAllCommentsDto.postId })
-                .sort({ sort: 1 })
-                .populate('postId')
-                .skip(parseInt(getAllCommentsDto.offset))
-                .limit(parseInt(getAllCommentsDto.limit));
-            let commment = await Promise.all(commentsData.map(async (Item) => {
-                return {
-                    comment: Item,
-                };
-            }));
-            return commment;
+            const existingVillage = await this.villageModel.findById(id).exec();
+            if (!existingVillage) {
+                throw new common_1.NotFoundException(`Village with ID '${id}' not found`);
+            }
+            const updateData = {};
+            if (updateVillageDto.name !== undefined)
+                updateData.name = updateVillageDto.name;
+            if (updateVillageDto.description !== undefined)
+                updateData.description = updateVillageDto.description;
+            if (updateVillageDto.status !== undefined)
+                updateData.status = updateVillageDto.status;
+            const updatedVillage = await this.villageModel
+                .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+                .exec();
+            if (!updatedVillage) {
+                throw new common_1.NotFoundException(`Village with ID '${id}' not found`);
+            }
+            return updatedVillage;
         }
         catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
+            if (error.code === 11000 && error.keyPattern?.name) {
+                throw new common_1.ConflictException(`Village with name '${updateVillageDto.name}' already exists`);
+            }
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ConflictException) {
+                throw error;
+            }
+            throw error;
         }
     }
-    async getCommentsById(getCommentsIdDTO) {
-        try {
-            let commentsData = await this.commentsModel
-                .find({ id: getCommentsIdDTO.id, }).exec();
-            let commentReturn = JSON.parse(JSON.stringify(commentsData[0]));
-            return commentReturn;
+    async deleteVillage(id) {
+        const existingVillage = await this.villageModel.findById(id).exec();
+        if (!existingVillage) {
+            throw new common_1.NotFoundException(`Village with ID '${id}' not found`);
         }
-        catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
+        const result = await this.villageModel.findByIdAndDelete(id).exec();
+        if (!result) {
+            throw new common_1.NotFoundException(`Village with ID '${id}' not found`);
         }
-    }
-    async deleteCommentsById(deleteCommentIdDTO) {
-        try {
-            let postData = await this.commentsModel
-                .deleteOne({ id: deleteCommentIdDTO.id, }).exec();
-        }
-        catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
-        }
-    }
-    async updateCommentsById(postId, updateCommentsDTO) {
-        try {
-            console.log(postId);
-            console.log("updated post ", updateCommentsDTO);
-            const comments = await this.commentsModel
-                .updateOne({ id: postId }, { $set: updateCommentsDTO });
-            console.log("updated post nnn ", comments);
-            return comments;
-        }
-        catch (error) {
-            console.log(error);
-            throw new common_1.BadRequestException(error?.message);
-        }
+        return {
+            success: true,
+            message: 'Village deleted successfully'
+        };
     }
 };
-exports.CommentsService = CommentsService = __decorate([
+exports.VillageService = VillageService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(comments_schema_1.Comments.name)),
+    __param(0, (0, mongoose_1.InjectModel)(village_schema_1.Village.name)),
     __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
-], CommentsService);
+], VillageService);
 
 
 /***/ }),
-/* 81 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+/***/ "@nestjs/common":
+/*!*********************************!*\
+  !*** external "@nestjs/common" ***!
+  \*********************************/
+/***/ ((module) => {
 
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UpdateCommentsDTO = exports.DeleteCommentIdDTO = exports.GetCommentsIdDTO = exports.GetAllCommmentDTO = exports.PaginationDTO = exports.CreateCommentsDTO = void 0;
-const swagger_1 = __webpack_require__(3);
-class CreateCommentsDTO {
-    static find() {
-        throw new Error('Method not implemented.');
-    }
-}
-exports.CreateCommentsDTO = CreateCommentsDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], CreateCommentsDTO.prototype, "userId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], CreateCommentsDTO.prototype, "postId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], CreateCommentsDTO.prototype, "text", void 0);
-class PaginationDTO {
-}
-exports.PaginationDTO = PaginationDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)({ default: 0 }),
-    __metadata("design:type", String)
-], PaginationDTO.prototype, "offset", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ default: 10 }),
-    __metadata("design:type", String)
-], PaginationDTO.prototype, "limit", void 0);
-class GetAllCommmentDTO extends PaginationDTO {
-}
-exports.GetAllCommmentDTO = GetAllCommmentDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: true }),
-    __metadata("design:type", String)
-], GetAllCommmentDTO.prototype, "postId", void 0);
-class GetCommentsIdDTO {
-}
-exports.GetCommentsIdDTO = GetCommentsIdDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], GetCommentsIdDTO.prototype, "id", void 0);
-class DeleteCommentIdDTO {
-}
-exports.DeleteCommentIdDTO = DeleteCommentIdDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], DeleteCommentIdDTO.prototype, "id", void 0);
-class UpdateCommentsDTO {
-}
-exports.UpdateCommentsDTO = UpdateCommentsDTO;
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], UpdateCommentsDTO.prototype, "id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], UpdateCommentsDTO.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], UpdateCommentsDTO.prototype, "pic", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", String)
-], UpdateCommentsDTO.prototype, "color", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)(),
-    __metadata("design:type", Boolean)
-], UpdateCommentsDTO.prototype, "isDeleted", void 0);
+module.exports = require("@nestjs/common");
 
+/***/ }),
+
+/***/ "@nestjs/config":
+/*!*********************************!*\
+  !*** external "@nestjs/config" ***!
+  \*********************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/config");
+
+/***/ }),
+
+/***/ "@nestjs/core":
+/*!*******************************!*\
+  !*** external "@nestjs/core" ***!
+  \*******************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/core");
+
+/***/ }),
+
+/***/ "@nestjs/jwt":
+/*!******************************!*\
+  !*** external "@nestjs/jwt" ***!
+  \******************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/jwt");
+
+/***/ }),
+
+/***/ "@nestjs/jwt/dist":
+/*!***********************************!*\
+  !*** external "@nestjs/jwt/dist" ***!
+  \***********************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/jwt/dist");
+
+/***/ }),
+
+/***/ "@nestjs/mongoose":
+/*!***********************************!*\
+  !*** external "@nestjs/mongoose" ***!
+  \***********************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/mongoose");
+
+/***/ }),
+
+/***/ "@nestjs/passport":
+/*!***********************************!*\
+  !*** external "@nestjs/passport" ***!
+  \***********************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/passport");
+
+/***/ }),
+
+/***/ "@nestjs/platform-express":
+/*!*******************************************!*\
+  !*** external "@nestjs/platform-express" ***!
+  \*******************************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/platform-express");
+
+/***/ }),
+
+/***/ "@nestjs/swagger":
+/*!**********************************!*\
+  !*** external "@nestjs/swagger" ***!
+  \**********************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/swagger");
+
+/***/ }),
+
+/***/ "@nestjs/websockets":
+/*!*************************************!*\
+  !*** external "@nestjs/websockets" ***!
+  \*************************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/websockets");
+
+/***/ }),
+
+/***/ "bcryptjs":
+/*!***************************!*\
+  !*** external "bcryptjs" ***!
+  \***************************/
+/***/ ((module) => {
+
+module.exports = require("bcryptjs");
+
+/***/ }),
+
+/***/ "class-transformer":
+/*!************************************!*\
+  !*** external "class-transformer" ***!
+  \************************************/
+/***/ ((module) => {
+
+module.exports = require("class-transformer");
+
+/***/ }),
+
+/***/ "class-validator":
+/*!**********************************!*\
+  !*** external "class-validator" ***!
+  \**********************************/
+/***/ ((module) => {
+
+module.exports = require("class-validator");
+
+/***/ }),
+
+/***/ "firebase-admin":
+/*!*********************************!*\
+  !*** external "firebase-admin" ***!
+  \*********************************/
+/***/ ((module) => {
+
+module.exports = require("firebase-admin");
+
+/***/ }),
+
+/***/ "form-data":
+/*!****************************!*\
+  !*** external "form-data" ***!
+  \****************************/
+/***/ ((module) => {
+
+module.exports = require("form-data");
+
+/***/ }),
+
+/***/ "jimp":
+/*!***********************!*\
+  !*** external "jimp" ***!
+  \***********************/
+/***/ ((module) => {
+
+module.exports = require("jimp");
+
+/***/ }),
+
+/***/ "mailgun.js":
+/*!*****************************!*\
+  !*** external "mailgun.js" ***!
+  \*****************************/
+/***/ ((module) => {
+
+module.exports = require("mailgun.js");
+
+/***/ }),
+
+/***/ "mongoose":
+/*!***************************!*\
+  !*** external "mongoose" ***!
+  \***************************/
+/***/ ((module) => {
+
+module.exports = require("mongoose");
+
+/***/ }),
+
+/***/ "multer":
+/*!*************************!*\
+  !*** external "multer" ***!
+  \*************************/
+/***/ ((module) => {
+
+module.exports = require("multer");
+
+/***/ }),
+
+/***/ "node-cron":
+/*!****************************!*\
+  !*** external "node-cron" ***!
+  \****************************/
+/***/ ((module) => {
+
+module.exports = require("node-cron");
+
+/***/ }),
+
+/***/ "node-mailjet":
+/*!*******************************!*\
+  !*** external "node-mailjet" ***!
+  \*******************************/
+/***/ ((module) => {
+
+module.exports = require("node-mailjet");
+
+/***/ }),
+
+/***/ "otp-generator":
+/*!********************************!*\
+  !*** external "otp-generator" ***!
+  \********************************/
+/***/ ((module) => {
+
+module.exports = require("otp-generator");
+
+/***/ }),
+
+/***/ "passport-jwt":
+/*!*******************************!*\
+  !*** external "passport-jwt" ***!
+  \*******************************/
+/***/ ((module) => {
+
+module.exports = require("passport-jwt");
+
+/***/ }),
+
+/***/ "socket.io":
+/*!****************************!*\
+  !*** external "socket.io" ***!
+  \****************************/
+/***/ ((module) => {
+
+module.exports = require("socket.io");
+
+/***/ }),
+
+/***/ "fs":
+/*!*********************!*\
+  !*** external "fs" ***!
+  \*********************/
+/***/ ((module) => {
+
+module.exports = require("fs");
+
+/***/ }),
+
+/***/ "path":
+/*!***********************!*\
+  !*** external "path" ***!
+  \***********************/
+/***/ ((module) => {
+
+module.exports = require("path");
 
 /***/ })
-/******/ 	]);
+
+/******/ 	});
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
@@ -5450,18 +6383,21 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 var exports = __webpack_exports__;
+/*!*********************!*\
+  !*** ./src/main.ts ***!
+  \*********************/
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const common_1 = __webpack_require__(1);
-const core_1 = __webpack_require__(2);
-const swagger_1 = __webpack_require__(3);
-const app_module_1 = __webpack_require__(4);
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const app_module_1 = __webpack_require__(/*! ./app.module */ "./src/app.module.ts");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.useGlobalPipes(new common_1.ValidationPipe());
     const config = new swagger_1.DocumentBuilder()
-        .setTitle('Chat app')
-        .setDescription('Chat App APIs')
+        .setTitle('Shop app')
+        .setDescription('Shop App APIs')
         .setVersion('1.0')
         .addBearerAuth()
         .addTag('apis')

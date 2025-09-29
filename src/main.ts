@@ -8,8 +8,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   const config = new DocumentBuilder()
-    .setTitle('Chat app')
-    .setDescription('Chat App APIs')
+    .setTitle('Shop app')
+    .setDescription('Shop App APIs')
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('apis')
