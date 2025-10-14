@@ -73,3 +73,4 @@ export class Login2FAResponseDTO {
     isTwoFactorEnabled: boolean;
   };
 }
+

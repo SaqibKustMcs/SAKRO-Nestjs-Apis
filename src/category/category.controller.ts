@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { 
   ApiTags, 
-  ApiBearerAuth, 
+  // ApiBearerAuth, 
   ApiOperation, 
   ApiResponse, 
   ApiQuery,
@@ -36,9 +36,9 @@ export class CategoryController {
     type: CategoryResponseDTO
   })
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  // @ApiResponse({ status: 401, description: 'Unauthorized' })
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard)
   @Post()
   createCategory(@Body() createCategoryDto: CreateCategoryDTO) {
     return this.categoryService.createCategory(createCategoryDto);
@@ -82,9 +82,9 @@ export class CategoryController {
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  // @ApiResponse({ status: 401, description: 'Unauthorized' })
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard)
   @Put(':id')
   updateCategory(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDTO) {
     return this.categoryService.updateCategory(id, updateCategoryDto);
@@ -95,9 +95,9 @@ export class CategoryController {
   @ApiResponse({ status: 200, description: 'Category deleted successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - category has children' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  // @ApiResponse({ status: 401, description: 'Unauthorized' })
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard)
   @Delete(':id')
   deleteCategory(@Param('id') id: string) {
     return this.categoryService.deleteCategory(id);

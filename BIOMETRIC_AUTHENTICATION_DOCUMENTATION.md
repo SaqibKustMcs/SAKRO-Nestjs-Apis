@@ -187,3 +187,4 @@ const updateBiometricStatus = async (isEnabled) => {
 ---
 
 **Note**: This biometric authentication system provides the foundation for mobile app integration. The actual biometric verification (fingerprint, face recognition, etc.) should be handled by the mobile device's native biometric APIs.
+

@@ -27,16 +27,18 @@ export class ShopController {
     return this.shopService.createShop(createShopDto, user.id);
   }
 
-  @ApiOperation({ summary: 'Get shop by ID' })
+  @ApiOperation({ summary: 'Get shops owned by the authenticated user' })
   @ApiResponse({ 
     status: 200, 
-    description: 'Shop retrieved successfully',
-    type: ShopResponseDTO
+    description: 'User shops retrieved successfully',
+    type: [ShopResponseDTO]
   })
-  @ApiResponse({ status: 404, description: 'Shop not found' })
-  @Get(':id')
-  getShopById(@Param('id') id: string) {
-    return this.shopService.getShopById(id);
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('my-shops')
+  getMyShops(@User() user) {
+    return this.shopService.getShopsByOwner(user.id);
   }
 
   @ApiOperation({ summary: 'Get all active shops' })
@@ -48,6 +50,18 @@ export class ShopController {
   @Get()
   getAllShops() {
     return this.shopService.getAllShops();
+  }
+
+  @ApiOperation({ summary: 'Get shop by ID' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Shop retrieved successfully',
+    type: ShopResponseDTO
+  })
+  @ApiResponse({ status: 404, description: 'Shop not found' })
+  @Get(':id')
+  getShopById(@Param('id') id: string) {
+    return this.shopService.getShopById(id);
   }
 
   @ApiOperation({ summary: 'Update shop by ID' })
@@ -82,19 +96,5 @@ export class ShopController {
   @Delete(':id')
   deleteShop(@Param('id') id: string, @User() user) {
     return this.shopService.deleteShop(id, user.id);
-  }
-
-  @ApiOperation({ summary: 'Get shops owned by the authenticated user' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'User shops retrieved successfully',
-    type: [ShopResponseDTO]
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Get('my-shops')
-  getMyShops(@User() user) {
-    return this.shopService.getShopsByOwner(user.id);
   }
 }

@@ -331,13 +331,11 @@ export class AuthService {
         throw new Error('Invalid Email');
       }
 
-      // const otp = otpGenerator.generate(6, {
-      //   upperCaseAlphabets: false,
-      //   lowerCaseAlphabets: false,
-      //   specialChars: false,
-      // });
-
-      const otp = '123456';
+      const otp = otpGenerator.generate(6, {
+        upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
+      });
 
       const expiryTime = new Date(Date.now()).getTime() + 2 * 60 * 1000;
 
@@ -367,7 +365,6 @@ export class AuthService {
       }
 
       const otpAlreadyPresent = await this._otpModel.find({
-        isKYC: true,
         userID: user.id,
         isUsed: false,
         type: OtpTypeEnum.FORGOT_PASSWORD,
@@ -381,16 +378,17 @@ export class AuthService {
 
       await this._otpModel.create(otpObject);
 
-      /*
-       send email
-       */
+      // Send OTP email
+      const userName = user?.fullName || user?.name || emailDto?.email;
+      
+      await this.utilsService.sendEmail({
+        to: emailDto?.email,
+        subject: "Password Reset - Verification Code",
+        html: getEmail(userName, otp, false),
+        text: `Your password reset verification code is: ${otp}`
+      });
 
-      // const res = await this.utilsService.sendEmail({
-      //   from: `Buildings Up<no-reply@${process.env.MAILGUN_DOMAIN}>`,
-      //   to: [emailDto?.email],
-      //   subject: "Confirm your email",
-      //   html: getEmail(`${user?.firstname} ${user?.lastname}`, otp, false)
-      // })
+      console.log(`🔐 Forgot Password OTP sent to ${emailDto?.email}: ${otp}`);
 
       return {
         status: 'success',

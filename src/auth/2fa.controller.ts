@@ -138,3 +138,4 @@ export class Auth2FAController {
     return await this.authService.loginWith2FA(login2FADto);
   }
 }
+

@@ -3,26 +3,19 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Post, PostSchema } from 'src/schema/post/post.schema';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
-import { UserData, UserDataSchema } from '@app/chat/schemas/user.schema';
+import { UserSchema } from 'src/schema/user/user.schema';
+import { VillageSchema } from 'src/schema/village/village.schema';
 
 @Module({
     imports: [
-      
-      MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
-      MongooseModule.forFeature([{
-        name: Post.name,
-        schema: PostSchema,
-      },
-      {
-        name: UserData.name,
-        schema: UserDataSchema,
-      }
-      ])
+        MongooseModule.forFeature([
+            { name: Post.name, schema: PostSchema },
+            { name: 'User', schema: UserSchema },
+            { name: 'Village', schema: VillageSchema }
+        ])
     ],
     controllers: [PostController],
-    providers: [ PostService,Post],
+    providers: [PostService],
     exports: [PostService]
-  })export class PostModule {
-
-     
-}
+})
+export class PostModule {}

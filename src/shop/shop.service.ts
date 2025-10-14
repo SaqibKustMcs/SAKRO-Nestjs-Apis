@@ -213,6 +213,8 @@ export class ShopService {
 
   async getShopsByOwner(userId: string) {
     try {
+      console.log('🔍 Getting shops for user:', userId);
+      
       const shops = await this.shopModel
         .find({ user: userId })
         .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
@@ -220,6 +222,14 @@ export class ShopService {
         .populate('categoryId', 'id name')
         .sort({ createdAt: -1 })
         .exec();
+
+      console.log('✅ Found shops:', shops.length);
+
+      // If no shops found, return empty array instead of throwing error
+      if (!shops || shops.length === 0) {
+        console.log('ℹ️ No shops found for user, returning empty array');
+        return [];
+      }
 
       // Remove password from user objects
       shops.forEach(shop => {
@@ -231,8 +241,10 @@ export class ShopService {
 
       return shops;
     } catch (err) {
-      console.log(err);
-      throw new BadRequestException(err?.message || 'Failed to get user shops');
+      console.log('❌ Error getting user shops:', err);
+      // Return empty array instead of throwing error
+      // This prevents 400 error when user has no shops
+      return [];
     }
   }
 }

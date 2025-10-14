@@ -211,7 +211,7 @@ export class CategoryService {
     // Validate shopCategoryId exists for PRODUCT_CATEGORY and SUBCATEGORY
     if (createCategoryDto.shopCategoryId) {
       const shopCategory = await this.categoryModel.findOne({
-        id: createCategoryDto.shopCategoryId,
+        _id: createCategoryDto.shopCategoryId,
         type: 'SHOP_CATEGORY',
         status: 'ACTIVE'
       });
@@ -223,7 +223,7 @@ export class CategoryService {
     // Validate productCategoryId exists for SUBCATEGORY
     if (createCategoryDto.productCategoryId) {
       const productCategory = await this.categoryModel.findOne({
-        id: createCategoryDto.productCategoryId,
+        _id: createCategoryDto.productCategoryId,
         type: 'PRODUCT_CATEGORY',
         status: 'ACTIVE'
       });

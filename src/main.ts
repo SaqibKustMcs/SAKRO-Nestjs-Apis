@@ -19,8 +19,11 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3101;
 
-  await app.listen(port);
+  // Listen on all network interfaces (0.0.0.0) to allow connections from same network
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`API is running on port ${port}`);
+  console.log(`API is running on http://0.0.0.0:${port}`);
+  console.log(`Local: http://localhost:${port}`);
+  console.log(`Network: http://192.168.18.32:${port}`);
 }
 bootstrap();

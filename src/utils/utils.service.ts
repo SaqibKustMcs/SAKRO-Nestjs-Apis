@@ -18,7 +18,30 @@ export class UtilsService {
 
     async sendEmail(emailDto: SendEmailDTO) {
         try {
-            debugger;
+            // Check if Mailjet is configured (not dummy values)
+            const isMailjetConfigured = process.env.MAILJET_API_KEY && 
+                                       process.env.MAILJET_API_KEY !== '0' &&
+                                       process.env.MAILJET_API_KEY !== 'dummy-key-not-configured';
+            
+            if (!isMailjetConfigured) {
+                // Development mode - log OTP instead of sending email
+                console.log('\n========================================');
+                console.log('📧 EMAIL NOT SENT (Development Mode)');
+                console.log('To:', emailDto.to);
+                console.log('Subject:', emailDto.subject);
+                console.log('HTML Content:', emailDto.html);
+                console.log('========================================\n');
+                
+                // Return mock success response
+                return {
+                    Messages: [{
+                        Status: 'success',
+                        To: [{ Email: emailDto.to }]
+                    }]
+                };
+            }
+            
+            // Production mode - send actual email
             const request = await this.mailjet.post('send', { version: 'v3.1' }).request({
                 Messages: [
                     {
@@ -41,7 +64,7 @@ export class UtilsService {
 
             return request.body;
         } catch (err) {
-            console.log(err);
+            console.log('Email sending error:', err);
             throw new Error(err?.message);
         }
     }
