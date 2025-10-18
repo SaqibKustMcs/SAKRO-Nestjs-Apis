@@ -8,7 +8,7 @@ import { query } from 'express';
 import { generateStringId } from 'src/utils/utils';
 // import { User } from 'src/decorators/user.decorator';
 import { Post } from 'src/schema/post/post.schema';
-import { UserData } from '@app/chat/schemas/user.schema';
+// Removed legacy chat user schema import
 import { async } from 'rxjs';
 import { CreateCommentsDTO, DeleteCommentIdDTO, GetAllCommmentDTO, GetCommentsIdDTO, UpdateCommentsDTO } from './dto/comments.dto';
 import { Order } from 'src/schema/order/order.schema';

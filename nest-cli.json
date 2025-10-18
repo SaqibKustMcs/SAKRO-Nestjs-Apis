@@ -7,14 +7,6 @@
     "webpack": true
   },
   "projects": {
-    "chat": {
-      "type": "library",
-      "root": "libs/chat",
-      "entryFile": "index",
-      "sourceRoot": "libs/chat/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/chat/tsconfig.lib.json"
-      }
-    }
+    
   }
 }

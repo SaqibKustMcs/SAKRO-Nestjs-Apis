@@ -27,7 +27,7 @@
     "@nestjs/mongoose": "^10.0.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.20",
-    "@nestjs/platform-socket.io": "^10.0.3",
+    "@nestjs/platform-socket.io": "^10.4.20",
     "@nestjs/swagger": "^7.4.2",
     "@nestjs/websockets": "^10.4.20",
     "@types/qrcode": "^1.5.5",
@@ -94,9 +94,6 @@
     "roots": [
       "<rootDir>/src/",
       "<rootDir>/libs/"
-    ],
-    "moduleNameMapper": {
-      "^@app/chat(|/.*)$": "<rootDir>/libs/chat/src/$1"
-    }
+    ]
   }
 }

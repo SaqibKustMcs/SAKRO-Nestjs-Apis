@@ -9,7 +9,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from 'src/schema/user/user.schema';
 import { OtpSchema } from 'src/schema/otp/otp.schema';
 import { UtilsService } from '../utils/utils.service';
-import { ChatModule } from '@app/chat';
+// Removed legacy ChatModule import
 
 @Module({})
 export class AuthModule {
@@ -19,13 +19,14 @@ export class AuthModule {
         JwtModule.register({
           secret: process.env.JWT_SECRET,
           signOptions: { expiresIn: '9999999999s' },
+          global: true, // Make JWT module global to avoid conflicts
         }),
         MongooseModule.forFeature([
           { name: 'User', schema: UserSchema },
           { name: 'Otp', schema: OtpSchema },
         ]),
 
-        ChatModule,
+        // Removed legacy ChatModule to avoid conflicts with new chat module
       ],
       controllers: [AuthController, TwoFactorController, Auth2FAController],
       providers: [AuthService, TwoFactorService, JwtStrategy, UtilsService],

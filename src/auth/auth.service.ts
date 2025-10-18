@@ -19,7 +19,6 @@ import { EmailDTO } from './dto/email.dto';
 import * as otpGenerator from 'otp-generator';
 import { getEmail } from './email';
 import { UtilsService } from '../utils/utils.service';
-import { ChatService } from '@app/chat/chat.service';
 import { Login2FADTO } from './dto/2fa.dto';
 import { TwoFactorService } from './2fa.service';
 import { UpdateBiometricStatusDTO } from './dto/biometric.dto';
@@ -31,7 +30,6 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectModel('User') private _userModel: Model<User>,
     @InjectModel('Otp') private _otpModel: Model<Otp>,
-    private chatService: ChatService,
     private utilsService: UtilsService,
     private twoFactorService: TwoFactorService,
   ) {
@@ -280,12 +278,7 @@ export class AuthService {
 
       const token = await this.generateToken(userData);
 
-      await this.chatService.addUser({
-        userId: userData.id,
-        name: userData.name,
-        pic: userData.pic,
-        color: userData.color,
-      });
+      // Removed legacy chat user creation hook
 
       return { status: 'success', token };
     } catch (err) {
