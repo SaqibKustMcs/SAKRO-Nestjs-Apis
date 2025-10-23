@@ -91,10 +91,17 @@ export class PostService {
             });
         }
 
+        // Handle villageId - return it as string if populated object is available
+        let villageIdResponse: any = populatedPost.villageId;
+        if (villageIdResponse && typeof villageIdResponse === 'object') {
+            // If populated and is an object, return the id field
+            villageIdResponse = villageIdResponse.id || populatedPost.villageId;
+        }
+
         return {
             id: populatedPost.id,
             userId: populatedPost.userId as any,
-            villageId: populatedPost.villageId as any,
+            villageId: villageIdResponse,
             type: populatedPost.type,
             text: populatedPost.text,
             mediaUrl: populatedPost.mediaUrl,
@@ -112,11 +119,18 @@ export class PostService {
 
     async createPost(createPostDTO: CreatePostDTO, userId: string): Promise<{ success: boolean; message: string; data: PostResponseDTO }> {
         try {
+            // Validate villageId first
+            if (!createPostDTO.villageId || createPostDTO.villageId.trim().length === 0) {
+                throw new BadRequestException('Village ID is required for creating posts');
+            }
+
             // Validate post type specific requirements
             this.validatePostData(createPostDTO);
 
-            const postData = {
-                ...createPostDTO,
+            // Build post data, only including fields that are relevant for each post type
+            const postData: any = {
+                villageId: createPostDTO.villageId.trim(),
+                type: createPostDTO.type,
                 userId,
                 options: createPostDTO.options?.map(option => ({
                     id: generateStringId(),
@@ -125,8 +139,35 @@ export class PostService {
                 })) || []
             };
 
+            // Include text for all post types (required for text posts, optional for others)
+            if (createPostDTO.text !== undefined && createPostDTO.text !== null) {
+                postData.text = createPostDTO.text;
+            }
+
+            // Only include mediaType for image/video posts when mediaType is actually provided
+            if ((createPostDTO.type === 'image' || createPostDTO.type === 'video') && 
+                createPostDTO.mediaType && 
+                createPostDTO.mediaType !== null && 
+                createPostDTO.mediaType !== undefined) {
+                postData.mediaType = createPostDTO.mediaType;
+            }
+
+            // Include mediaUrl for image/video posts when provided
+            if (createPostDTO.mediaUrl !== undefined && createPostDTO.mediaUrl !== null) {
+                postData.mediaUrl = createPostDTO.mediaUrl;
+            }
+
+            // Include question for question posts
+            if (createPostDTO.question !== undefined && createPostDTO.question !== null) {
+                postData.question = createPostDTO.question;
+            }
+
+            console.log('📝 Creating post with data:', JSON.stringify(postData, null, 2));
+
             const postDocument = await new this.postModel(postData).save();
             const populatedPost = await this.populatePostData(postDocument, userId);
+
+            console.log('✅ Post created successfully:', postDocument.id);
 
             return {
                 success: true,
@@ -134,7 +175,7 @@ export class PostService {
                 data: populatedPost
             };
         } catch (error) {
-            console.log(error);
+            console.log('❌ Error creating post:', error);
             throw new BadRequestException(error?.message || 'Failed to create post');
         }
     }
@@ -163,7 +204,7 @@ export class PostService {
             // Get total count
             const total = await this.postModel.countDocuments(filter);
 
-            // Get posts with pagination
+            // Get posts with pagination - try to populate villageId but handle gracefully if it fails
             const posts = await this.postModel
                 .find(filter)
                 .populate('userId', 'id fullName email profilePic')
@@ -201,20 +242,40 @@ export class PostService {
                         });
                     }
 
+                    // Handle villageId properly - get the raw value if population failed
+                    let villageIdResponse: any = null;
+                    
+                    // First try to get the populated value
+                    if (post.villageId && typeof post.villageId === 'object') {
+                        villageIdResponse = (post.villageId as any).id || (post.villageId as any)._id;
+                    } else if (post.villageId && typeof post.villageId === 'string') {
+                        // If it's a string, it's the raw value (population failed)
+                        villageIdResponse = post.villageId;
+                    } else {
+                        // Try to get the raw value from the database
+                        try {
+                            const rawPost = await this.postModel.findById(post._id).select('villageId').lean();
+                            villageIdResponse = rawPost?.villageId || null;
+                        } catch (error) {
+                            console.log('Error getting raw villageId:', error);
+                            villageIdResponse = null;
+                        }
+                    }
+
                     return {
                         id: post.id,
                         userId: post.userId as any,
-                        villageId: post.villageId as any,
+                        villageId: villageIdResponse,
                         type: post.type,
-                        text: post.text,
-                        mediaUrl: post.mediaUrl,
-                        mediaType: post.mediaType,
-                        question: post.question,
+                        text: post.text || '', // Use text field from schema
+                        mediaUrl: post.mediaUrl || '',
+                        mediaType: post.mediaType || null,
+                        question: post.question || '',
                         options: optionsWithPercentages,
-                        totalVotes: post.totalVotes,
+                        totalVotes: post.totalVotes || 0,
                         hasVoted: post.type === 'question' ? hasVoted : undefined,
                         votedOptionId: post.type === 'question' ? votedOptionId : undefined,
-                        isDeleted: post.isDeleted,
+                        isDeleted: post.isDeleted || false,
                         createdAt: post.createdAt,
                         updatedAt: post.updatedAt
                     };

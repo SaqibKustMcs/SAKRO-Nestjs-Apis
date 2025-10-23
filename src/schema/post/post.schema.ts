@@ -45,9 +45,10 @@ export class Post {
   @Prop({ 
     type: String, 
     enum: ['image', 'video'], 
-    default: null 
+    default: undefined,
+    required: false 
   })
-  mediaType: 'image' | 'video' | null;
+  mediaType?: 'image' | 'video';
 
   @Prop({ type: String, default: '' })
   question: string;

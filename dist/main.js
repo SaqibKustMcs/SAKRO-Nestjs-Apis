@@ -5810,10 +5810,14 @@ let PostService = exports.PostService = class PostService {
                 };
             });
         }
+        let villageIdResponse = populatedPost.villageId;
+        if (villageIdResponse && typeof villageIdResponse === 'object') {
+            villageIdResponse = villageIdResponse.id || populatedPost.villageId;
+        }
         return {
             id: populatedPost.id,
             userId: populatedPost.userId,
-            villageId: populatedPost.villageId,
+            villageId: villageIdResponse,
             type: populatedPost.type,
             text: populatedPost.text,
             mediaUrl: populatedPost.mediaUrl,
@@ -5830,9 +5834,13 @@ let PostService = exports.PostService = class PostService {
     }
     async createPost(createPostDTO, userId) {
         try {
+            if (!createPostDTO.villageId || createPostDTO.villageId.trim().length === 0) {
+                throw new common_1.BadRequestException('Village ID is required for creating posts');
+            }
             this.validatePostData(createPostDTO);
             const postData = {
-                ...createPostDTO,
+                villageId: createPostDTO.villageId.trim(),
+                type: createPostDTO.type,
                 userId,
                 options: createPostDTO.options?.map(option => ({
                     id: (0, utils_1.generateStringId)(),
@@ -5840,8 +5848,25 @@ let PostService = exports.PostService = class PostService {
                     votes: []
                 })) || []
             };
+            if (createPostDTO.text !== undefined && createPostDTO.text !== null) {
+                postData.text = createPostDTO.text;
+            }
+            if ((createPostDTO.type === 'image' || createPostDTO.type === 'video') &&
+                createPostDTO.mediaType &&
+                createPostDTO.mediaType !== null &&
+                createPostDTO.mediaType !== undefined) {
+                postData.mediaType = createPostDTO.mediaType;
+            }
+            if (createPostDTO.mediaUrl !== undefined && createPostDTO.mediaUrl !== null) {
+                postData.mediaUrl = createPostDTO.mediaUrl;
+            }
+            if (createPostDTO.question !== undefined && createPostDTO.question !== null) {
+                postData.question = createPostDTO.question;
+            }
+            console.log('📝 Creating post with data:', JSON.stringify(postData, null, 2));
             const postDocument = await new this.postModel(postData).save();
             const populatedPost = await this.populatePostData(postDocument, userId);
+            console.log('✅ Post created successfully:', postDocument.id);
             return {
                 success: true,
                 message: 'Post created successfully',
@@ -5849,7 +5874,7 @@ let PostService = exports.PostService = class PostService {
             };
         }
         catch (error) {
-            console.log(error);
+            console.log('❌ Error creating post:', error);
             throw new common_1.BadRequestException(error?.message || 'Failed to create post');
         }
     }
@@ -5901,20 +5926,37 @@ let PostService = exports.PostService = class PostService {
                         };
                     });
                 }
+                let villageIdResponse = null;
+                if (post.villageId && typeof post.villageId === 'object') {
+                    villageIdResponse = post.villageId.id || post.villageId._id;
+                }
+                else if (post.villageId && typeof post.villageId === 'string') {
+                    villageIdResponse = post.villageId;
+                }
+                else {
+                    try {
+                        const rawPost = await this.postModel.findById(post._id).select('villageId').lean();
+                        villageIdResponse = rawPost?.villageId || null;
+                    }
+                    catch (error) {
+                        console.log('Error getting raw villageId:', error);
+                        villageIdResponse = null;
+                    }
+                }
                 return {
                     id: post.id,
                     userId: post.userId,
-                    villageId: post.villageId,
+                    villageId: villageIdResponse,
                     type: post.type,
-                    text: post.text,
-                    mediaUrl: post.mediaUrl,
-                    mediaType: post.mediaType,
-                    question: post.question,
+                    text: post.text || '',
+                    mediaUrl: post.mediaUrl || '',
+                    mediaType: post.mediaType || null,
+                    question: post.question || '',
                     options: optionsWithPercentages,
-                    totalVotes: post.totalVotes,
+                    totalVotes: post.totalVotes || 0,
                     hasVoted: post.type === 'question' ? hasVoted : undefined,
                     votedOptionId: post.type === 'question' ? votedOptionId : undefined,
-                    isDeleted: post.isDeleted,
+                    isDeleted: post.isDeleted || false,
                     createdAt: post.createdAt,
                     updatedAt: post.updatedAt
                 };
@@ -8472,7 +8514,8 @@ __decorate([
     (0, mongoose_1.Prop)({
         type: String,
         enum: ['image', 'video'],
-        default: null
+        default: undefined,
+        required: false
     }),
     __metadata("design:type", String)
 ], Post.prototype, "mediaType", void 0);
@@ -10526,7 +10569,7 @@ async function bootstrap() {
     await app.listen(port, '0.0.0.0');
     console.log(`API is running on http://0.0.0.0:${port}`);
     console.log(`Local: http://localhost:${port}`);
-    console.log(`Network: http://192.168.18.32:${port}`);
+    console.log(`Network: http://172.29.90.95:${port}`);
 }
 bootstrap();
 
