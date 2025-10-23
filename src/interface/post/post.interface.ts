@@ -17,6 +17,8 @@ export interface Post extends Document {
   question: string;
   options: PostOption[];
   totalVotes: number;
+  likedBy: string[];
+  likesCount: number;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;

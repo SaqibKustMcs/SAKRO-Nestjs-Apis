@@ -4093,11 +4093,12 @@ let CommentsController = exports.CommentsController = class CommentsController {
     constructor(commentService) {
         this.commentService = commentService;
     }
-    createComment(createCommentDTO) {
+    createComment(createCommentDTO, user) {
+        createCommentDTO.userId = user.id;
         return this.commentService.createComments(createCommentDTO);
     }
     getAllComments(getAllCommentsDTO, user) {
-        return this.commentService.getAllComments(getAllCommentsDTO);
+        return this.commentService.getAllComments(getAllCommentsDTO, user.id);
     }
     getCommentById(getCommentIdDTO, user) {
         return this.commentService.getCommentsById(getCommentIdDTO);
@@ -4108,12 +4109,16 @@ let CommentsController = exports.CommentsController = class CommentsController {
     updateCommentById(updateCommentDTO, user) {
         return this.commentService.updateCommentsById(updateCommentDTO.id, updateCommentDTO);
     }
+    toggleLikeComment(commentId, user) {
+        return this.commentService.toggleLikeComment(commentId, user.id);
+    }
 };
 __decorate([
     (0, common_1.Post)('createComment'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof comments_dto_1.CreateCommentsDTO !== "undefined" && comments_dto_1.CreateCommentsDTO) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [typeof (_b = typeof comments_dto_1.CreateCommentsDTO !== "undefined" && comments_dto_1.CreateCommentsDTO) === "function" ? _b : Object, Object]),
     __metadata("design:returntype", void 0)
 ], CommentsController.prototype, "createComment", null);
 __decorate([
@@ -4148,6 +4153,14 @@ __decorate([
     __metadata("design:paramtypes", [typeof (_f = typeof comments_dto_1.UpdateCommentsDTO !== "undefined" && comments_dto_1.UpdateCommentsDTO) === "function" ? _f : Object, Object]),
     __metadata("design:returntype", void 0)
 ], CommentsController.prototype, "updateCommentById", null);
+__decorate([
+    (0, common_1.Post)(':id/like'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], CommentsController.prototype, "toggleLikeComment", null);
 exports.CommentsController = CommentsController = __decorate([
     (0, swagger_1.ApiTags)('Comments'),
     (0, common_1.Controller)('comment'),
@@ -4178,6 +4191,8 @@ exports.CommentsModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
+const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
+const post_schema_1 = __webpack_require__(/*! src/schema/post/post.schema */ "./src/schema/post/post.schema.ts");
 const comments_controller_1 = __webpack_require__(/*! ./comments.controller */ "./src/comments/comments.controller.ts");
 const comments_service_1 = __webpack_require__(/*! ./comments.service */ "./src/comments/comments.service.ts");
 let CommentsModule = exports.CommentsModule = CommentsModule_1 = class CommentsModule {
@@ -4186,15 +4201,24 @@ exports.CommentsModule = CommentsModule = CommentsModule_1 = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
-            mongoose_1.MongooseModule.forFeature([{
+            mongoose_1.MongooseModule.forFeature([
+                {
                     name: comments_schema_1.Comments.name,
                     schema: comments_schema_1.CommentsSchema,
                 },
+                {
+                    name: user_schema_1.User.name,
+                    schema: user_schema_1.UserSchema,
+                },
+                {
+                    name: post_schema_1.Post.name,
+                    schema: post_schema_1.PostSchema,
+                }
             ]),
             CommentsModule_1
         ],
         controllers: [comments_controller_1.CommentsController],
-        providers: [comments_service_1.CommentsService, comments_schema_1.Comments],
+        providers: [comments_service_1.CommentsService],
         exports: [comments_service_1.CommentsService]
     })
 ], CommentsModule);
@@ -4221,48 +4245,67 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommentsService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const post_schema_1 = __webpack_require__(/*! src/schema/post/post.schema */ "./src/schema/post/post.schema.ts");
 const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
+const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 let CommentsService = exports.CommentsService = class CommentsService {
-    constructor(commentsModel) {
+    constructor(commentsModel, userModel, postModel) {
         this.commentsModel = commentsModel;
+        this.userModel = userModel;
+        this.postModel = postModel;
     }
     async createComments(createCommentsDTO) {
         try {
-            let commmentDocument = await new this.commentsModel(createCommentsDTO).save();
-            return commmentDocument;
+            const post = await this.postModel.findOne({ id: createCommentsDTO.postId, isDeleted: false });
+            if (!post) {
+                throw new common_1.NotFoundException('Post not found');
+            }
+            const user = await this.userModel.findOne({ id: createCommentsDTO.userId, isDeleted: false });
+            if (!user) {
+                throw new common_1.NotFoundException('User not found');
+            }
+            const commentDocument = await new this.commentsModel({
+                ...createCommentsDTO,
+                likesCount: 0,
+                likedBy: [],
+            }).save();
+            const populatedComment = await this.populateCommentData(commentDocument, createCommentsDTO.userId);
+            return {
+                success: true,
+                message: 'Comment created successfully',
+                data: populatedComment
+            };
         }
         catch (error) {
             console.log(error);
-            throw new common_1.BadRequestException(error?.message);
+            throw new common_1.BadRequestException(error?.message || 'Failed to create comment');
         }
     }
-    async getAllComments(getAllCommentsDto) {
+    async getAllComments(getAllCommentsDto, currentUserId) {
         try {
-            console.log(getAllCommentsDto.limit);
-            console.log(getAllCommentsDto.offset);
-            let pagination = [];
-            let commentsData = await this.commentsModel
+            const commentsData = await this.commentsModel
                 .find({ isDeleted: false, postId: getAllCommentsDto.postId })
-                .sort({ sort: 1 })
-                .populate('postId')
+                .sort({ createdAt: -1 })
                 .skip(parseInt(getAllCommentsDto.offset))
                 .limit(parseInt(getAllCommentsDto.limit));
-            let commment = await Promise.all(commentsData.map(async (Item) => {
-                return {
-                    comment: Item,
-                };
+            const populatedComments = await Promise.all(commentsData.map(async (comment) => {
+                return await this.populateCommentData(comment, currentUserId);
             }));
-            return commment;
+            return {
+                success: true,
+                message: 'Comments fetched successfully',
+                data: populatedComments
+            };
         }
         catch (error) {
             console.log(error);
-            throw new common_1.BadRequestException(error?.message);
+            throw new common_1.BadRequestException(error?.message || 'Failed to fetch comments');
         }
     }
     async getCommentsById(getCommentsIdDTO) {
@@ -4301,11 +4344,68 @@ let CommentsService = exports.CommentsService = class CommentsService {
             throw new common_1.BadRequestException(error?.message);
         }
     }
+    async toggleLikeComment(commentId, userId) {
+        try {
+            const comment = await this.commentsModel.findOne({ id: commentId, isDeleted: false });
+            if (!comment) {
+                throw new common_1.NotFoundException('Comment not found');
+            }
+            const isLiked = comment.likedBy.includes(userId);
+            if (isLiked) {
+                comment.likedBy = comment.likedBy.filter(id => id !== userId);
+                comment.likesCount = Math.max(0, comment.likesCount - 1);
+            }
+            else {
+                comment.likedBy.push(userId);
+                comment.likesCount = comment.likesCount + 1;
+            }
+            await comment.save();
+            const populatedComment = await this.populateCommentData(comment, userId);
+            return {
+                success: true,
+                message: isLiked ? 'Comment unliked successfully' : 'Comment liked successfully',
+                data: populatedComment
+            };
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to toggle like');
+        }
+    }
+    async populateCommentData(comment, currentUserId) {
+        try {
+            const user = await this.userModel.findOne({ id: comment.userId, isDeleted: false });
+            return {
+                id: comment.id,
+                userId: user ? {
+                    id: user.id,
+                    fullName: user.fullName,
+                    profilePic: user.profilePic,
+                    email: user.email,
+                } : null,
+                postId: comment.postId,
+                text: comment.text,
+                parentCommentId: comment.parentCommentId,
+                likedBy: comment.likedBy || [],
+                likesCount: comment.likesCount || 0,
+                isLiked: currentUserId ? (comment.likedBy || []).includes(currentUserId) : false,
+                isDeleted: comment.isDeleted,
+                createdAt: comment.createdAt,
+                updatedAt: comment.updatedAt
+            };
+        }
+        catch (error) {
+            console.log('Error populating comment data:', error);
+            throw error;
+        }
+    }
 };
 exports.CommentsService = CommentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(comments_schema_1.Comments.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __param(1, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(2, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object])
 ], CommentsService);
 
 
@@ -4327,27 +4427,29 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UpdateCommentsDTO = exports.DeleteCommentIdDTO = exports.GetCommentsIdDTO = exports.GetAllCommmentDTO = exports.PaginationDTO = exports.CreateCommentsDTO = void 0;
+exports.LikeCommentDTO = exports.CommentResponseDTO = exports.UpdateCommentsDTO = exports.DeleteCommentIdDTO = exports.GetCommentsIdDTO = exports.GetAllCommmentDTO = exports.PaginationDTO = exports.CreateCommentsDTO = void 0;
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateCommentsDTO {
-    static find() {
-        throw new Error('Method not implemented.');
-    }
 }
 exports.CreateCommentsDTO = CreateCommentsDTO;
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'User ID who is creating the comment' }),
     __metadata("design:type", String)
 ], CreateCommentsDTO.prototype, "userId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'Post ID to comment on' }),
     __metadata("design:type", String)
 ], CreateCommentsDTO.prototype, "postId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'Comment text content' }),
     __metadata("design:type", String)
 ], CreateCommentsDTO.prototype, "text", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Parent comment ID for replies', required: false }),
+    __metadata("design:type", String)
+], CreateCommentsDTO.prototype, "parentCommentId", void 0);
 class PaginationDTO {
 }
 exports.PaginationDTO = PaginationDTO;
@@ -4384,25 +4486,67 @@ class UpdateCommentsDTO {
 }
 exports.UpdateCommentsDTO = UpdateCommentsDTO;
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'Comment ID to update' }),
     __metadata("design:type", String)
 ], UpdateCommentsDTO.prototype, "id", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'Updated comment text' }),
     __metadata("design:type", String)
-], UpdateCommentsDTO.prototype, "name", void 0);
+], UpdateCommentsDTO.prototype, "text", void 0);
+class CommentResponseDTO {
+}
+exports.CommentResponseDTO = CommentResponseDTO;
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'Comment ID' }),
     __metadata("design:type", String)
-], UpdateCommentsDTO.prototype, "pic", void 0);
+], CommentResponseDTO.prototype, "id", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'User who created the comment' }),
+    __metadata("design:type", Object)
+], CommentResponseDTO.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Post ID this comment belongs to' }),
     __metadata("design:type", String)
-], UpdateCommentsDTO.prototype, "color", void 0);
+], CommentResponseDTO.prototype, "postId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'Comment text content' }),
+    __metadata("design:type", String)
+], CommentResponseDTO.prototype, "text", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Parent comment ID for replies', required: false }),
+    __metadata("design:type", String)
+], CommentResponseDTO.prototype, "parentCommentId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'List of user IDs who liked this comment' }),
+    __metadata("design:type", Array)
+], CommentResponseDTO.prototype, "likedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total number of likes' }),
+    __metadata("design:type", Number)
+], CommentResponseDTO.prototype, "likesCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Whether the current user has liked this comment', required: false }),
     __metadata("design:type", Boolean)
-], UpdateCommentsDTO.prototype, "isDeleted", void 0);
+], CommentResponseDTO.prototype, "isLiked", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Whether the comment is deleted' }),
+    __metadata("design:type", Boolean)
+], CommentResponseDTO.prototype, "isDeleted", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Comment creation date' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], CommentResponseDTO.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Comment last update date' }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], CommentResponseDTO.prototype, "updatedAt", void 0);
+class LikeCommentDTO {
+}
+exports.LikeCommentDTO = LikeCommentDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Comment ID to like/unlike' }),
+    __metadata("design:type", String)
+], LikeCommentDTO.prototype, "commentId", void 0);
 
 
 /***/ }),
@@ -5452,6 +5596,18 @@ __decorate([
     __metadata("design:type", Number)
 ], PostResponseDTO.prototype, "totalVotes", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ description: 'List of user IDs who liked this post' }),
+    __metadata("design:type", Array)
+], PostResponseDTO.prototype, "likedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total number of likes' }),
+    __metadata("design:type", Number)
+], PostResponseDTO.prototype, "likesCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Whether the current user has liked this post', required: false }),
+    __metadata("design:type", Boolean)
+], PostResponseDTO.prototype, "isLiked", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ description: 'Whether the current user has voted on this question post', required: false }),
     __metadata("design:type", Boolean)
 ], PostResponseDTO.prototype, "hasVoted", void 0);
@@ -5539,6 +5695,9 @@ let PostController = exports.PostController = class PostController {
     }
     voteOnPost(postId, votePostDTO, user) {
         return this.postService.voteOnPost(postId, votePostDTO, user.id);
+    }
+    toggleLike(postId, user) {
+        return this.postService.toggleLike(postId, user.id);
     }
 };
 __decorate([
@@ -5670,6 +5829,32 @@ __decorate([
     __metadata("design:paramtypes", [String, typeof (_e = typeof post_dto_1.VotePostDTO !== "undefined" && post_dto_1.VotePostDTO) === "function" ? _e : Object, Object]),
     __metadata("design:returntype", void 0)
 ], PostController.prototype, "voteOnPost", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Like or unlike a post' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Like status updated successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/PostResponseDTO' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Post not found' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(':id/like'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "toggleLike", null);
 exports.PostController = PostController = __decorate([
     (0, swagger_1.ApiTags)('Community Posts'),
     (0, common_1.Controller)('posts'),
@@ -5825,6 +6010,9 @@ let PostService = exports.PostService = class PostService {
             question: populatedPost.question,
             options: optionsWithPercentages,
             totalVotes: populatedPost.totalVotes,
+            likedBy: populatedPost.likedBy || [],
+            likesCount: populatedPost.likesCount || 0,
+            isLiked: currentUserId ? (populatedPost.likedBy || []).includes(currentUserId) : false,
             hasVoted: populatedPost.type === 'question' ? hasVoted : undefined,
             votedOptionId: populatedPost.type === 'question' ? votedOptionId : undefined,
             isDeleted: populatedPost.isDeleted,
@@ -5954,6 +6142,9 @@ let PostService = exports.PostService = class PostService {
                     question: post.question || '',
                     options: optionsWithPercentages,
                     totalVotes: post.totalVotes || 0,
+                    likedBy: post.likedBy || [],
+                    likesCount: post.likesCount || 0,
+                    isLiked: currentUserId ? (post.likedBy || []).includes(currentUserId) : false,
                     hasVoted: post.type === 'question' ? hasVoted : undefined,
                     votedOptionId: post.type === 'question' ? votedOptionId : undefined,
                     isDeleted: post.isDeleted || false,
@@ -6082,6 +6273,34 @@ let PostService = exports.PostService = class PostService {
         catch (error) {
             console.log(error);
             throw new common_1.BadRequestException(error?.message || 'Failed to record vote');
+        }
+    }
+    async toggleLike(postId, userId) {
+        try {
+            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+            if (!post) {
+                throw new common_1.NotFoundException('Post not found');
+            }
+            const isLiked = post.likedBy.includes(userId);
+            if (isLiked) {
+                post.likedBy = post.likedBy.filter(id => id !== userId);
+                post.likesCount = Math.max(0, post.likesCount - 1);
+            }
+            else {
+                post.likedBy.push(userId);
+                post.likesCount = post.likesCount + 1;
+            }
+            await post.save();
+            const populatedPost = await this.populatePostData(post, userId);
+            return {
+                success: true,
+                message: isLiked ? 'Post unliked successfully' : 'Post liked successfully',
+                data: populatedPost
+            };
+        }
+        catch (error) {
+            console.log(error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to toggle like');
         }
     }
 };
@@ -8270,6 +8489,18 @@ __decorate([
     __metadata("design:type", String)
 ], Comments.prototype, "text", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Comments.prototype, "parentCommentId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], Comments.prototype, "likedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, default: 0 }),
+    __metadata("design:type", Number)
+], Comments.prototype, "likesCount", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ type: Boolean, default: false }),
     __metadata("design:type", Boolean)
 ], Comments.prototype, "isDeleted", void 0);
@@ -8532,6 +8763,14 @@ __decorate([
     __metadata("design:type", Number)
 ], Post.prototype, "totalVotes", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], Post.prototype, "likedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, default: 0 }),
+    __metadata("design:type", Number)
+], Post.prototype, "likesCount", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ type: Boolean, default: false }),
     __metadata("design:type", Boolean)
 ], Post.prototype, "isDeleted", void 0);
@@ -8762,7 +9001,7 @@ exports.ShopSchema.index({ isVerified: 1 });
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.User = exports.UserSchema = void 0;
+exports.User = exports.UserModel = exports.UserSchema = void 0;
 const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
 const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
 var bcrypt = __webpack_require__(/*! bcryptjs */ "bcryptjs");
@@ -8798,7 +9037,7 @@ exports.UserSchema = new mongoose_1.Schema({
     collection: 'users',
     timestamps: true,
 });
-(0, mongoose_1.model)('users', exports.UserSchema);
+exports.UserModel = (0, mongoose_1.model)('users', exports.UserSchema);
 exports.UserSchema.set('timestamps', true);
 exports.UserSchema.set('toJSON', {
     virtuals: true,

@@ -10,9 +10,10 @@ import { generateStringId } from 'src/utils/utils';
 import { Post } from 'src/schema/post/post.schema';
 // Removed legacy chat user schema import
 import { async } from 'rxjs';
-import { CreateCommentsDTO, DeleteCommentIdDTO, GetAllCommmentDTO, GetCommentsIdDTO, UpdateCommentsDTO } from './dto/comments.dto';
+import { CreateCommentsDTO, DeleteCommentIdDTO, GetAllCommmentDTO, GetCommentsIdDTO, UpdateCommentsDTO, CommentResponseDTO, LikeCommentDTO } from './dto/comments.dto';
 import { Order } from 'src/schema/order/order.schema';
 import { Comments } from 'src/schema/comments/comments.schema';
+import { User } from 'src/schema/user/user.schema';
 
 
 
@@ -25,65 +26,70 @@ export class CommentsService {
 
     constructor(
         @InjectModel(Comments.name) private commentsModel: Model<Comments>,
-        // @InjectModel(UserData.name) private userModel: Model<UserData>,
-       
-
+        @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel(Post.name) private postModel: Model<Post>,
     ){}
 
 
  
 
-    async createComments(createCommentsDTO: CreateCommentsDTO): Promise<Comments> {
+    async createComments(createCommentsDTO: CreateCommentsDTO): Promise<{ success: boolean; message: string; data: CommentResponseDTO }> {
         try {
+            // Validate that the post exists
+            const post = await this.postModel.findOne({ id: createCommentsDTO.postId, isDeleted: false });
+            if (!post) {
+                throw new NotFoundException('Post not found');
+            }
 
-          
+            // Validate that the user exists
+            const user = await this.userModel.findOne({ id: createCommentsDTO.userId, isDeleted: false });
+            if (!user) {
+                throw new NotFoundException('User not found');
+            }
 
+            // Create the comment
+            const commentDocument = await new this.commentsModel({
+                ...createCommentsDTO,
+                likesCount: 0,
+                likedBy: [],
+            }).save();
 
-            let commmentDocument = await new this.commentsModel(createCommentsDTO).save();
+            // Populate the comment with user data
+            const populatedComment = await this.populateCommentData(commentDocument, createCommentsDTO.userId);
 
-
-
-         
-
-              
-
-
-          
-
-
-            return commmentDocument;
+            return {
+                success: true,
+                message: 'Comment created successfully',
+                data: populatedComment
+            };
 
         } catch (error) {
             console.log(error);
-            throw new BadRequestException(error?.message);
+            throw new BadRequestException(error?.message || 'Failed to create comment');
         }
     }
-    async getAllComments(getAllCommentsDto: GetAllCommmentDTO) {
+    async getAllComments(getAllCommentsDto: GetAllCommmentDTO, currentUserId?: string): Promise<{ success: boolean; message: string; data: CommentResponseDTO[] }> {
         try {
+            const commentsData = await this.commentsModel
+                .find({ isDeleted: false, postId: getAllCommentsDto.postId })
+                .sort({ createdAt: -1 }) // Sort by newest first
+                .skip(parseInt(getAllCommentsDto.offset))
+                .limit(parseInt(getAllCommentsDto.limit));
 
-            console.log(getAllCommentsDto.limit);
-            console.log(getAllCommentsDto.offset);
-            let pagination = [];
-            let commentsData = await this.commentsModel
-            .find({ isDeleted: false,postId:getAllCommentsDto.postId})
-            .sort({ sort: 1 })
-            .populate('postId')
-            .skip(parseInt(getAllCommentsDto.offset))
-            .limit(parseInt(getAllCommentsDto.limit))
-            
+            const populatedComments = await Promise.all(
+                commentsData.map(async (comment) => {
+                    return await this.populateCommentData(comment, currentUserId);
+                })
+            );
 
-            let commment = await Promise.all(commentsData.map(async (Item) => {
-        
             return {
-                  comment: Item,
-                //  user: createdBy
-                };
-              }));
-          
-            return commment ;
+                success: true,
+                message: 'Comments fetched successfully',
+                data: populatedComments
+            };
         } catch (error) {
             console.log(error);
-            throw new BadRequestException(error?.message);
+            throw new BadRequestException(error?.message || 'Failed to fetch comments');
         }
     }
     async getCommentsById(getCommentsIdDTO: GetCommentsIdDTO): Promise<Comments | null>  {
@@ -137,8 +143,67 @@ export class CommentsService {
         }
     }
 
+    async toggleLikeComment(commentId: string, userId: string): Promise<{ success: boolean; message: string; data: CommentResponseDTO }> {
+        try {
+            const comment = await this.commentsModel.findOne({ id: commentId, isDeleted: false });
 
+            if (!comment) {
+                throw new NotFoundException('Comment not found');
+            }
 
-   
+            const isLiked = comment.likedBy.includes(userId);
 
+            if (isLiked) {
+                // Unlike the comment
+                comment.likedBy = comment.likedBy.filter(id => id !== userId);
+                comment.likesCount = Math.max(0, comment.likesCount - 1);
+            } else {
+                // Like the comment
+                comment.likedBy.push(userId);
+                comment.likesCount = comment.likesCount + 1;
+            }
+
+            await comment.save();
+
+            const populatedComment = await this.populateCommentData(comment, userId);
+
+            return {
+                success: true,
+                message: isLiked ? 'Comment unliked successfully' : 'Comment liked successfully',
+                data: populatedComment
+            };
+        } catch (error) {
+            console.log(error);
+            throw new BadRequestException(error?.message || 'Failed to toggle like');
+        }
+    }
+
+    private async populateCommentData(comment: any, currentUserId?: string): Promise<CommentResponseDTO> {
+        try {
+            // Populate user data
+            const user = await this.userModel.findOne({ id: comment.userId, isDeleted: false });
+            
+            return {
+                id: comment.id,
+                userId: user ? {
+                    id: user.id,
+                    fullName: user.fullName,
+                    profilePic: user.profilePic,
+                    email: user.email,
+                } : null,
+                postId: comment.postId,
+                text: comment.text,
+                parentCommentId: comment.parentCommentId,
+                likedBy: comment.likedBy || [],
+                likesCount: comment.likesCount || 0,
+                isLiked: currentUserId ? (comment.likedBy || []).includes(currentUserId) : false,
+                isDeleted: comment.isDeleted,
+                createdAt: comment.createdAt,
+                updatedAt: comment.updatedAt
+            };
+        } catch (error) {
+            console.log('Error populating comment data:', error);
+            throw error;
+        }
+    }
 }

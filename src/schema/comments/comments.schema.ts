@@ -6,8 +6,6 @@ export type commentsDocument = HydratedDocument<Comments>;
 
 @Schema()
 export class Comments {
- 
-
     @Prop({ type: String, default: generateStringId })
     id: string;
 
@@ -16,8 +14,19 @@ export class Comments {
 
     @Prop({ type: String, default: '' })
     postId: string;
+    
     @Prop({ type: String, default: '' })
     text: string;
+    
+    @Prop({ type: String, default: '' })
+    parentCommentId: string; // For replies
+    
+    @Prop({ type: [String], default: [] })
+    likedBy: string[];
+    
+    @Prop({ type: Number, default: 0 })
+    likesCount: number;
+    
     @Prop({ type: Boolean, default: false })
     isDeleted: boolean;
 }

@@ -127,4 +127,27 @@ export class PostController {
     voteOnPost(@Param('id') postId: string, @Body() votePostDTO: VotePostDTO, @User() user) {
         return this.postService.voteOnPost(postId, votePostDTO, user.id);
     }
+
+    @ApiOperation({ summary: 'Like or unlike a post' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Like status updated successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/PostResponseDTO' }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Bad request' })
+    @ApiResponse({ status: 404, description: 'Post not found' })
+    @ApiParam({ name: 'id', description: 'Post ID' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Post(':id/like')
+    toggleLike(@Param('id') postId: string, @User() user) {
+        return this.postService.toggleLike(postId, user.id);
+    }
 }

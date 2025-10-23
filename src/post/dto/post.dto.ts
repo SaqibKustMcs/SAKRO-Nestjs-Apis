@@ -262,6 +262,15 @@ export class PostResponseDTO {
   @ApiProperty({ description: 'Total votes for question posts' })
   totalVotes: number;
 
+  @ApiProperty({ description: 'List of user IDs who liked this post' })
+  likedBy: string[];
+
+  @ApiProperty({ description: 'Total number of likes' })
+  likesCount: number;
+
+  @ApiProperty({ description: 'Whether the current user has liked this post', required: false })
+  isLiked?: boolean;
+
   @ApiProperty({ description: 'Whether the current user has voted on this question post', required: false })
   hasVoted?: boolean;
 

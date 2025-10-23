@@ -45,7 +45,7 @@ export const UserSchema = new Schema(
   },
 );
 
-model('users', UserSchema);
+export const UserModel = model<User>('users', UserSchema);
 
 UserSchema.set('timestamps', true);
 UserSchema.set('toJSON', {

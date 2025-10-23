@@ -109,6 +109,9 @@ export class PostService {
             question: populatedPost.question,
             options: optionsWithPercentages,
             totalVotes: populatedPost.totalVotes,
+            likedBy: populatedPost.likedBy || [],
+            likesCount: populatedPost.likesCount || 0,
+            isLiked: currentUserId ? (populatedPost.likedBy || []).includes(currentUserId) : false,
             hasVoted: populatedPost.type === 'question' ? hasVoted : undefined,
             votedOptionId: populatedPost.type === 'question' ? votedOptionId : undefined,
             isDeleted: populatedPost.isDeleted,
@@ -273,6 +276,9 @@ export class PostService {
                         question: post.question || '',
                         options: optionsWithPercentages,
                         totalVotes: post.totalVotes || 0,
+                        likedBy: post.likedBy || [],
+                        likesCount: post.likesCount || 0,
+                        isLiked: currentUserId ? (post.likedBy || []).includes(currentUserId) : false,
                         hasVoted: post.type === 'question' ? hasVoted : undefined,
                         votedOptionId: post.type === 'question' ? votedOptionId : undefined,
                         isDeleted: post.isDeleted || false,
@@ -438,6 +444,41 @@ export class PostService {
         } catch (error) {
             console.log(error);
             throw new BadRequestException(error?.message || 'Failed to record vote');
+        }
+    }
+
+    async toggleLike(postId: string, userId: string): Promise<{ success: boolean; message: string; data: PostResponseDTO }> {
+        try {
+            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+
+            if (!post) {
+                throw new NotFoundException('Post not found');
+            }
+
+            const isLiked = post.likedBy.includes(userId);
+
+            if (isLiked) {
+                // Unlike the post
+                post.likedBy = post.likedBy.filter(id => id !== userId);
+                post.likesCount = Math.max(0, post.likesCount - 1);
+            } else {
+                // Like the post
+                post.likedBy.push(userId);
+                post.likesCount = post.likesCount + 1;
+            }
+
+            await post.save();
+
+            const populatedPost = await this.populatePostData(post, userId);
+
+            return {
+                success: true,
+                message: isLiked ? 'Post unliked successfully' : 'Post liked successfully',
+                data: populatedPost
+            };
+        } catch (error) {
+            console.log(error);
+            throw new BadRequestException(error?.message || 'Failed to toggle like');
         }
     }
 }

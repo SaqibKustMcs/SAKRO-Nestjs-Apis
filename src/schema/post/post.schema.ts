@@ -59,6 +59,12 @@ export class Post {
   @Prop({ type: Number, default: 0 })
   totalVotes: number;
 
+  @Prop({ type: [String], default: [] })
+  likedBy: string[];
+
+  @Prop({ type: Number, default: 0 })
+  likesCount: number;
+
   @Prop({ type: Boolean, default: false })
   isDeleted: boolean;
 

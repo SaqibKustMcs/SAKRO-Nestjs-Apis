@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/decorators/user.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CommentsService } from './comments.service';
-import { CreateCommentsDTO, DeleteCommentIdDTO, GetAllCommmentDTO, GetCommentsIdDTO, UpdateCommentsDTO } from './dto/comments.dto';
+import { CreateCommentsDTO, DeleteCommentIdDTO, GetAllCommmentDTO, GetCommentsIdDTO, UpdateCommentsDTO, LikeCommentDTO } from './dto/comments.dto';
 @ApiTags('Comments')
 @Controller('comment')
 @ApiBearerAuth()
@@ -13,13 +13,14 @@ export class CommentsController {
     constructor(private readonly commentService: CommentsService) { }
 
     @Post('createComment')
-    createComment(@Body() createCommentDTO: CreateCommentsDTO) {
+    createComment(@Body() createCommentDTO: CreateCommentsDTO, @User() user) {
+      createCommentDTO.userId = user.id;
       return this.commentService.createComments(createCommentDTO);
     }
   
     @Get('getAllComments')
     getAllComments(@Query() getAllCommentsDTO: GetAllCommmentDTO, @User() user) {
-      return this.commentService.getAllComments(getAllCommentsDTO );
+      return this.commentService.getAllComments(getAllCommentsDTO, user.id);
     }
     @Get('getCommentById')
     getCommentById(@Query() getCommentIdDTO: GetCommentsIdDTO, @User() user) {
@@ -33,6 +34,9 @@ export class CommentsController {
     updateCommentById(@Body() updateCommentDTO: UpdateCommentsDTO, @User() user) {
       return this.commentService.updateCommentsById(updateCommentDTO.id,updateCommentDTO );
     }
-    
 
+    @Post(':id/like')
+    toggleLikeComment(@Param('id') commentId: string, @User() user) {
+      return this.commentService.toggleLikeComment(commentId, user.id);
+    }
 }
