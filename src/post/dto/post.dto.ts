@@ -268,6 +268,12 @@ export class PostResponseDTO {
   @ApiProperty({ description: 'Total number of likes' })
   likesCount: number;
 
+  @ApiProperty({ description: 'Total number of comments (including replies)' })
+  commentsCount: number;
+
+  @ApiProperty({ description: 'Total number of shares' })
+  sharesCount: number;
+
   @ApiProperty({ description: 'Whether the current user has liked this post', required: false })
   isLiked?: boolean;
 

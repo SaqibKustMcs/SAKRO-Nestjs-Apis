@@ -150,4 +150,27 @@ export class PostController {
     toggleLike(@Param('id') postId: string, @User() user) {
         return this.postService.toggleLike(postId, user.id);
     }
+
+    @ApiOperation({ summary: 'Share a post (increment share count)' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Post shared successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/PostResponseDTO' }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Bad request' })
+    @ApiResponse({ status: 404, description: 'Post not found' })
+    @ApiParam({ name: 'id', description: 'Post ID' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Post(':id/share')
+    sharePost(@Param('id') postId: string, @User() user) {
+        return this.postService.sharePost(postId, user.id);
+    }
 }

@@ -4261,19 +4261,30 @@ let CommentsService = exports.CommentsService = class CommentsService {
     }
     async createComments(createCommentsDTO) {
         try {
+            console.log('💬 Creating comment with data:', {
+                postId: createCommentsDTO.postId,
+                userId: createCommentsDTO.userId,
+                text: createCommentsDTO.text,
+                parentCommentId: createCommentsDTO.parentCommentId
+            });
             const post = await this.postModel.findOne({ id: createCommentsDTO.postId, isDeleted: false });
             if (!post) {
+                console.log(`❌ Post not found: ${createCommentsDTO.postId}`);
                 throw new common_1.NotFoundException('Post not found');
             }
-            const user = await this.userModel.findOne({ id: createCommentsDTO.userId, isDeleted: false });
+            console.log('✅ Post found:', post.id);
+            const user = await this.userModel.findOne({ _id: createCommentsDTO.userId, isDeleted: false });
             if (!user) {
+                console.log(`❌ User not found: ${createCommentsDTO.userId}`);
                 throw new common_1.NotFoundException('User not found');
             }
+            console.log('✅ User found:', user._id);
             const commentDocument = await new this.commentsModel({
                 ...createCommentsDTO,
                 likesCount: 0,
                 likedBy: [],
             }).save();
+            console.log('✅ Comment created:', commentDocument.id);
             const populatedComment = await this.populateCommentData(commentDocument, createCommentsDTO.userId);
             return {
                 success: true,
@@ -4282,7 +4293,8 @@ let CommentsService = exports.CommentsService = class CommentsService {
             };
         }
         catch (error) {
-            console.log(error);
+            console.log('❌ Error creating comment:', error?.message);
+            console.log('❌ Full error:', error);
             throw new common_1.BadRequestException(error?.message || 'Failed to create comment');
         }
     }
@@ -4373,11 +4385,11 @@ let CommentsService = exports.CommentsService = class CommentsService {
     }
     async populateCommentData(comment, currentUserId) {
         try {
-            const user = await this.userModel.findOne({ id: comment.userId, isDeleted: false });
+            const user = await this.userModel.findOne({ _id: comment.userId, isDeleted: false });
             return {
                 id: comment.id,
                 userId: user ? {
-                    id: user.id,
+                    id: user._id,
                     fullName: user.fullName,
                     profilePic: user.profilePic,
                     email: user.email,
@@ -4430,23 +4442,32 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LikeCommentDTO = exports.CommentResponseDTO = exports.UpdateCommentsDTO = exports.DeleteCommentIdDTO = exports.GetCommentsIdDTO = exports.GetAllCommmentDTO = exports.PaginationDTO = exports.CreateCommentsDTO = void 0;
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class CreateCommentsDTO {
 }
 exports.CreateCommentsDTO = CreateCommentsDTO;
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'User ID who is creating the comment' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateCommentsDTO.prototype, "userId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Post ID to comment on' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateCommentsDTO.prototype, "postId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Comment text content' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateCommentsDTO.prototype, "text", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Parent comment ID for replies', required: false }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateCommentsDTO.prototype, "parentCommentId", void 0);
 class PaginationDTO {
@@ -4454,10 +4475,14 @@ class PaginationDTO {
 exports.PaginationDTO = PaginationDTO;
 __decorate([
     (0, swagger_1.ApiProperty)({ default: 0 }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], PaginationDTO.prototype, "offset", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ default: 10 }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], PaginationDTO.prototype, "limit", void 0);
 class GetAllCommmentDTO extends PaginationDTO {
@@ -4465,6 +4490,8 @@ class GetAllCommmentDTO extends PaginationDTO {
 exports.GetAllCommmentDTO = GetAllCommmentDTO;
 __decorate([
     (0, swagger_1.ApiProperty)({ required: true }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], GetAllCommmentDTO.prototype, "postId", void 0);
 class GetCommentsIdDTO {
@@ -4472,6 +4499,8 @@ class GetCommentsIdDTO {
 exports.GetCommentsIdDTO = GetCommentsIdDTO;
 __decorate([
     (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], GetCommentsIdDTO.prototype, "id", void 0);
 class DeleteCommentIdDTO {
@@ -4479,6 +4508,8 @@ class DeleteCommentIdDTO {
 exports.DeleteCommentIdDTO = DeleteCommentIdDTO;
 __decorate([
     (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], DeleteCommentIdDTO.prototype, "id", void 0);
 class UpdateCommentsDTO {
@@ -4486,10 +4517,14 @@ class UpdateCommentsDTO {
 exports.UpdateCommentsDTO = UpdateCommentsDTO;
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Comment ID to update' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], UpdateCommentsDTO.prototype, "id", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Updated comment text' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], UpdateCommentsDTO.prototype, "text", void 0);
 class CommentResponseDTO {
@@ -4544,6 +4579,8 @@ class LikeCommentDTO {
 exports.LikeCommentDTO = LikeCommentDTO;
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Comment ID to like/unlike' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], LikeCommentDTO.prototype, "commentId", void 0);
 
@@ -5603,6 +5640,14 @@ __decorate([
     __metadata("design:type", Number)
 ], PostResponseDTO.prototype, "likesCount", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total number of comments (including replies)' }),
+    __metadata("design:type", Number)
+], PostResponseDTO.prototype, "commentsCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total number of shares' }),
+    __metadata("design:type", Number)
+], PostResponseDTO.prototype, "sharesCount", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ description: 'Whether the current user has liked this post', required: false }),
     __metadata("design:type", Boolean)
 ], PostResponseDTO.prototype, "isLiked", void 0);
@@ -5697,6 +5742,9 @@ let PostController = exports.PostController = class PostController {
     }
     toggleLike(postId, user) {
         return this.postService.toggleLike(postId, user.id);
+    }
+    sharePost(postId, user) {
+        return this.postService.sharePost(postId, user.id);
     }
 };
 __decorate([
@@ -5854,6 +5902,32 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], PostController.prototype, "toggleLike", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Share a post (increment share count)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Post shared successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/PostResponseDTO' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Post not found' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(':id/share'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "sharePost", null);
 exports.PostController = PostController = __decorate([
     (0, swagger_1.ApiTags)('Community Posts'),
     (0, common_1.Controller)('posts'),
@@ -5885,6 +5959,7 @@ const post_controller_1 = __webpack_require__(/*! ./post.controller */ "./src/po
 const post_service_1 = __webpack_require__(/*! ./post.service */ "./src/post/post.service.ts");
 const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 const village_schema_1 = __webpack_require__(/*! src/schema/village/village.schema */ "./src/schema/village/village.schema.ts");
+const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
 let PostModule = exports.PostModule = class PostModule {
 };
 exports.PostModule = PostModule = __decorate([
@@ -5893,7 +5968,8 @@ exports.PostModule = PostModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: post_schema_1.Post.name, schema: post_schema_1.PostSchema },
                 { name: 'User', schema: user_schema_1.UserSchema },
-                { name: 'Village', schema: village_schema_1.VillageSchema }
+                { name: 'Village', schema: village_schema_1.VillageSchema },
+                { name: comments_schema_1.Comments.name, schema: comments_schema_1.CommentsSchema }
             ])
         ],
         controllers: [post_controller_1.PostController],
@@ -5924,19 +6000,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PostService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
 const post_schema_1 = __webpack_require__(/*! src/schema/post/post.schema */ "./src/schema/post/post.schema.ts");
+const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
 const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
 let PostService = exports.PostService = class PostService {
-    constructor(postModel, userModel, villageModel) {
+    constructor(postModel, userModel, villageModel, commentsModel) {
         this.postModel = postModel;
         this.userModel = userModel;
         this.villageModel = villageModel;
+        this.commentsModel = commentsModel;
     }
     validatePostData(createPostDTO) {
         const { type, text, mediaUrl, mediaType, question, options } = createPostDTO;
@@ -5998,6 +6076,7 @@ let PostService = exports.PostService = class PostService {
         if (villageIdResponse && typeof villageIdResponse === 'object') {
             villageIdResponse = villageIdResponse.id || populatedPost.villageId;
         }
+        const commentsCount = await this.calculateCommentsCount(populatedPost.id);
         return {
             id: populatedPost.id,
             userId: populatedPost.userId,
@@ -6011,6 +6090,8 @@ let PostService = exports.PostService = class PostService {
             totalVotes: populatedPost.totalVotes,
             likedBy: populatedPost.likedBy || [],
             likesCount: populatedPost.likesCount || 0,
+            commentsCount: commentsCount,
+            sharesCount: populatedPost.sharesCount || 0,
             isLiked: currentUserId ? (populatedPost.likedBy || []).includes(currentUserId) : false,
             hasVoted: populatedPost.type === 'question' ? hasVoted : undefined,
             votedOptionId: populatedPost.type === 'question' ? votedOptionId : undefined,
@@ -6018,6 +6099,21 @@ let PostService = exports.PostService = class PostService {
             createdAt: populatedPost.createdAt,
             updatedAt: populatedPost.updatedAt
         };
+    }
+    async calculateCommentsCount(postId) {
+        try {
+            const allComments = await this.commentsModel.find({
+                postId: postId,
+                isDeleted: false
+            }).exec();
+            const count = allComments.length;
+            console.log(`📊 Post ${postId} - Total comments count: ${count}`);
+            return count;
+        }
+        catch (error) {
+            console.log('❌ Error calculating comments count:', error);
+            return 0;
+        }
     }
     async createPost(createPostDTO, userId) {
         try {
@@ -6092,6 +6188,7 @@ let PostService = exports.PostService = class PostService {
                 .skip(offset)
                 .limit(limit)
                 .lean();
+            console.log(`📊 Processing ${posts.length} posts with comments count calculation...`);
             const processedPosts = await Promise.all(posts.map(async (post) => {
                 let optionsWithPercentages = [];
                 let hasVoted = false;
@@ -6130,6 +6227,7 @@ let PostService = exports.PostService = class PostService {
                         villageIdResponse = null;
                     }
                 }
+                const commentsCount = await this.calculateCommentsCount(post.id);
                 return {
                     id: post.id,
                     userId: post.userId,
@@ -6143,6 +6241,8 @@ let PostService = exports.PostService = class PostService {
                     totalVotes: post.totalVotes || 0,
                     likedBy: post.likedBy || [],
                     likesCount: post.likesCount || 0,
+                    commentsCount: commentsCount,
+                    sharesCount: post.sharesCount || 0,
                     isLiked: currentUserId ? (post.likedBy || []).includes(currentUserId) : false,
                     hasVoted: post.type === 'question' ? hasVoted : undefined,
                     votedOptionId: post.type === 'question' ? votedOptionId : undefined,
@@ -6302,13 +6402,36 @@ let PostService = exports.PostService = class PostService {
             throw new common_1.BadRequestException(error?.message || 'Failed to toggle like');
         }
     }
+    async sharePost(postId, userId) {
+        try {
+            console.log(`🔗 User ${userId} sharing post ${postId}`);
+            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+            if (!post) {
+                throw new common_1.NotFoundException('Post not found');
+            }
+            post.sharesCount = (post.sharesCount || 0) + 1;
+            await post.save();
+            console.log(`✅ Post ${postId} share count: ${post.sharesCount}`);
+            const populatedPost = await this.populatePostData(post, userId);
+            return {
+                success: true,
+                message: 'Post shared successfully',
+                data: populatedPost
+            };
+        }
+        catch (error) {
+            console.log('❌ Error sharing post:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to share post');
+        }
+    }
 };
 exports.PostService = PostService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
     __param(1, (0, mongoose_1.InjectModel)('User')),
     __param(2, (0, mongoose_1.InjectModel)('Village')),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object])
+    __param(3, (0, mongoose_1.InjectModel)(comments_schema_1.Comments.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object])
 ], PostService);
 
 
@@ -8769,6 +8892,14 @@ __decorate([
     (0, mongoose_1.Prop)({ type: Number, default: 0 }),
     __metadata("design:type", Number)
 ], Post.prototype, "likesCount", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, default: 0 }),
+    __metadata("design:type", Number)
+], Post.prototype, "commentsCount", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, default: 0 }),
+    __metadata("design:type", Number)
+], Post.prototype, "sharesCount", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: Boolean, default: false }),
     __metadata("design:type", Boolean)

@@ -1,45 +1,71 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateCommentsDTO {
     @ApiProperty({ description: 'User ID who is creating the comment' })
+    @IsString()
+    @IsOptional() // Made optional since controller sets it from JWT
     userId: string;
     
     @ApiProperty({ description: 'Post ID to comment on' })
+    @IsString()
+    @IsNotEmpty()
     postId: string;
     
     @ApiProperty({ description: 'Comment text content' })
+    @IsString()
+    @IsNotEmpty()
     text: string;
     
     @ApiProperty({ description: 'Parent comment ID for replies', required: false })
+    @IsString()
+    @IsOptional()
     parentCommentId?: string;
 }
 export class PaginationDTO {
     @ApiProperty({ default: 0 })
+    @IsString()
+    @IsOptional()
     offset: string;
+    
     @ApiProperty({ default: 10 })
+    @IsString()
+    @IsOptional()
     limit: string;
 }
+
 export class GetAllCommmentDTO extends PaginationDTO {
-     @ApiProperty({ required: true })
-     postId: string;
+    @ApiProperty({ required: true })
+    @IsString()
+    @IsNotEmpty()
+    postId: string;
+    
     static offset: any;
     static limit: any;
 }
 export class GetCommentsIdDTO {
     @ApiProperty()
+    @IsString()
+    @IsOptional()
     id?: string;
-   
 }
+
 export class DeleteCommentIdDTO {
     @ApiProperty()
+    @IsString()
+    @IsOptional()
     id?: string;
-   
 }
+
 export class UpdateCommentsDTO {
     @ApiProperty({ description: 'Comment ID to update' })
+    @IsString()
+    @IsNotEmpty()
     id: string;
     
     @ApiProperty({ description: 'Updated comment text' })
+    @IsString()
+    @IsNotEmpty()
     text: string;
 }
 
@@ -80,6 +106,8 @@ export class CommentResponseDTO {
 
 export class LikeCommentDTO {
     @ApiProperty({ description: 'Comment ID to like/unlike' })
+    @IsString()
+    @IsNotEmpty()
     commentId: string;
 }
 

@@ -65,6 +65,12 @@ export class Post {
   @Prop({ type: Number, default: 0 })
   likesCount: number;
 
+  @Prop({ type: Number, default: 0 })
+  commentsCount: number;
+
+  @Prop({ type: Number, default: 0 })
+  sharesCount: number;
+
   @Prop({ type: Boolean, default: false })
   isDeleted: boolean;
 

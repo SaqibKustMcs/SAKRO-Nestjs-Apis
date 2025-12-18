@@ -14,6 +14,7 @@ import { Post, PostOption } from 'src/schema/post/post.schema';
 import { Post as PostInterface, PostOption as PostOptionInterface } from 'src/interface/post/post.interface';
 import { User } from 'src/interface/user/user.interface';
 import { VillageInterface } from 'src/interface/village/village.interface';
+import { Comments } from 'src/schema/comments/comments.schema';
 import { generateStringId } from 'src/utils/utils';
 
 @Injectable()
@@ -22,6 +23,7 @@ export class PostService {
         @InjectModel(Post.name) private postModel: Model<PostInterface>,
         @InjectModel('User') private userModel: Model<User>,
         @InjectModel('Village') private villageModel: Model<VillageInterface>,
+        @InjectModel(Comments.name) private commentsModel: Model<Comments>,
     ) {}
 
     private validatePostData(createPostDTO: CreatePostDTO): void {
@@ -98,6 +100,9 @@ export class PostService {
             villageIdResponse = villageIdResponse.id || populatedPost.villageId;
         }
 
+        // Calculate total comments count (including replies)
+        const commentsCount = await this.calculateCommentsCount(populatedPost.id);
+
         return {
             id: populatedPost.id,
             userId: populatedPost.userId as any,
@@ -111,6 +116,8 @@ export class PostService {
             totalVotes: populatedPost.totalVotes,
             likedBy: populatedPost.likedBy || [],
             likesCount: populatedPost.likesCount || 0,
+            commentsCount: commentsCount, // ✅ Total comments including replies
+            sharesCount: populatedPost.sharesCount || 0,
             isLiked: currentUserId ? (populatedPost.likedBy || []).includes(currentUserId) : false,
             hasVoted: populatedPost.type === 'question' ? hasVoted : undefined,
             votedOptionId: populatedPost.type === 'question' ? votedOptionId : undefined,
@@ -118,6 +125,26 @@ export class PostService {
             createdAt: populatedPost.createdAt,
             updatedAt: populatedPost.updatedAt
         };
+    }
+
+    /**
+     * Calculate total comments count including replies
+     */
+    private async calculateCommentsCount(postId: string): Promise<number> {
+        try {
+            // Get all comments for this post (both parent and replies)
+            const allComments = await this.commentsModel.find({ 
+                postId: postId, 
+                isDeleted: false 
+            }).exec();
+
+            const count = allComments.length;
+            console.log(`📊 Post ${postId} - Total comments count: ${count}`);
+            return count;
+        } catch (error) {
+            console.log('❌ Error calculating comments count:', error);
+            return 0;
+        }
     }
 
     async createPost(createPostDTO: CreatePostDTO, userId: string): Promise<{ success: boolean; message: string; data: PostResponseDTO }> {
@@ -217,6 +244,8 @@ export class PostService {
                 .limit(limit)
                 .lean();
 
+            console.log(`📊 Processing ${posts.length} posts with comments count calculation...`);
+
             // Process posts to include vote percentages and user voting status
             const processedPosts: PostResponseDTO[] = await Promise.all(
                 posts.map(async (post) => {
@@ -265,6 +294,9 @@ export class PostService {
                         }
                     }
 
+                    // Calculate comments count for this post
+                    const commentsCount = await this.calculateCommentsCount(post.id);
+
                     return {
                         id: post.id,
                         userId: post.userId as any,
@@ -278,6 +310,8 @@ export class PostService {
                         totalVotes: post.totalVotes || 0,
                         likedBy: post.likedBy || [],
                         likesCount: post.likesCount || 0,
+                        commentsCount: commentsCount, // ✅ Total comments including replies
+                        sharesCount: post.sharesCount || 0, // ✅ Shares count
                         isLiked: currentUserId ? (post.likedBy || []).includes(currentUserId) : false,
                         hasVoted: post.type === 'question' ? hasVoted : undefined,
                         votedOptionId: post.type === 'question' ? votedOptionId : undefined,
@@ -479,6 +513,36 @@ export class PostService {
         } catch (error) {
             console.log(error);
             throw new BadRequestException(error?.message || 'Failed to toggle like');
+        }
+    }
+
+    async sharePost(postId: string, userId: string): Promise<{ success: boolean; message: string; data: PostResponseDTO }> {
+        try {
+            console.log(`🔗 User ${userId} sharing post ${postId}`);
+            
+            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+
+            if (!post) {
+                throw new NotFoundException('Post not found');
+            }
+
+            // Increment share count
+            post.sharesCount = (post.sharesCount || 0) + 1;
+
+            await post.save();
+
+            console.log(`✅ Post ${postId} share count: ${post.sharesCount}`);
+
+            const populatedPost = await this.populatePostData(post, userId);
+
+            return {
+                success: true,
+                message: 'Post shared successfully',
+                data: populatedPost
+            };
+        } catch (error) {
+            console.log('❌ Error sharing post:', error);
+            throw new BadRequestException(error?.message || 'Failed to share post');
         }
     }
 }

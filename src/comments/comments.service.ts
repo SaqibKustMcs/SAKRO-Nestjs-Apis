@@ -35,17 +35,29 @@ export class CommentsService {
 
     async createComments(createCommentsDTO: CreateCommentsDTO): Promise<{ success: boolean; message: string; data: CommentResponseDTO }> {
         try {
+            console.log('💬 Creating comment with data:', {
+                postId: createCommentsDTO.postId,
+                userId: createCommentsDTO.userId,
+                text: createCommentsDTO.text,
+                parentCommentId: createCommentsDTO.parentCommentId
+            });
+
             // Validate that the post exists
             const post = await this.postModel.findOne({ id: createCommentsDTO.postId, isDeleted: false });
             if (!post) {
+                console.log(`❌ Post not found: ${createCommentsDTO.postId}`);
                 throw new NotFoundException('Post not found');
             }
+            console.log('✅ Post found:', post.id);
 
             // Validate that the user exists
-            const user = await this.userModel.findOne({ id: createCommentsDTO.userId, isDeleted: false });
+            // Note: User schema uses _id as primary key, not id
+            const user = await this.userModel.findOne({ _id: createCommentsDTO.userId, isDeleted: false });
             if (!user) {
+                console.log(`❌ User not found: ${createCommentsDTO.userId}`);
                 throw new NotFoundException('User not found');
             }
+            console.log('✅ User found:', user._id);
 
             // Create the comment
             const commentDocument = await new this.commentsModel({
@@ -53,6 +65,8 @@ export class CommentsService {
                 likesCount: 0,
                 likedBy: [],
             }).save();
+
+            console.log('✅ Comment created:', commentDocument.id);
 
             // Populate the comment with user data
             const populatedComment = await this.populateCommentData(commentDocument, createCommentsDTO.userId);
@@ -64,7 +78,8 @@ export class CommentsService {
             };
 
         } catch (error) {
-            console.log(error);
+            console.log('❌ Error creating comment:', error?.message);
+            console.log('❌ Full error:', error);
             throw new BadRequestException(error?.message || 'Failed to create comment');
         }
     }
@@ -181,12 +196,13 @@ export class CommentsService {
     private async populateCommentData(comment: any, currentUserId?: string): Promise<CommentResponseDTO> {
         try {
             // Populate user data
-            const user = await this.userModel.findOne({ id: comment.userId, isDeleted: false });
+            // Note: User schema uses _id as primary key, not id
+            const user = await this.userModel.findOne({ _id: comment.userId, isDeleted: false });
             
             return {
                 id: comment.id,
                 userId: user ? {
-                    id: user.id,
+                    id: user._id,
                     fullName: user.fullName,
                     profilePic: user.profilePic,
                     email: user.email,
