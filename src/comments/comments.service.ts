@@ -26,7 +26,7 @@ export class CommentsService {
 
     constructor(
         @InjectModel(Comments.name) private commentsModel: Model<Comments>,
-        @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel('users') private userModel: Model<User>,
         @InjectModel(Post.name) private postModel: Model<Post>,
     ){}
 

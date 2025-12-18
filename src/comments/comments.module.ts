@@ -16,7 +16,7 @@ import { CommentsService } from './comments.service';
             schema: CommentsSchema,
           },
           {
-            name: User.name,
+            name: 'users',
             schema: UserSchema,
           },
           {

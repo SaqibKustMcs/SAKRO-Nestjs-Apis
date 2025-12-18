@@ -4207,7 +4207,7 @@ exports.CommentsModule = CommentsModule = CommentsModule_1 = __decorate([
                     schema: comments_schema_1.CommentsSchema,
                 },
                 {
-                    name: user_schema_1.User.name,
+                    name: 'users',
                     schema: user_schema_1.UserSchema,
                 },
                 {
@@ -4253,7 +4253,6 @@ const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
 const post_schema_1 = __webpack_require__(/*! src/schema/post/post.schema */ "./src/schema/post/post.schema.ts");
 const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
-const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 let CommentsService = exports.CommentsService = class CommentsService {
     constructor(commentsModel, userModel, postModel) {
         this.commentsModel = commentsModel;
@@ -4403,7 +4402,7 @@ let CommentsService = exports.CommentsService = class CommentsService {
 exports.CommentsService = CommentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(comments_schema_1.Comments.name)),
-    __param(1, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(1, (0, mongoose_1.InjectModel)('users')),
     __param(2, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
     __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object])
 ], CommentsService);
