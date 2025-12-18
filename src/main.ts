@@ -17,13 +17,26 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
 
+  // Get configuration from environment variables
   const port = process.env.PORT || 3101;
+  const host = process.env.HOST || '0.0.0.0';
+  const networkIp = process.env.NETWORK_IP || 'localhost';
+
+  // Enable CORS
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN?.split(',') || '*',
+    credentials: true,
+  });
 
   // Listen on all network interfaces (0.0.0.0) to allow connections from same network
-  await app.listen(port, '0.0.0.0');
+  await app.listen(port, host);
 
-  console.log(`API is running on http://0.0.0.0:${port}`);
-  console.log(`Local: http://localhost:${port}`);
-  console.log(`Network: http://172.29.90.95:${port}`);
+  console.log('\n🚀 ===================================');
+  console.log('✅ API is running successfully!');
+  console.log(`📍 Local:   http://localhost:${port}`);
+  console.log(`📍 Network: http://${networkIp}:${port}`);
+  console.log(`📚 Swagger: http://${networkIp}:${port}/swagger`);
+  console.log(`🌐 WebSocket: ws://${networkIp}:${port}`);
+  console.log('=====================================\n');
 }
 bootstrap();

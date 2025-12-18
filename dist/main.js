@@ -6275,6 +6275,9 @@ let PostService = exports.PostService = class PostService {
                             isVotedByCurrentUser
                         };
                     });
+                    if (hasVoted) {
+                        console.log(`🗳️ User ${currentUserId} has voted on poll post ${post.id} - option: ${votedOptionId}`);
+                    }
                 }
                 let villageIdResponse = null;
                 if (post.villageId && typeof post.villageId === 'object') {
@@ -11001,10 +11004,20 @@ async function bootstrap() {
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup('swagger', app, document);
     const port = process.env.PORT || 3101;
-    await app.listen(port, '0.0.0.0');
-    console.log(`API is running on http://0.0.0.0:${port}`);
-    console.log(`Local: http://localhost:${port}`);
-    console.log(`Network: http://172.29.90.95:${port}`);
+    const host = process.env.HOST || '0.0.0.0';
+    const networkIp = process.env.NETWORK_IP || 'localhost';
+    app.enableCors({
+        origin: process.env.CORS_ORIGIN?.split(',') || '*',
+        credentials: true,
+    });
+    await app.listen(port, host);
+    console.log('\n🚀 ===================================');
+    console.log('✅ API is running successfully!');
+    console.log(`📍 Local:   http://localhost:${port}`);
+    console.log(`📍 Network: http://${networkIp}:${port}`);
+    console.log(`📚 Swagger: http://${networkIp}:${port}/swagger`);
+    console.log(`🌐 WebSocket: ws://${networkIp}:${port}`);
+    console.log('=====================================\n');
 }
 bootstrap();
 

@@ -272,6 +272,11 @@ export class PostService {
                                 isVotedByCurrentUser
                             };
                         });
+                        
+                        // Debug logging for poll posts
+                        if (hasVoted) {
+                            console.log(`🗳️ User ${currentUserId} has voted on poll post ${post.id} - option: ${votedOptionId}`);
+                        }
                     }
 
                     // Handle villageId properly - get the raw value if population failed
