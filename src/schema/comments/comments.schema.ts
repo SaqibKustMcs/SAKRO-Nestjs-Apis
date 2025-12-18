@@ -18,8 +18,8 @@ export class Comments {
     @Prop({ type: String, default: '' })
     text: string;
     
-    @Prop({ type: String, default: '' })
-    parentCommentId: string; // For replies
+    @Prop({ type: String, default: null, required: false })
+    parentCommentId: string; // For replies - null for parent comments, has value for replies
     
     @Prop({ type: [String], default: [] })
     likedBy: string[];

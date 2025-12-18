@@ -85,17 +85,38 @@ export class CommentsService {
     }
     async getAllComments(getAllCommentsDto: GetAllCommmentDTO, currentUserId?: string): Promise<{ success: boolean; message: string; data: CommentResponseDTO[] }> {
         try {
+            // Only fetch parent comments (parentCommentId is null or empty)
             const commentsData = await this.commentsModel
-                .find({ isDeleted: false, postId: getAllCommentsDto.postId })
+                .find({ 
+                    isDeleted: false, 
+                    postId: getAllCommentsDto.postId,
+                    $or: [
+                        { parentCommentId: null },
+                        { parentCommentId: '' }
+                    ]
+                })
                 .sort({ createdAt: -1 }) // Sort by newest first
                 .skip(parseInt(getAllCommentsDto.offset))
                 .limit(parseInt(getAllCommentsDto.limit));
 
             const populatedComments = await Promise.all(
                 commentsData.map(async (comment) => {
-                    return await this.populateCommentData(comment, currentUserId);
+                    const populatedComment = await this.populateCommentData(comment, currentUserId);
+                    
+                    // Add reply count for each parent comment
+                    const replyCount = await this.commentsModel.countDocuments({
+                        parentCommentId: comment.id,
+                        isDeleted: false
+                    });
+                    
+                    return {
+                        ...populatedComment,
+                        replyCount: replyCount
+                    };
                 })
             );
+
+            console.log(`✅ Fetched ${populatedComments.length} parent comments for post ${getAllCommentsDto.postId}`);
 
             return {
                 success: true,
@@ -105,6 +126,51 @@ export class CommentsService {
         } catch (error) {
             console.log(error);
             throw new BadRequestException(error?.message || 'Failed to fetch comments');
+        }
+    }
+
+    async getRepliesByCommentId(
+        commentId: string, 
+        currentUserId: string, 
+        offset: number = 0, 
+        limit: number = 10
+    ): Promise<{ success: boolean; message: string; data: CommentResponseDTO[]; total: number }> {
+        try {
+            console.log(`📥 Fetching replies for comment ${commentId}: offset=${offset}, limit=${limit}`);
+
+            // Get replies for this specific comment
+            const repliesData = await this.commentsModel
+                .find({ 
+                    isDeleted: false, 
+                    parentCommentId: commentId
+                })
+                .sort({ createdAt: 1 }) // Sort oldest first for replies
+                .skip(offset)
+                .limit(limit);
+
+            // Get total count for pagination
+            const total = await this.commentsModel.countDocuments({
+                parentCommentId: commentId,
+                isDeleted: false
+            });
+
+            const populatedReplies = await Promise.all(
+                repliesData.map(async (reply) => {
+                    return await this.populateCommentData(reply, currentUserId);
+                })
+            );
+
+            console.log(`✅ Fetched ${populatedReplies.length} replies out of ${total} total`);
+
+            return {
+                success: true,
+                message: 'Replies fetched successfully',
+                data: populatedReplies,
+                total: total
+            };
+        } catch (error) {
+            console.log('❌ Error fetching replies:', error);
+            throw new BadRequestException(error?.message || 'Failed to fetch replies');
         }
     }
     async getCommentsById(getCommentsIdDTO: GetCommentsIdDTO): Promise<Comments | null>  {
@@ -209,7 +275,10 @@ export class CommentsService {
                 } : null,
                 postId: comment.postId,
                 text: comment.text,
-                parentCommentId: comment.parentCommentId,
+                // Ensure parentCommentId is null if empty string
+                parentCommentId: comment.parentCommentId && comment.parentCommentId.trim() !== '' 
+                    ? comment.parentCommentId 
+                    : null,
                 likedBy: comment.likedBy || [],
                 likesCount: comment.likesCount || 0,
                 isLiked: currentUserId ? (comment.likedBy || []).includes(currentUserId) : false,

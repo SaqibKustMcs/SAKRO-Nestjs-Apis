@@ -91,6 +91,9 @@ export class CommentResponseDTO {
     @ApiProperty({ description: 'Total number of likes' })
     likesCount: number;
 
+    @ApiProperty({ description: 'Number of replies (only for parent comments)', required: false })
+    replyCount?: number;
+
     @ApiProperty({ description: 'Whether the current user has liked this comment', required: false })
     isLiked?: boolean;
 

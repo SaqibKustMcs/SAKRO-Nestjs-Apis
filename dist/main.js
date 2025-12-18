@@ -4100,6 +4100,9 @@ let CommentsController = exports.CommentsController = class CommentsController {
     getAllComments(getAllCommentsDTO, user) {
         return this.commentService.getAllComments(getAllCommentsDTO, user.id);
     }
+    getReplies(commentId, offset = '0', limit = '10', user) {
+        return this.commentService.getRepliesByCommentId(commentId, user.id, parseInt(offset), parseInt(limit));
+    }
     getCommentById(getCommentIdDTO, user) {
         return this.commentService.getCommentsById(getCommentIdDTO);
     }
@@ -4129,6 +4132,16 @@ __decorate([
     __metadata("design:paramtypes", [typeof (_c = typeof comments_dto_1.GetAllCommmentDTO !== "undefined" && comments_dto_1.GetAllCommmentDTO) === "function" ? _c : Object, Object]),
     __metadata("design:returntype", void 0)
 ], CommentsController.prototype, "getAllComments", null);
+__decorate([
+    (0, common_1.Get)('getReplies/:commentId'),
+    __param(0, (0, common_1.Param)('commentId')),
+    __param(1, (0, common_1.Query)('offset')),
+    __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, Object]),
+    __metadata("design:returntype", void 0)
+], CommentsController.prototype, "getReplies", null);
 __decorate([
     (0, common_1.Get)('getCommentById'),
     __param(0, (0, common_1.Query)()),
@@ -4301,13 +4314,29 @@ let CommentsService = exports.CommentsService = class CommentsService {
     async getAllComments(getAllCommentsDto, currentUserId) {
         try {
             const commentsData = await this.commentsModel
-                .find({ isDeleted: false, postId: getAllCommentsDto.postId })
+                .find({
+                isDeleted: false,
+                postId: getAllCommentsDto.postId,
+                $or: [
+                    { parentCommentId: null },
+                    { parentCommentId: '' }
+                ]
+            })
                 .sort({ createdAt: -1 })
                 .skip(parseInt(getAllCommentsDto.offset))
                 .limit(parseInt(getAllCommentsDto.limit));
             const populatedComments = await Promise.all(commentsData.map(async (comment) => {
-                return await this.populateCommentData(comment, currentUserId);
+                const populatedComment = await this.populateCommentData(comment, currentUserId);
+                const replyCount = await this.commentsModel.countDocuments({
+                    parentCommentId: comment.id,
+                    isDeleted: false
+                });
+                return {
+                    ...populatedComment,
+                    replyCount: replyCount
+                };
             }));
+            console.log(`✅ Fetched ${populatedComments.length} parent comments for post ${getAllCommentsDto.postId}`);
             return {
                 success: true,
                 message: 'Comments fetched successfully',
@@ -4317,6 +4346,37 @@ let CommentsService = exports.CommentsService = class CommentsService {
         catch (error) {
             console.log(error);
             throw new common_1.BadRequestException(error?.message || 'Failed to fetch comments');
+        }
+    }
+    async getRepliesByCommentId(commentId, currentUserId, offset = 0, limit = 10) {
+        try {
+            console.log(`📥 Fetching replies for comment ${commentId}: offset=${offset}, limit=${limit}`);
+            const repliesData = await this.commentsModel
+                .find({
+                isDeleted: false,
+                parentCommentId: commentId
+            })
+                .sort({ createdAt: 1 })
+                .skip(offset)
+                .limit(limit);
+            const total = await this.commentsModel.countDocuments({
+                parentCommentId: commentId,
+                isDeleted: false
+            });
+            const populatedReplies = await Promise.all(repliesData.map(async (reply) => {
+                return await this.populateCommentData(reply, currentUserId);
+            }));
+            console.log(`✅ Fetched ${populatedReplies.length} replies out of ${total} total`);
+            return {
+                success: true,
+                message: 'Replies fetched successfully',
+                data: populatedReplies,
+                total: total
+            };
+        }
+        catch (error) {
+            console.log('❌ Error fetching replies:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to fetch replies');
         }
     }
     async getCommentsById(getCommentsIdDTO) {
@@ -4396,7 +4456,9 @@ let CommentsService = exports.CommentsService = class CommentsService {
                 } : null,
                 postId: comment.postId,
                 text: comment.text,
-                parentCommentId: comment.parentCommentId,
+                parentCommentId: comment.parentCommentId && comment.parentCommentId.trim() !== ''
+                    ? comment.parentCommentId
+                    : null,
                 likedBy: comment.likedBy || [],
                 likesCount: comment.likesCount || 0,
                 isLiked: currentUserId ? (comment.likedBy || []).includes(currentUserId) : false,
@@ -4558,6 +4620,10 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Total number of likes' }),
     __metadata("design:type", Number)
 ], CommentResponseDTO.prototype, "likesCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Number of replies (only for parent comments)', required: false }),
+    __metadata("design:type", Number)
+], CommentResponseDTO.prototype, "replyCount", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Whether the current user has liked this comment', required: false }),
     __metadata("design:type", Boolean)
@@ -8611,7 +8677,7 @@ __decorate([
     __metadata("design:type", String)
 ], Comments.prototype, "text", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    (0, mongoose_1.Prop)({ type: String, default: null, required: false }),
     __metadata("design:type", String)
 ], Comments.prototype, "parentCommentId", void 0);
 __decorate([

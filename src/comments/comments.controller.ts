@@ -22,6 +22,16 @@ export class CommentsController {
     getAllComments(@Query() getAllCommentsDTO: GetAllCommmentDTO, @User() user) {
       return this.commentService.getAllComments(getAllCommentsDTO, user.id);
     }
+
+    @Get('getReplies/:commentId')
+    getReplies(
+      @Param('commentId') commentId: string,
+      @Query('offset') offset: string = '0',
+      @Query('limit') limit: string = '10',
+      @User() user
+    ) {
+      return this.commentService.getRepliesByCommentId(commentId, user.id, parseInt(offset), parseInt(limit));
+    }
     @Get('getCommentById')
     getCommentById(@Query() getCommentIdDTO: GetCommentsIdDTO, @User() user) {
       return this.commentService.getCommentsById(getCommentIdDTO );
