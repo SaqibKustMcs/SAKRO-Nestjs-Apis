@@ -22,6 +22,10 @@ import { UtilsService } from '../utils/utils.service';
 import { Login2FADTO } from './dto/2fa.dto';
 import { TwoFactorService } from './2fa.service';
 import { UpdateBiometricStatusDTO } from './dto/biometric.dto';
+import { ChangePasswordDTO } from './dto/change-password.dto';
+import { DeviceService } from './device.service';
+import { LoginHistoryService } from './login-history.service';
+import { DeviceInfoDTO } from './dto/device.dto';
 const GO_CARDLESS_ACTIVE = false;
 
 @Injectable()
@@ -32,6 +36,8 @@ export class AuthService {
     @InjectModel('Otp') private _otpModel: Model<Otp>,
     private utilsService: UtilsService,
     private twoFactorService: TwoFactorService,
+    private deviceService: DeviceService,
+    private loginHistoryService: LoginHistoryService,
   ) {
   }
 
@@ -287,25 +293,124 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDTO) {
+  async login(loginDto: LoginDTO, deviceInfo?: DeviceInfoDTO, ipAddress?: string) {
+    console.log('🟢 [AUTH SERVICE] Login method called');
+    console.log('📧 [AUTH SERVICE] Email:', loginDto.email);
+    console.log('📱 [AUTH SERVICE] Device info received:', deviceInfo ? 'YES' : 'NO');
+    if (deviceInfo) {
+      console.log('📱 [AUTH SERVICE] Device info details:', JSON.stringify(deviceInfo, null, 2));
+    }
+    console.log('🌐 [AUTH SERVICE] IP Address:', ipAddress);
+    
     try {
       let user = await this._userModel.findOne({
         email: loginDto.email,
         isEmailVerified: true,
         isDeleted: false,
       });
+      
+      console.log('👤 [AUTH SERVICE] User found:', user ? 'YES' : 'NO');
+      
       if (!user) {
+        console.log('❌ [AUTH SERVICE] User not found, recording failed login');
+        // Record failed login attempt
+        await this.loginHistoryService.recordLogin({
+          userId: null, // User not found
+          email: loginDto.email,
+          deviceInfo,
+          ipAddress: ipAddress || 'Unknown',
+          loginMethod: 'password',
+          status: 'failed',
+          failureReason: 'User not found',
+        });
         throw new Error('Incorrect credentials');
       }
 
+      console.log('🔐 [AUTH SERVICE] Comparing password...');
       if (await bcrypt.compare(loginDto.password, user.password)) {
+        console.log('✅ [AUTH SERVICE] Password is valid');
+        console.log('🔒 [AUTH SERVICE] Checking 2FA status:', user.isTwoFactorEnabled ? 'ENABLED' : 'DISABLED');
+        // Check if user has 2FA enabled
+        if (user.isTwoFactorEnabled) {
+          // Return 2FA required response (without token/user data)
+          return {
+            success: false,
+            requires2FA: true,
+            message: '2FA verification required',
+            data: {
+              email: user.email,
+              isTwoFactorEnabled: true,
+            },
+          };
+        }
+
+        // No 2FA - proceed with normal login
+        // IMPORTANT: Save userId and email BEFORE converting to plain object
+        const userId = user._id.toString();
+        const userEmail = user.email;
+        
         user = JSON.parse(JSON.stringify(user));
         delete user.password;
 
         const token = await this.generateToken(user);
+        console.log('🔑 [AUTH SERVICE] JWT token generated');
 
-        return { user, token };
+      // Register device if device info provided
+      if (deviceInfo) {
+        console.log('📱 [AUTH SERVICE] Device info provided in simple login, registering...');
+        console.log('📱 [AUTH SERVICE] Calling deviceService.registerDevice with:');
+        console.log('   userId:', userId);
+        console.log('   deviceInfo:', JSON.stringify(deviceInfo, null, 2));
+        console.log('   token:', token.access_token.substring(0, 20) + '...');
+        console.log('   ipAddress:', ipAddress);
+        
+        try {
+          const registeredDevice = await this.deviceService.registerDevice(
+            userId,
+            deviceInfo,
+            token.access_token,
+            ipAddress,
+          );
+          console.log('✅ [AUTH SERVICE] Device registered successfully:', registeredDevice);
+        } catch (err) {
+          console.error('❌ [AUTH SERVICE] Error registering device in simple login:', err);
+          console.error('❌ [AUTH SERVICE] Error stack:', err.stack);
+          // Don't fail login if device registration fails
+        }
       } else {
+        console.log('⚠️ [AUTH SERVICE] No device info provided in simple login');
+      }
+
+        // Record successful login
+        console.log('📜 [AUTH SERVICE] Recording login history...');
+        await this.loginHistoryService.recordLogin({
+          userId: userId,
+          email: userEmail,
+          deviceInfo,
+          ipAddress: ipAddress || 'Unknown',
+          loginMethod: 'password',
+          status: 'success',
+        });
+        console.log('✅ [AUTH SERVICE] Login history recorded');
+
+        return { 
+          success: true,
+          requires2FA: false,
+          user, 
+          token 
+        };
+      } else {
+        // Record failed login attempt
+        const failedUserId = user._id.toString();
+        await this.loginHistoryService.recordLogin({
+          userId: failedUserId,
+          email: user.email,
+          deviceInfo,
+          ipAddress: ipAddress || 'Unknown',
+          loginMethod: 'password',
+          status: 'failed',
+          failureReason: 'Invalid password',
+        });
         throw new Error('Incorrect credentials');
       }
     } catch (err) {
@@ -497,7 +602,7 @@ export class AuthService {
     }
   }
 
-  async loginWith2FA(login2FADto: Login2FADTO) {
+  async loginWith2FA(login2FADto: Login2FADTO, deviceInfo?: DeviceInfoDTO, ipAddress?: string) {
     try {
       const { email, password, token } = login2FADto;
 
@@ -509,23 +614,66 @@ export class AuthService {
       });
 
       if (!user) {
+        // Record failed login attempt
+        await this.loginHistoryService.recordLogin({
+          userId: null,
+          email: email.toLowerCase(),
+          deviceInfo,
+          ipAddress: ipAddress || 'Unknown',
+          loginMethod: '2fa',
+          status: 'failed',
+          failureReason: 'User not found',
+        });
         throw new UnauthorizedException('Invalid credentials');
       }
 
+      // IMPORTANT: Save userId as string immediately after finding user
+      const userId = user._id.toString();
+      const userEmail = user.email;
+
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
+        // Record failed login attempt
+        await this.loginHistoryService.recordLogin({
+          userId: userId,
+          email: userEmail,
+          deviceInfo,
+          ipAddress: ipAddress || 'Unknown',
+          loginMethod: '2fa',
+          status: 'failed',
+          failureReason: 'Invalid password',
+        });
         throw new UnauthorizedException('Invalid credentials');
       }
 
       // Check if user has 2FA enabled
       if (user.isTwoFactorEnabled) {
         if (!token) {
-          throw new BadRequestException('2FA token is required');
+          // Return a special response indicating 2FA is required
+          return {
+            success: false,
+            requires2FA: true,
+            message: '2FA verification required',
+            data: {
+              email: user.email,
+              isTwoFactorEnabled: true,
+            },
+          };
         }
 
         // Verify the 2FA token
         const isTokenValid = await this.twoFactorService.verify2FAToken(user.id, token);
         if (!isTokenValid) {
+          // Record failed 2FA attempt
+          await this.loginHistoryService.recordLogin({
+            userId: userId,
+            email: userEmail,
+            deviceInfo,
+            ipAddress: ipAddress || 'Unknown',
+            loginMethod: '2fa',
+            status: 'failed',
+            failureReason: 'Invalid 2FA token',
+          });
           throw new UnauthorizedException('Invalid 2FA token');
         }
       }
@@ -539,6 +687,35 @@ export class AuthService {
 
       const tokenResponse = this.generateToken(payload);
 
+      // Register device if device info provided
+      if (deviceInfo) {
+        console.log('📱 Device info provided in 2FA login, registering...');
+        try {
+          await this.deviceService.registerDevice(
+            userId,
+            deviceInfo,
+            tokenResponse.access_token,
+            ipAddress,
+          );
+          console.log('✅ Device registered successfully in 2FA login');
+        } catch (err) {
+          console.error('❌ Error registering device in 2FA login:', err);
+          // Don't fail login if device registration fails
+        }
+      } else {
+        console.log('⚠️ No device info provided in 2FA login');
+      }
+
+      // Record successful 2FA login
+      await this.loginHistoryService.recordLogin({
+        userId: userId,
+        email: userEmail,
+        deviceInfo,
+        ipAddress: ipAddress || 'Unknown',
+        loginMethod: '2fa',
+        status: 'success',
+      });
+
       // Prepare user response (without password)
       const userResponse = {
         id: user.id,
@@ -547,12 +724,14 @@ export class AuthService {
         userRole: user.userRole,
         userStatus: user.userStatus,
         isTwoFactorEnabled: user.isTwoFactorEnabled,
+        isBiometric: user.isBiometric,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       };
 
       return {
         success: true,
+        requires2FA: false,
         message: 'Login successful',
         data: {
           ...tokenResponse,
@@ -585,6 +764,174 @@ export class AuthService {
     } catch (err) {
       console.log(err);
       throw new BadRequestException(err?.message || 'Failed to update biometric status');
+    }
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDTO) {
+    try {
+      // Find user
+      const user = await this._userModel.findById(userId);
+
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
+
+      // Verify current password
+      const isPasswordValid = await bcrypt.compare(
+        changePasswordDto.currentPassword,
+        user.password,
+      );
+
+      if (!isPasswordValid) {
+        throw new BadRequestException('Current password is incorrect');
+      }
+
+      // Check if new password is same as current
+      const isSamePassword = await bcrypt.compare(
+        changePasswordDto.newPassword,
+        user.password,
+      );
+
+      if (isSamePassword) {
+        throw new BadRequestException('New password must be different from current password');
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+
+      // Update password
+      user.password = hashedPassword;
+      await user.save();
+
+      return {
+        success: true,
+        message: 'Password changed successfully',
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to change password');
+    }
+  }
+
+  // ============ DEVICE MANAGEMENT ============
+
+  async getUserDevices(userId: string, currentDeviceId?: string) {
+    try {
+      const devices = await this.deviceService.getUserDevices(userId, currentDeviceId);
+
+      return {
+        success: true,
+        devices: devices.map((device: any) => ({
+          id: device._id,
+          deviceId: device.deviceId,
+          deviceName: device.deviceName,
+          deviceType: device.deviceType,
+          platform: device.platform,
+          browser: device.browser,
+          ipAddress: device.ipAddress,
+          location: device.location,
+          lastActive: device.lastActive,
+          isCurrentDevice: device.isCurrentDevice,
+          createdAt: device.createdAt,
+        })),
+        count: devices.length,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to get devices');
+    }
+  }
+
+  async logoutDevice(userId: string, deviceId: string) {
+    try {
+      const success = await this.deviceService.logoutDevice(userId, deviceId);
+
+      if (!success) {
+        throw new BadRequestException('Device not found');
+      }
+
+      return {
+        success: true,
+        message: 'Device logged out successfully',
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to logout device');
+    }
+  }
+
+  async logoutAllDevices(userId: string, currentDeviceId?: string) {
+    try {
+      const count = await this.deviceService.logoutAllDevices(userId, currentDeviceId);
+
+      return {
+        success: true,
+        message: `Logged out from ${count} device(s)`,
+        count,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to logout all devices');
+    }
+  }
+
+  // ============ DEVELOPMENT HELPER ============
+
+  /**
+   * Get recent OTPs for development/testing
+   * Only works when Mailjet is not configured (development mode)
+   */
+  async getRecentOTPs(email?: string) {
+    try {
+      // Check if in development mode
+      const isMailjetConfigured = process.env.MAILJET_API_KEY && 
+                                 process.env.MAILJET_API_KEY !== '0' &&
+                                 process.env.MAILJET_API_KEY !== 'dummy-key-not-configured';
+
+      if (isMailjetConfigured) {
+        throw new BadRequestException('This endpoint is only available in development mode');
+      }
+
+      const query: any = {};
+      
+      if (email) {
+        const user = await this._userModel.findOne({ email: email.toLowerCase() });
+        if (user) {
+          query.userID = user.id;
+        }
+      }
+
+      // Get recent OTPs (last 10)
+      const otps = await this._otpModel
+        .find(query)
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean();
+
+      const currentTime = new Date().getTime();
+
+      const otpList = await Promise.all(
+        otps.map(async (otp: any) => {
+          const user = await this._userModel.findById(otp.userID);
+          return {
+            email: user?.email || 'Unknown',
+            otp: otp.otp,
+            type: otp.type,
+            expiryTime: otp.expiryTime,
+            isExpired: currentTime > otp.expiryTime,
+            createdAt: otp.createdAt,
+          };
+        })
+      );
+
+      return {
+        isDevelopmentMode: true,
+        otps: otpList,
+        count: otpList.length,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to get OTPs');
     }
   }
 

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, Length } from 'class-validator';
+import { IsString, IsNotEmpty, Length, IsOptional } from 'class-validator';
 
 export class Verify2FADTO {
   @ApiProperty({ 
@@ -39,6 +39,30 @@ export class Login2FADTO {
   @IsString()
   @Length(6, 6, { message: 'Token must be exactly 6 digits' })
   token?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  deviceId?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  deviceName?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  deviceType?: 'mobile' | 'tablet' | 'desktop' | 'other';
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  platform?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  browser?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  location?: string;
 }
 
 export class Enable2FAResponseDTO {

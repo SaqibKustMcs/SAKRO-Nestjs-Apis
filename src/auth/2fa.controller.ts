@@ -2,8 +2,10 @@ import {
   Body, 
   Controller, 
   Post, 
-  UseGuards 
+  UseGuards,
+  Req 
 } from '@nestjs/common';
+import { Request } from 'express';
 import { 
   ApiTags, 
   ApiBearerAuth, 
@@ -19,6 +21,7 @@ import {
   Verify2FAResponseDTO, 
   Login2FAResponseDTO 
 } from './dto/2fa.dto';
+import { DeviceInfoDTO } from './dto/device.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
 
@@ -134,8 +137,24 @@ export class Auth2FAController {
   @ApiResponse({ status: 400, description: 'Bad request - missing 2FA token' })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid credentials or 2FA token' })
   @Post('login-2fa')
-  async loginWith2FA(@Body() login2FADto: Login2FADTO) {
-    return await this.authService.loginWith2FA(login2FADto);
+  async loginWith2FA(@Body() login2FADto: Login2FADTO, @Req() req: Request) {
+    // Extract device info if provided
+    let deviceInfo: DeviceInfoDTO | undefined;
+    if (login2FADto.deviceId && login2FADto.deviceName) {
+      deviceInfo = {
+        deviceId: login2FADto.deviceId,
+        deviceName: login2FADto.deviceName,
+        deviceType: login2FADto.deviceType || 'other',
+        platform: login2FADto.platform || 'Unknown',
+        browser: login2FADto.browser,
+        location: login2FADto.location,
+      };
+    }
+
+    // Get IP address from request
+    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+
+    return await this.authService.loginWith2FA(login2FADto, deviceInfo, ipAddress);
   }
 }
 

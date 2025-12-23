@@ -147,10 +147,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Auth2FAController = exports.TwoFactorController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const express_1 = __webpack_require__(/*! express */ "express");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const _2fa_service_1 = __webpack_require__(/*! ./2fa.service */ "./src/auth/2fa.service.ts");
 const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/auth/auth.service.ts");
@@ -280,8 +281,20 @@ let Auth2FAController = exports.Auth2FAController = class Auth2FAController {
     constructor(authService) {
         this.authService = authService;
     }
-    async loginWith2FA(login2FADto) {
-        return await this.authService.loginWith2FA(login2FADto);
+    async loginWith2FA(login2FADto, req) {
+        let deviceInfo;
+        if (login2FADto.deviceId && login2FADto.deviceName) {
+            deviceInfo = {
+                deviceId: login2FADto.deviceId,
+                deviceName: login2FADto.deviceName,
+                deviceType: login2FADto.deviceType || 'other',
+                platform: login2FADto.platform || 'Unknown',
+                browser: login2FADto.browser,
+                location: login2FADto.location,
+            };
+        }
+        const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+        return await this.authService.loginWith2FA(login2FADto, deviceInfo, ipAddress);
     }
 };
 __decorate([
@@ -295,8 +308,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - invalid credentials or 2FA token' }),
     (0, common_1.Post)('login-2fa'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof _2fa_dto_1.Login2FADTO !== "undefined" && _2fa_dto_1.Login2FADTO) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [typeof (_e = typeof _2fa_dto_1.Login2FADTO !== "undefined" && _2fa_dto_1.Login2FADTO) === "function" ? _e : Object, typeof (_f = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _f : Object]),
     __metadata("design:returntype", Promise)
 ], Auth2FAController.prototype, "loginWith2FA", null);
 exports.Auth2FAController = Auth2FAController = __decorate([
@@ -507,10 +521,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const express_1 = __webpack_require__(/*! express */ "express");
 const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/auth/auth.service.ts");
 const login_dto_1 = __webpack_require__(/*! ./dto/login.dto */ "./src/auth/dto/login.dto.ts");
 const otp_dto_1 = __webpack_require__(/*! ./dto/otp.dto */ "./src/auth/dto/otp.dto.ts");
@@ -522,9 +537,15 @@ const password_dto_1 = __webpack_require__(/*! ./dto/password.dto */ "./src/auth
 const jwt_auth_guard_1 = __webpack_require__(/*! ./jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
 const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
 const biometric_dto_1 = __webpack_require__(/*! ./dto/biometric.dto */ "./src/auth/dto/biometric.dto.ts");
+const change_password_dto_1 = __webpack_require__(/*! ./dto/change-password.dto */ "./src/auth/dto/change-password.dto.ts");
+const device_dto_1 = __webpack_require__(/*! ./dto/device.dto */ "./src/auth/dto/device.dto.ts");
+const dev_otp_response_dto_1 = __webpack_require__(/*! ./dto/dev-otp-response.dto */ "./src/auth/dto/dev-otp-response.dto.ts");
+const login_history_dto_1 = __webpack_require__(/*! ./dto/login-history.dto */ "./src/auth/dto/login-history.dto.ts");
+const login_history_service_1 = __webpack_require__(/*! ./login-history.service */ "./src/auth/login-history.service.ts");
 let AuthController = exports.AuthController = class AuthController {
-    constructor(authService) {
+    constructor(authService, loginHistoryService) {
         this.authService = authService;
+        this.loginHistoryService = loginHistoryService;
     }
     signup(signupDto) {
         return this.authService.signup(signupDto);
@@ -538,8 +559,29 @@ let AuthController = exports.AuthController = class AuthController {
     resendOtp(emailDto) {
         return this.authService.resendOtp(emailDto);
     }
-    login(loginDto) {
-        return this.authService.login(loginDto);
+    login(loginDto, req) {
+        console.log('🔵 [AUTH CONTROLLER] Login request received');
+        console.log('📦 [AUTH CONTROLLER] LoginDto:', JSON.stringify(loginDto, null, 2));
+        let deviceInfo;
+        if (loginDto.deviceId && loginDto.deviceName) {
+            deviceInfo = {
+                deviceId: loginDto.deviceId,
+                deviceName: loginDto.deviceName,
+                deviceType: loginDto.deviceType || 'other',
+                platform: loginDto.platform || 'Unknown',
+                browser: loginDto.browser,
+                location: loginDto.location,
+            };
+            console.log('📱 [AUTH CONTROLLER] Device info extracted:', JSON.stringify(deviceInfo, null, 2));
+        }
+        else {
+            console.log('⚠️ [AUTH CONTROLLER] No device info in request');
+            console.log('   deviceId present:', !!loginDto.deviceId);
+            console.log('   deviceName present:', !!loginDto.deviceName);
+        }
+        const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+        console.log('🌐 [AUTH CONTROLLER] IP Address:', ipAddress);
+        return this.authService.login(loginDto, deviceInfo, ipAddress);
     }
     forgotPassword(emailDto) {
         return this.authService.forgotPassword(emailDto);
@@ -559,54 +601,91 @@ let AuthController = exports.AuthController = class AuthController {
     updateBiometricStatus(updateBiometricDto, user) {
         return this.authService.updateBiometricStatus(user.id, updateBiometricDto);
     }
+    changePassword(changePasswordDto, user) {
+        return this.authService.changePassword(user.id, changePasswordDto);
+    }
+    getUserDevices(user, currentDeviceId) {
+        return this.authService.getUserDevices(user.id, currentDeviceId);
+    }
+    logoutDevice(logoutDeviceDto, user) {
+        return this.authService.logoutDevice(user.id, logoutDeviceDto.deviceId);
+    }
+    logoutAllDevices(user, currentDeviceId) {
+        return this.authService.logoutAllDevices(user.id, currentDeviceId);
+    }
+    getRecentOTPs(email) {
+        return this.authService.getRecentOTPs(email);
+    }
+    async getLoginHistory(user, query) {
+        const options = {
+            limit: query.limit || 50,
+            status: query.status,
+            startDate: query.startDate ? new Date(query.startDate) : undefined,
+            endDate: query.endDate ? new Date(query.endDate) : undefined,
+        };
+        const history = await this.loginHistoryService.getUserLoginHistory(user.id, options);
+        return {
+            success: true,
+            data: history,
+            count: history.length,
+        };
+    }
+    async getLoginStatistics(user) {
+        const statistics = await this.loginHistoryService.getLoginStatistics(user.id);
+        return {
+            success: true,
+            data: statistics,
+        };
+    }
 };
 __decorate([
     (0, common_1.Post)('signup'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof signup_dto_1.SignupDTO !== "undefined" && signup_dto_1.SignupDTO) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [typeof (_c = typeof signup_dto_1.SignupDTO !== "undefined" && signup_dto_1.SignupDTO) === "function" ? _c : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "signup", null);
 __decorate([
     (0, common_1.Post)('isEmailExists'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [typeof (_d = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _d : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "isEmailExists", null);
 __decorate([
     (0, common_1.Post)('verifyEmail'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof otp_dto_1.OtpDTO !== "undefined" && otp_dto_1.OtpDTO) === "function" ? _d : Object]),
+    __metadata("design:paramtypes", [typeof (_e = typeof otp_dto_1.OtpDTO !== "undefined" && otp_dto_1.OtpDTO) === "function" ? _e : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyEmail", null);
 __decorate([
     (0, common_1.Post)('resendOtp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [typeof (_f = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _f : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "resendOtp", null);
 __decorate([
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof login_dto_1.LoginDTO !== "undefined" && login_dto_1.LoginDTO) === "function" ? _f : Object]),
+    __metadata("design:paramtypes", [typeof (_g = typeof login_dto_1.LoginDTO !== "undefined" && login_dto_1.LoginDTO) === "function" ? _g : Object, typeof (_h = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _h : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('forgotPassword'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_g = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _g : Object]),
+    __metadata("design:paramtypes", [typeof (_j = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _j : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "forgotPassword", null);
 __decorate([
     (0, common_1.Post)('verifyOtpForForgotPassword'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_h = typeof otp_dto_1.OtpDTO !== "undefined" && otp_dto_1.OtpDTO) === "function" ? _h : Object]),
+    __metadata("design:paramtypes", [typeof (_k = typeof otp_dto_1.OtpDTO !== "undefined" && otp_dto_1.OtpDTO) === "function" ? _k : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyOtpForForgotPassword", null);
 __decorate([
@@ -616,7 +695,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_j = typeof password_dto_1.PasswordDTO !== "undefined" && password_dto_1.PasswordDTO) === "function" ? _j : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_l = typeof password_dto_1.PasswordDTO !== "undefined" && password_dto_1.PasswordDTO) === "function" ? _l : Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "resetPassword", null);
 __decorate([
@@ -635,7 +714,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_k = typeof update_profile_dto_1.UpdateProfileDTO !== "undefined" && update_profile_dto_1.UpdateProfileDTO) === "function" ? _k : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_m = typeof update_profile_dto_1.UpdateProfileDTO !== "undefined" && update_profile_dto_1.UpdateProfileDTO) === "function" ? _m : Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "updateProfile", null);
 __decorate([
@@ -653,13 +732,128 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_l = typeof biometric_dto_1.UpdateBiometricStatusDTO !== "undefined" && biometric_dto_1.UpdateBiometricStatusDTO) === "function" ? _l : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_o = typeof biometric_dto_1.UpdateBiometricStatusDTO !== "undefined" && biometric_dto_1.UpdateBiometricStatusDTO) === "function" ? _o : Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "updateBiometricStatus", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Change user password' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Password changed successfully',
+        type: change_password_dto_1.ChangePasswordResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - Invalid input or incorrect current password' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Invalid token' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)('change-password'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_p = typeof change_password_dto_1.ChangePasswordDTO !== "undefined" && change_password_dto_1.ChangePasswordDTO) === "function" ? _p : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "changePassword", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all user devices' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'List of user devices',
+        type: device_dto_1.DevicesListResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Invalid token' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('devices'),
+    __param(0, (0, user_decorator_1.User)()),
+    __param(1, (0, common_1.Query)('currentDeviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getUserDevices", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Logout from a specific device' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Device logged out successfully'
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - Device not found' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Invalid token' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('logout-device'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_q = typeof device_dto_1.LogoutDeviceDTO !== "undefined" && device_dto_1.LogoutDeviceDTO) === "function" ? _q : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "logoutDevice", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Logout from all devices except current' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Logged out from all devices successfully'
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Invalid token' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('logout-all-devices'),
+    __param(0, (0, user_decorator_1.User)()),
+    __param(1, (0, common_1.Body)('currentDeviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "logoutAllDevices", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get recent OTPs (Development Only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'List of recent OTPs for testing',
+        type: dev_otp_response_dto_1.DevOtpListResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Only available in development mode' }),
+    (0, common_1.Get)('dev/otps'),
+    __param(0, (0, common_1.Query)('email')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getRecentOTPs", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get user login history' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'User login history retrieved successfully',
+        type: [login_history_dto_1.LoginHistoryResponseDTO]
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Invalid token' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('login-history'),
+    __param(0, (0, user_decorator_1.User)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, typeof (_r = typeof login_history_dto_1.GetLoginHistoryDTO !== "undefined" && login_history_dto_1.GetLoginHistoryDTO) === "function" ? _r : Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getLoginHistory", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get login statistics' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Login statistics retrieved successfully',
+        type: login_history_dto_1.LoginStatisticsDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Invalid token' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('login-statistics'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getLoginStatistics", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object, typeof (_b = typeof login_history_service_1.LoginHistoryService !== "undefined" && login_history_service_1.LoginHistoryService) === "function" ? _b : Object])
 ], AuthController);
 
 
@@ -691,7 +885,11 @@ const _2fa_service_1 = __webpack_require__(/*! ./2fa.service */ "./src/auth/2fa.
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 const otp_schema_1 = __webpack_require__(/*! src/schema/otp/otp.schema */ "./src/schema/otp/otp.schema.ts");
+const device_schema_1 = __webpack_require__(/*! src/schema/device.schema */ "./src/schema/device.schema.ts");
+const login_history_schema_1 = __webpack_require__(/*! src/schema/login-history.schema */ "./src/schema/login-history.schema.ts");
 const utils_service_1 = __webpack_require__(/*! ../utils/utils.service */ "./src/utils/utils.service.ts");
+const device_service_1 = __webpack_require__(/*! ./device.service */ "./src/auth/device.service.ts");
+const login_history_service_1 = __webpack_require__(/*! ./login-history.service */ "./src/auth/login-history.service.ts");
 let AuthModule = exports.AuthModule = AuthModule_1 = class AuthModule {
     static forRoot() {
         return {
@@ -704,10 +902,12 @@ let AuthModule = exports.AuthModule = AuthModule_1 = class AuthModule {
                 mongoose_1.MongooseModule.forFeature([
                     { name: 'User', schema: user_schema_1.UserSchema },
                     { name: 'Otp', schema: otp_schema_1.OtpSchema },
+                    { name: 'Device', schema: device_schema_1.DeviceSchema },
+                    { name: 'LoginHistory', schema: login_history_schema_1.LoginHistorySchema },
                 ]),
             ],
             controllers: [auth_controller_1.AuthController, _2fa_controller_1.TwoFactorController, _2fa_controller_1.Auth2FAController],
-            providers: [auth_service_1.AuthService, _2fa_service_1.TwoFactorService, jwt_strategy_1.JwtStrategy, utils_service_1.UtilsService],
+            providers: [auth_service_1.AuthService, _2fa_service_1.TwoFactorService, device_service_1.DeviceService, login_history_service_1.LoginHistoryService, jwt_strategy_1.JwtStrategy, utils_service_1.UtilsService],
             module: AuthModule_1,
         };
     }
@@ -738,7 +938,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -751,14 +951,18 @@ const otpGenerator = __webpack_require__(/*! otp-generator */ "otp-generator");
 const email_1 = __webpack_require__(/*! ./email */ "./src/auth/email.ts");
 const utils_service_1 = __webpack_require__(/*! ../utils/utils.service */ "./src/utils/utils.service.ts");
 const _2fa_service_1 = __webpack_require__(/*! ./2fa.service */ "./src/auth/2fa.service.ts");
+const device_service_1 = __webpack_require__(/*! ./device.service */ "./src/auth/device.service.ts");
+const login_history_service_1 = __webpack_require__(/*! ./login-history.service */ "./src/auth/login-history.service.ts");
 const GO_CARDLESS_ACTIVE = false;
 let AuthService = exports.AuthService = class AuthService {
-    constructor(jwtService, _userModel, _otpModel, utilsService, twoFactorService) {
+    constructor(jwtService, _userModel, _otpModel, utilsService, twoFactorService, deviceService, loginHistoryService) {
         this.jwtService = jwtService;
         this._userModel = _userModel;
         this._otpModel = _otpModel;
         this.utilsService = utilsService;
         this.twoFactorService = twoFactorService;
+        this.deviceService = deviceService;
+        this.loginHistoryService = loginHistoryService;
     }
     generateToken(payload) {
         return {
@@ -940,23 +1144,102 @@ let AuthService = exports.AuthService = class AuthService {
             throw new common_1.BadRequestException(err?.message);
         }
     }
-    async login(loginDto) {
+    async login(loginDto, deviceInfo, ipAddress) {
+        console.log('🟢 [AUTH SERVICE] Login method called');
+        console.log('📧 [AUTH SERVICE] Email:', loginDto.email);
+        console.log('📱 [AUTH SERVICE] Device info received:', deviceInfo ? 'YES' : 'NO');
+        if (deviceInfo) {
+            console.log('📱 [AUTH SERVICE] Device info details:', JSON.stringify(deviceInfo, null, 2));
+        }
+        console.log('🌐 [AUTH SERVICE] IP Address:', ipAddress);
         try {
             let user = await this._userModel.findOne({
                 email: loginDto.email,
                 isEmailVerified: true,
                 isDeleted: false,
             });
+            console.log('👤 [AUTH SERVICE] User found:', user ? 'YES' : 'NO');
             if (!user) {
+                console.log('❌ [AUTH SERVICE] User not found, recording failed login');
+                await this.loginHistoryService.recordLogin({
+                    userId: null,
+                    email: loginDto.email,
+                    deviceInfo,
+                    ipAddress: ipAddress || 'Unknown',
+                    loginMethod: 'password',
+                    status: 'failed',
+                    failureReason: 'User not found',
+                });
                 throw new Error('Incorrect credentials');
             }
+            console.log('🔐 [AUTH SERVICE] Comparing password...');
             if (await bcrypt.compare(loginDto.password, user.password)) {
+                console.log('✅ [AUTH SERVICE] Password is valid');
+                console.log('🔒 [AUTH SERVICE] Checking 2FA status:', user.isTwoFactorEnabled ? 'ENABLED' : 'DISABLED');
+                if (user.isTwoFactorEnabled) {
+                    return {
+                        success: false,
+                        requires2FA: true,
+                        message: '2FA verification required',
+                        data: {
+                            email: user.email,
+                            isTwoFactorEnabled: true,
+                        },
+                    };
+                }
+                const userId = user._id.toString();
+                const userEmail = user.email;
                 user = JSON.parse(JSON.stringify(user));
                 delete user.password;
                 const token = await this.generateToken(user);
-                return { user, token };
+                console.log('🔑 [AUTH SERVICE] JWT token generated');
+                if (deviceInfo) {
+                    console.log('📱 [AUTH SERVICE] Device info provided in simple login, registering...');
+                    console.log('📱 [AUTH SERVICE] Calling deviceService.registerDevice with:');
+                    console.log('   userId:', userId);
+                    console.log('   deviceInfo:', JSON.stringify(deviceInfo, null, 2));
+                    console.log('   token:', token.access_token.substring(0, 20) + '...');
+                    console.log('   ipAddress:', ipAddress);
+                    try {
+                        const registeredDevice = await this.deviceService.registerDevice(userId, deviceInfo, token.access_token, ipAddress);
+                        console.log('✅ [AUTH SERVICE] Device registered successfully:', registeredDevice);
+                    }
+                    catch (err) {
+                        console.error('❌ [AUTH SERVICE] Error registering device in simple login:', err);
+                        console.error('❌ [AUTH SERVICE] Error stack:', err.stack);
+                    }
+                }
+                else {
+                    console.log('⚠️ [AUTH SERVICE] No device info provided in simple login');
+                }
+                console.log('📜 [AUTH SERVICE] Recording login history...');
+                await this.loginHistoryService.recordLogin({
+                    userId: userId,
+                    email: userEmail,
+                    deviceInfo,
+                    ipAddress: ipAddress || 'Unknown',
+                    loginMethod: 'password',
+                    status: 'success',
+                });
+                console.log('✅ [AUTH SERVICE] Login history recorded');
+                return {
+                    success: true,
+                    requires2FA: false,
+                    user,
+                    token
+                };
             }
             else {
+                const failedUserId = user._id.toString();
+                await this.loginHistoryService.recordLogin({
+                    userId: failedUserId,
+                    email: user.email,
+                    deviceInfo,
+                    ipAddress: ipAddress || 'Unknown',
+                    loginMethod: 'password',
+                    status: 'failed',
+                    failureReason: 'Invalid password',
+                });
                 throw new Error('Incorrect credentials');
             }
         }
@@ -1106,7 +1389,7 @@ let AuthService = exports.AuthService = class AuthService {
             throw new common_1.BadRequestException(err?.message);
         }
     }
-    async loginWith2FA(login2FADto) {
+    async loginWith2FA(login2FADto, deviceInfo, ipAddress) {
         try {
             const { email, password, token } = login2FADto;
             const user = await this._userModel.findOne({
@@ -1115,18 +1398,55 @@ let AuthService = exports.AuthService = class AuthService {
                 isDeleted: false,
             });
             if (!user) {
+                await this.loginHistoryService.recordLogin({
+                    userId: null,
+                    email: email.toLowerCase(),
+                    deviceInfo,
+                    ipAddress: ipAddress || 'Unknown',
+                    loginMethod: '2fa',
+                    status: 'failed',
+                    failureReason: 'User not found',
+                });
                 throw new common_1.UnauthorizedException('Invalid credentials');
             }
+            const userId = user._id.toString();
+            const userEmail = user.email;
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
+                await this.loginHistoryService.recordLogin({
+                    userId: userId,
+                    email: userEmail,
+                    deviceInfo,
+                    ipAddress: ipAddress || 'Unknown',
+                    loginMethod: '2fa',
+                    status: 'failed',
+                    failureReason: 'Invalid password',
+                });
                 throw new common_1.UnauthorizedException('Invalid credentials');
             }
             if (user.isTwoFactorEnabled) {
                 if (!token) {
-                    throw new common_1.BadRequestException('2FA token is required');
+                    return {
+                        success: false,
+                        requires2FA: true,
+                        message: '2FA verification required',
+                        data: {
+                            email: user.email,
+                            isTwoFactorEnabled: true,
+                        },
+                    };
                 }
                 const isTokenValid = await this.twoFactorService.verify2FAToken(user.id, token);
                 if (!isTokenValid) {
+                    await this.loginHistoryService.recordLogin({
+                        userId: userId,
+                        email: userEmail,
+                        deviceInfo,
+                        ipAddress: ipAddress || 'Unknown',
+                        loginMethod: '2fa',
+                        status: 'failed',
+                        failureReason: 'Invalid 2FA token',
+                    });
                     throw new common_1.UnauthorizedException('Invalid 2FA token');
                 }
             }
@@ -1136,6 +1456,27 @@ let AuthService = exports.AuthService = class AuthService {
                 userRole: user.userRole,
             };
             const tokenResponse = this.generateToken(payload);
+            if (deviceInfo) {
+                console.log('📱 Device info provided in 2FA login, registering...');
+                try {
+                    await this.deviceService.registerDevice(userId, deviceInfo, tokenResponse.access_token, ipAddress);
+                    console.log('✅ Device registered successfully in 2FA login');
+                }
+                catch (err) {
+                    console.error('❌ Error registering device in 2FA login:', err);
+                }
+            }
+            else {
+                console.log('⚠️ No device info provided in 2FA login');
+            }
+            await this.loginHistoryService.recordLogin({
+                userId: userId,
+                email: userEmail,
+                deviceInfo,
+                ipAddress: ipAddress || 'Unknown',
+                loginMethod: '2fa',
+                status: 'success',
+            });
             const userResponse = {
                 id: user.id,
                 email: user.email,
@@ -1143,11 +1484,13 @@ let AuthService = exports.AuthService = class AuthService {
                 userRole: user.userRole,
                 userStatus: user.userStatus,
                 isTwoFactorEnabled: user.isTwoFactorEnabled,
+                isBiometric: user.isBiometric,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
             };
             return {
                 success: true,
+                requires2FA: false,
                 message: 'Login successful',
                 data: {
                     ...tokenResponse,
@@ -1181,13 +1524,309 @@ let AuthService = exports.AuthService = class AuthService {
             throw new common_1.BadRequestException(err?.message || 'Failed to update biometric status');
         }
     }
+    async changePassword(userId, changePasswordDto) {
+        try {
+            const user = await this._userModel.findById(userId);
+            if (!user) {
+                throw new common_1.BadRequestException('User not found');
+            }
+            const isPasswordValid = await bcrypt.compare(changePasswordDto.currentPassword, user.password);
+            if (!isPasswordValid) {
+                throw new common_1.BadRequestException('Current password is incorrect');
+            }
+            const isSamePassword = await bcrypt.compare(changePasswordDto.newPassword, user.password);
+            if (isSamePassword) {
+                throw new common_1.BadRequestException('New password must be different from current password');
+            }
+            const hashedPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+            user.password = hashedPassword;
+            await user.save();
+            return {
+                success: true,
+                message: 'Password changed successfully',
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to change password');
+        }
+    }
+    async getUserDevices(userId, currentDeviceId) {
+        try {
+            const devices = await this.deviceService.getUserDevices(userId, currentDeviceId);
+            return {
+                success: true,
+                devices: devices.map((device) => ({
+                    id: device._id,
+                    deviceId: device.deviceId,
+                    deviceName: device.deviceName,
+                    deviceType: device.deviceType,
+                    platform: device.platform,
+                    browser: device.browser,
+                    ipAddress: device.ipAddress,
+                    location: device.location,
+                    lastActive: device.lastActive,
+                    isCurrentDevice: device.isCurrentDevice,
+                    createdAt: device.createdAt,
+                })),
+                count: devices.length,
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get devices');
+        }
+    }
+    async logoutDevice(userId, deviceId) {
+        try {
+            const success = await this.deviceService.logoutDevice(userId, deviceId);
+            if (!success) {
+                throw new common_1.BadRequestException('Device not found');
+            }
+            return {
+                success: true,
+                message: 'Device logged out successfully',
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to logout device');
+        }
+    }
+    async logoutAllDevices(userId, currentDeviceId) {
+        try {
+            const count = await this.deviceService.logoutAllDevices(userId, currentDeviceId);
+            return {
+                success: true,
+                message: `Logged out from ${count} device(s)`,
+                count,
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to logout all devices');
+        }
+    }
+    async getRecentOTPs(email) {
+        try {
+            const isMailjetConfigured = process.env.MAILJET_API_KEY &&
+                process.env.MAILJET_API_KEY !== '0' &&
+                process.env.MAILJET_API_KEY !== 'dummy-key-not-configured';
+            if (isMailjetConfigured) {
+                throw new common_1.BadRequestException('This endpoint is only available in development mode');
+            }
+            const query = {};
+            if (email) {
+                const user = await this._userModel.findOne({ email: email.toLowerCase() });
+                if (user) {
+                    query.userID = user.id;
+                }
+            }
+            const otps = await this._otpModel
+                .find(query)
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .lean();
+            const currentTime = new Date().getTime();
+            const otpList = await Promise.all(otps.map(async (otp) => {
+                const user = await this._userModel.findById(otp.userID);
+                return {
+                    email: user?.email || 'Unknown',
+                    otp: otp.otp,
+                    type: otp.type,
+                    expiryTime: otp.expiryTime,
+                    isExpired: currentTime > otp.expiryTime,
+                    createdAt: otp.createdAt,
+                };
+            }));
+            return {
+                isDevelopmentMode: true,
+                otps: otpList,
+                count: otpList.length,
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get OTPs');
+        }
+    }
 };
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(1, (0, mongoose_2.InjectModel)('User')),
     __param(2, (0, mongoose_2.InjectModel)('Otp')),
-    __metadata("design:paramtypes", [typeof (_a = typeof dist_1.JwtService !== "undefined" && dist_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _c : Object, typeof (_d = typeof utils_service_1.UtilsService !== "undefined" && utils_service_1.UtilsService) === "function" ? _d : Object, typeof (_e = typeof _2fa_service_1.TwoFactorService !== "undefined" && _2fa_service_1.TwoFactorService) === "function" ? _e : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof dist_1.JwtService !== "undefined" && dist_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _c : Object, typeof (_d = typeof utils_service_1.UtilsService !== "undefined" && utils_service_1.UtilsService) === "function" ? _d : Object, typeof (_e = typeof _2fa_service_1.TwoFactorService !== "undefined" && _2fa_service_1.TwoFactorService) === "function" ? _e : Object, typeof (_f = typeof device_service_1.DeviceService !== "undefined" && device_service_1.DeviceService) === "function" ? _f : Object, typeof (_g = typeof login_history_service_1.LoginHistoryService !== "undefined" && login_history_service_1.LoginHistoryService) === "function" ? _g : Object])
 ], AuthService);
+
+
+/***/ }),
+
+/***/ "./src/auth/device.service.ts":
+/*!************************************!*\
+  !*** ./src/auth/device.service.ts ***!
+  \************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DeviceService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let DeviceService = exports.DeviceService = class DeviceService {
+    constructor(_deviceModel) {
+        this._deviceModel = _deviceModel;
+    }
+    async registerDevice(userId, deviceInfo, loginToken, ipAddress) {
+        try {
+            console.log('═══════════════════════════════════════════════════');
+            console.log('🔵 [DEVICE SERVICE] registerDevice called');
+            console.log('📊 [DEVICE SERVICE] Parameters:');
+            console.log('   userId:', userId);
+            console.log('   deviceId:', deviceInfo.deviceId);
+            console.log('   deviceName:', deviceInfo.deviceName);
+            console.log('   deviceType:', deviceInfo.deviceType);
+            console.log('   platform:', deviceInfo.platform);
+            console.log('   browser:', deviceInfo.browser);
+            console.log('   ipAddress:', ipAddress);
+            console.log('   location:', deviceInfo.location);
+            console.log('   loginToken:', loginToken ? loginToken.substring(0, 20) + '...' : 'MISSING');
+            console.log('═══════════════════════════════════════════════════');
+            console.log('🔍 [DEVICE SERVICE] Checking if device exists...');
+            const existingDevice = await this._deviceModel.findOne({
+                userId,
+                deviceId: deviceInfo.deviceId,
+            });
+            console.log('🔍 [DEVICE SERVICE] Existing device:', existingDevice ? 'FOUND' : 'NOT FOUND');
+            if (existingDevice) {
+                console.log('✅ Device exists, updating...');
+                existingDevice.deviceName = deviceInfo.deviceName;
+                existingDevice.deviceType = deviceInfo.deviceType;
+                existingDevice.platform = deviceInfo.platform;
+                existingDevice.browser = deviceInfo.browser || 'Unknown';
+                existingDevice.ipAddress = ipAddress || deviceInfo.ipAddress || 'Unknown';
+                existingDevice.location = deviceInfo.location || null;
+                existingDevice.lastActive = new Date();
+                existingDevice.loginToken = loginToken;
+                await existingDevice.save();
+                console.log('✅ Device updated successfully');
+                return existingDevice;
+            }
+            console.log('✅ Device does not exist, creating new...');
+            const newDevice = await this._deviceModel.create({
+                userId,
+                deviceId: deviceInfo.deviceId,
+                deviceName: deviceInfo.deviceName,
+                deviceType: deviceInfo.deviceType,
+                platform: deviceInfo.platform,
+                browser: deviceInfo.browser || 'Unknown',
+                ipAddress: ipAddress || deviceInfo.ipAddress || 'Unknown',
+                location: deviceInfo.location || null,
+                lastActive: new Date(),
+                loginToken,
+            });
+            console.log('✅ Device created successfully:', newDevice._id);
+            return newDevice;
+        }
+        catch (err) {
+            console.error('Error registering device:', err);
+            throw new common_1.BadRequestException('Failed to register device');
+        }
+    }
+    async getUserDevices(userId, currentDeviceId) {
+        try {
+            const devices = await this._deviceModel
+                .find({ userId })
+                .sort({ lastActive: -1 })
+                .lean();
+            if (currentDeviceId) {
+                devices.forEach((device) => {
+                    device.isCurrentDevice = device.deviceId === currentDeviceId;
+                });
+            }
+            return devices;
+        }
+        catch (err) {
+            console.error('Error getting user devices:', err);
+            throw new common_1.BadRequestException('Failed to get user devices');
+        }
+    }
+    async updateDeviceActivity(deviceId, userId) {
+        try {
+            await this._deviceModel.updateOne({ deviceId, userId }, { lastActive: new Date() });
+        }
+        catch (err) {
+            console.error('Error updating device activity:', err);
+        }
+    }
+    async logoutDevice(userId, deviceId) {
+        try {
+            const result = await this._deviceModel.deleteOne({
+                userId,
+                _id: deviceId,
+            });
+            return result.deletedCount > 0;
+        }
+        catch (err) {
+            console.error('Error logging out device:', err);
+            throw new common_1.BadRequestException('Failed to logout device');
+        }
+    }
+    async logoutAllDevices(userId, currentDeviceId) {
+        try {
+            const query = { userId };
+            if (currentDeviceId) {
+                query._id = { $ne: currentDeviceId };
+            }
+            const result = await this._deviceModel.deleteMany(query);
+            return result.deletedCount;
+        }
+        catch (err) {
+            console.error('Error logging out all devices:', err);
+            throw new common_1.BadRequestException('Failed to logout all devices');
+        }
+    }
+    async removeDeviceByToken(loginToken) {
+        try {
+            await this._deviceModel.deleteOne({ loginToken });
+        }
+        catch (err) {
+            console.error('Error removing device by token:', err);
+        }
+    }
+    async cleanupOldDevices() {
+        try {
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+            const result = await this._deviceModel.deleteMany({
+                lastActive: { $lt: ninetyDaysAgo },
+            });
+            return result.deletedCount;
+        }
+        catch (err) {
+            console.error('Error cleaning up old devices:', err);
+            return 0;
+        }
+    }
+};
+exports.DeviceService = DeviceService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)('Device')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], DeviceService);
 
 
 /***/ }),
@@ -1258,6 +1897,36 @@ __decorate([
     (0, class_validator_1.Length)(6, 6, { message: 'Token must be exactly 6 digits' }),
     __metadata("design:type", String)
 ], Login2FADTO.prototype, "token", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "deviceName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "deviceType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "platform", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "browser", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "location", void 0);
 class Enable2FAResponseDTO {
 }
 exports.Enable2FAResponseDTO = Enable2FAResponseDTO;
@@ -1351,6 +2020,298 @@ __decorate([
 
 /***/ }),
 
+/***/ "./src/auth/dto/change-password.dto.ts":
+/*!*********************************************!*\
+  !*** ./src/auth/dto/change-password.dto.ts ***!
+  \*********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChangePasswordResponseDTO = exports.ChangePasswordDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class ChangePasswordDTO {
+}
+exports.ChangePasswordDTO = ChangePasswordDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Current password',
+        example: 'OldPassword123!'
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Current password is required' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ChangePasswordDTO.prototype, "currentPassword", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'New password (min 8 characters)',
+        example: 'NewPassword123!'
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'New password is required' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(8, { message: 'New password must be at least 8 characters long' }),
+    __metadata("design:type", String)
+], ChangePasswordDTO.prototype, "newPassword", void 0);
+class ChangePasswordResponseDTO {
+}
+exports.ChangePasswordResponseDTO = ChangePasswordResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Success status' }),
+    __metadata("design:type", Boolean)
+], ChangePasswordResponseDTO.prototype, "success", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Response message' }),
+    __metadata("design:type", String)
+], ChangePasswordResponseDTO.prototype, "message", void 0);
+
+
+/***/ }),
+
+/***/ "./src/auth/dto/dev-otp-response.dto.ts":
+/*!**********************************************!*\
+  !*** ./src/auth/dto/dev-otp-response.dto.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DevOtpListResponseDTO = exports.DevOtpResponseDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class DevOtpResponseDTO {
+}
+exports.DevOtpResponseDTO = DevOtpResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User email' }),
+    __metadata("design:type", String)
+], DevOtpResponseDTO.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'OTP code' }),
+    __metadata("design:type", String)
+], DevOtpResponseDTO.prototype, "otp", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'OTP type' }),
+    __metadata("design:type", String)
+], DevOtpResponseDTO.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Expiry time' }),
+    __metadata("design:type", Number)
+], DevOtpResponseDTO.prototype, "expiryTime", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Is expired' }),
+    __metadata("design:type", Boolean)
+], DevOtpResponseDTO.prototype, "isExpired", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Created at' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], DevOtpResponseDTO.prototype, "createdAt", void 0);
+class DevOtpListResponseDTO {
+}
+exports.DevOtpListResponseDTO = DevOtpListResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Development mode status' }),
+    __metadata("design:type", Boolean)
+], DevOtpListResponseDTO.prototype, "isDevelopmentMode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'List of recent OTPs', type: [DevOtpResponseDTO] }),
+    __metadata("design:type", Array)
+], DevOtpListResponseDTO.prototype, "otps", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total count' }),
+    __metadata("design:type", Number)
+], DevOtpListResponseDTO.prototype, "count", void 0);
+
+
+/***/ }),
+
+/***/ "./src/auth/dto/device.dto.ts":
+/*!************************************!*\
+  !*** ./src/auth/dto/device.dto.ts ***!
+  \************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DevicesListResponseDTO = exports.DeviceResponseDTO = exports.LogoutDeviceDTO = exports.DeviceInfoDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class DeviceInfoDTO {
+}
+exports.DeviceInfoDTO = DeviceInfoDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Unique device identifier',
+        example: 'abc123xyz456'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Device name',
+        example: 'iPhone 13 Pro'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "deviceName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Device type',
+        example: 'mobile',
+        enum: ['mobile', 'tablet', 'desktop', 'other']
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "deviceType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Platform/OS',
+        example: 'iOS 16.0'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "platform", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Browser name',
+        example: 'Safari',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "browser", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'IP Address',
+        example: '192.168.1.1',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "ipAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Location',
+        example: 'New York, USA',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "location", void 0);
+class LogoutDeviceDTO {
+}
+exports.LogoutDeviceDTO = LogoutDeviceDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Device ID to logout',
+        example: '507f1f77bcf86cd799439011'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LogoutDeviceDTO.prototype, "deviceId", void 0);
+class DeviceResponseDTO {
+}
+exports.DeviceResponseDTO = DeviceResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Device ID' }),
+    __metadata("design:type", String)
+], DeviceResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Device identifier' }),
+    __metadata("design:type", String)
+], DeviceResponseDTO.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Device name' }),
+    __metadata("design:type", String)
+], DeviceResponseDTO.prototype, "deviceName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Device type' }),
+    __metadata("design:type", String)
+], DeviceResponseDTO.prototype, "deviceType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Platform/OS' }),
+    __metadata("design:type", String)
+], DeviceResponseDTO.prototype, "platform", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Browser name' }),
+    __metadata("design:type", String)
+], DeviceResponseDTO.prototype, "browser", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'IP Address' }),
+    __metadata("design:type", String)
+], DeviceResponseDTO.prototype, "ipAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Location' }),
+    __metadata("design:type", String)
+], DeviceResponseDTO.prototype, "location", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last active timestamp' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], DeviceResponseDTO.prototype, "lastActive", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Is this the current device' }),
+    __metadata("design:type", Boolean)
+], DeviceResponseDTO.prototype, "isCurrentDevice", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Login timestamp' }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], DeviceResponseDTO.prototype, "createdAt", void 0);
+class DevicesListResponseDTO {
+}
+exports.DevicesListResponseDTO = DevicesListResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Success status' }),
+    __metadata("design:type", Boolean)
+], DevicesListResponseDTO.prototype, "success", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'List of devices', type: [DeviceResponseDTO] }),
+    __metadata("design:type", Array)
+], DevicesListResponseDTO.prototype, "devices", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total count' }),
+    __metadata("design:type", Number)
+], DevicesListResponseDTO.prototype, "count", void 0);
+
+
+/***/ }),
+
 /***/ "./src/auth/dto/email.dto.ts":
 /*!***********************************!*\
   !*** ./src/auth/dto/email.dto.ts ***!
@@ -1381,6 +2342,60 @@ __decorate([
 
 /***/ }),
 
+/***/ "./src/auth/dto/login-history.dto.ts":
+/*!*******************************************!*\
+  !*** ./src/auth/dto/login-history.dto.ts ***!
+  \*******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginStatisticsDTO = exports.LoginHistoryResponseDTO = exports.GetLoginHistoryDTO = void 0;
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class GetLoginHistoryDTO {
+}
+exports.GetLoginHistoryDTO = GetLoginHistoryDTO;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(100),
+    __metadata("design:type", Number)
+], GetLoginHistoryDTO.prototype, "limit", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(['success', 'failed', 'blocked']),
+    __metadata("design:type", String)
+], GetLoginHistoryDTO.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], GetLoginHistoryDTO.prototype, "startDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], GetLoginHistoryDTO.prototype, "endDate", void 0);
+class LoginHistoryResponseDTO {
+}
+exports.LoginHistoryResponseDTO = LoginHistoryResponseDTO;
+class LoginStatisticsDTO {
+}
+exports.LoginStatisticsDTO = LoginStatisticsDTO;
+
+
+/***/ }),
+
 /***/ "./src/auth/dto/login.dto.ts":
 /*!***********************************!*\
   !*** ./src/auth/dto/login.dto.ts ***!
@@ -1400,6 +2415,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoginDTO = void 0;
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class LoginDTO {
 }
 exports.LoginDTO = LoginDTO;
@@ -1411,6 +2427,36 @@ __decorate([
     (0, swagger_1.ApiProperty)(),
     __metadata("design:type", String)
 ], LoginDTO.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "deviceName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "deviceType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "platform", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "browser", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "location", void 0);
 
 
 /***/ }),
@@ -1821,6 +2867,161 @@ exports.JwtStrategy = JwtStrategy = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [])
 ], JwtStrategy);
+
+
+/***/ }),
+
+/***/ "./src/auth/login-history.service.ts":
+/*!*******************************************!*\
+  !*** ./src/auth/login-history.service.ts ***!
+  \*******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginHistoryService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let LoginHistoryService = exports.LoginHistoryService = class LoginHistoryService {
+    constructor(_loginHistoryModel) {
+        this._loginHistoryModel = _loginHistoryModel;
+    }
+    async recordLogin(data) {
+        try {
+            console.log('═══════════════════════════════════════════════════');
+            console.log('📜 [LOGIN HISTORY] Recording login attempt');
+            console.log('📊 [LOGIN HISTORY] Data:');
+            console.log('   userId:', data.userId);
+            console.log('   email:', data.email);
+            console.log('   deviceInfo present:', data.deviceInfo ? 'YES' : 'NO');
+            if (data.deviceInfo) {
+                console.log('   deviceId:', data.deviceInfo.deviceId);
+                console.log('   deviceName:', data.deviceInfo.deviceName);
+            }
+            console.log('   ipAddress:', data.ipAddress);
+            console.log('   loginMethod:', data.loginMethod);
+            console.log('   status:', data.status);
+            console.log('   failureReason:', data.failureReason);
+            const record = await this._loginHistoryModel.create({
+                userId: data.userId,
+                email: data.email,
+                deviceId: data.deviceInfo?.deviceId || null,
+                deviceName: data.deviceInfo?.deviceName || 'Unknown Device',
+                deviceType: data.deviceInfo?.deviceType || 'other',
+                platform: data.deviceInfo?.platform || 'Unknown',
+                browser: data.deviceInfo?.browser || 'Unknown',
+                ipAddress: data.ipAddress,
+                location: data.deviceInfo?.location || null,
+                loginMethod: data.loginMethod,
+                status: data.status,
+                failureReason: data.failureReason || null,
+                loginAt: new Date(),
+            });
+            console.log(`✅ [LOGIN HISTORY] Login history recorded successfully`);
+            console.log('   Record ID:', record._id);
+            console.log('═══════════════════════════════════════════════════');
+        }
+        catch (err) {
+            console.error('❌ [LOGIN HISTORY] Error recording login history:', err);
+            console.error('❌ [LOGIN HISTORY] Error stack:', err.stack);
+        }
+    }
+    async getUserLoginHistory(userId, options) {
+        try {
+            const query = { userId };
+            if (options?.status) {
+                query.status = options.status;
+            }
+            if (options?.startDate || options?.endDate) {
+                query.loginAt = {};
+                if (options.startDate) {
+                    query.loginAt.$gte = options.startDate;
+                }
+                if (options.endDate) {
+                    query.loginAt.$lte = options.endDate;
+                }
+            }
+            const limit = options?.limit || 50;
+            const history = await this._loginHistoryModel
+                .find(query)
+                .sort({ loginAt: -1 })
+                .limit(limit)
+                .lean();
+            return history;
+        }
+        catch (err) {
+            console.error('Error getting login history:', err);
+            throw new common_1.BadRequestException('Failed to get login history');
+        }
+    }
+    async getRecentFailedAttempts(userId, minutesAgo = 15) {
+        try {
+            const timeAgo = new Date(Date.now() - minutesAgo * 60 * 1000);
+            const count = await this._loginHistoryModel.countDocuments({
+                userId,
+                status: 'failed',
+                loginAt: { $gte: timeAgo },
+            });
+            return count;
+        }
+        catch (err) {
+            console.error('Error getting failed attempts:', err);
+            return 0;
+        }
+    }
+    async getLoginStatistics(userId) {
+        try {
+            const history = await this._loginHistoryModel.find({ userId }).lean();
+            const stats = {
+                totalLogins: history.length,
+                successfulLogins: history.filter(h => h.status === 'success').length,
+                failedLogins: history.filter(h => h.status === 'failed').length,
+                lastLogin: history.length > 0 ? history[0].loginAt : null,
+                uniqueDevices: new Set(history.map(h => h.deviceId).filter(Boolean)).size,
+                uniqueLocations: new Set(history.map(h => h.location).filter(Boolean)).size,
+            };
+            return stats;
+        }
+        catch (err) {
+            console.error('Error getting login statistics:', err);
+            throw new common_1.BadRequestException('Failed to get login statistics');
+        }
+    }
+    async cleanupOldHistory(daysOld = 90) {
+        try {
+            const dateThreshold = new Date();
+            dateThreshold.setDate(dateThreshold.getDate() - daysOld);
+            const result = await this._loginHistoryModel.deleteMany({
+                createdAt: { $lt: dateThreshold },
+            });
+            console.log(`✅ Cleaned up ${result.deletedCount} old login history records`);
+            return result.deletedCount;
+        }
+        catch (err) {
+            console.error('Error cleaning up login history:', err);
+            return 0;
+        }
+    }
+};
+exports.LoginHistoryService = LoginHistoryService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)('LoginHistory')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], LoginHistoryService);
 
 
 /***/ }),
@@ -8711,6 +9912,154 @@ exports.CommentsSchema.set('toJSON', {
 
 /***/ }),
 
+/***/ "./src/schema/device.schema.ts":
+/*!*************************************!*\
+  !*** ./src/schema/device.schema.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DeviceSchema = void 0;
+const mongoose = __webpack_require__(/*! mongoose */ "mongoose");
+exports.DeviceSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true,
+    },
+    deviceId: {
+        type: String,
+        required: true,
+        index: true,
+    },
+    deviceName: {
+        type: String,
+        required: true,
+    },
+    deviceType: {
+        type: String,
+        enum: ['mobile', 'tablet', 'desktop', 'other'],
+        default: 'other',
+    },
+    platform: {
+        type: String,
+        required: true,
+    },
+    browser: {
+        type: String,
+        default: 'Unknown',
+    },
+    ipAddress: {
+        type: String,
+        required: true,
+    },
+    location: {
+        type: String,
+        default: null,
+    },
+    lastActive: {
+        type: Date,
+        default: Date.now,
+    },
+    isCurrentDevice: {
+        type: Boolean,
+        default: false,
+    },
+    loginToken: {
+        type: String,
+        required: true,
+        index: true,
+    },
+}, {
+    timestamps: true,
+});
+exports.DeviceSchema.index({ userId: 1, lastActive: -1 });
+exports.DeviceSchema.index({ userId: 1, deviceId: 1 });
+
+
+/***/ }),
+
+/***/ "./src/schema/login-history.schema.ts":
+/*!********************************************!*\
+  !*** ./src/schema/login-history.schema.ts ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginHistorySchema = void 0;
+const mongoose = __webpack_require__(/*! mongoose */ "mongoose");
+exports.LoginHistorySchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true,
+    },
+    email: {
+        type: String,
+        required: true,
+    },
+    deviceId: {
+        type: String,
+        default: null,
+    },
+    deviceName: {
+        type: String,
+        default: 'Unknown Device',
+    },
+    deviceType: {
+        type: String,
+        enum: ['mobile', 'tablet', 'desktop', 'other'],
+        default: 'other',
+    },
+    platform: {
+        type: String,
+        default: 'Unknown',
+    },
+    browser: {
+        type: String,
+        default: 'Unknown',
+    },
+    ipAddress: {
+        type: String,
+        required: true,
+    },
+    location: {
+        type: String,
+        default: null,
+    },
+    loginMethod: {
+        type: String,
+        enum: ['password', '2fa', 'biometric'],
+        default: 'password',
+    },
+    status: {
+        type: String,
+        enum: ['success', 'failed', 'blocked'],
+        required: true,
+    },
+    failureReason: {
+        type: String,
+        default: null,
+    },
+    loginAt: {
+        type: Date,
+        default: Date.now,
+    },
+}, {
+    timestamps: true,
+});
+exports.LoginHistorySchema.index({ userId: 1, loginAt: -1 });
+exports.LoginHistorySchema.index({ userId: 1, status: 1, loginAt: -1 });
+exports.LoginHistorySchema.index({ loginAt: -1 });
+exports.LoginHistorySchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
+
+
+/***/ }),
+
 /***/ "./src/schema/order/order.schema.ts":
 /*!******************************************!*\
   !*** ./src/schema/order/order.schema.ts ***!
@@ -10097,12 +11446,41 @@ let UtilsService = exports.UtilsService = class UtilsService {
                 process.env.MAILJET_API_KEY !== '0' &&
                 process.env.MAILJET_API_KEY !== 'dummy-key-not-configured';
             if (!isMailjetConfigured) {
-                console.log('\n========================================');
+                let otp = 'Not found';
+                let otpMatch = emailDto.html.match(/<strong[^>]*>\s*(\d{6})\s*<\/strong>/i);
+                if (otpMatch) {
+                    otp = otpMatch[1];
+                }
+                if (otp === 'Not found') {
+                    otpMatch = emailDto.html.match(/verification code:.*?(\d{6})/is);
+                    if (otpMatch) {
+                        otp = otpMatch[1];
+                    }
+                }
+                if (otp === 'Not found') {
+                    otpMatch = emailDto.html.match(/(\d{6})/);
+                    if (otpMatch) {
+                        otp = otpMatch[1];
+                    }
+                }
+                console.log('\n' + '='.repeat(60));
                 console.log('📧 EMAIL NOT SENT (Development Mode)');
-                console.log('To:', emailDto.to);
-                console.log('Subject:', emailDto.subject);
-                console.log('HTML Content:', emailDto.html);
-                console.log('========================================\n');
+                console.log('='.repeat(60));
+                console.log(`📬 To: ${emailDto.to}`);
+                console.log(`📋 Subject: ${emailDto.subject}`);
+                console.log('─'.repeat(60));
+                console.log(`🔑 VERIFICATION CODE: ${otp}`);
+                console.log('─'.repeat(60));
+                console.log('⏰ Valid for: 2 minutes');
+                console.log('');
+                console.log('⚠️  IMPORTANT: Emails are NOT sent in development mode!');
+                console.log('   You will NOT receive this email in your inbox.');
+                console.log('   Use the code above from this console output.');
+                console.log('');
+                console.log('💡 Tip: Configure Mailjet to send real emails');
+                console.log('📖 See: EMAIL_CONFIGURATION_GUIDE.md');
+                console.log('🔗 API: GET http://localhost:3000/auth/dev/otps');
+                console.log('='.repeat(60) + '\n');
                 return {
                     Messages: [{
                             Status: 'success',
@@ -10818,6 +12196,16 @@ module.exports = require("class-transformer");
 /***/ ((module) => {
 
 module.exports = require("class-validator");
+
+/***/ }),
+
+/***/ "express":
+/*!**************************!*\
+  !*** external "express" ***!
+  \**************************/
+/***/ ((module) => {
+
+module.exports = require("express");
 
 /***/ }),
 
