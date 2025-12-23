@@ -56,7 +56,7 @@ export class PostService {
     }
 
     private async populatePostData(post: any, currentUserId?: string): Promise<PostResponseDTO> {
-        const populatedPost = await this.postModel
+        const populatedPost: any = await this.postModel
             .findById(post._id)
             .populate('userId', 'id fullName email profilePic')
             .populate('villageId', 'id name')
@@ -235,7 +235,7 @@ export class PostService {
             const total = await this.postModel.countDocuments(filter);
 
             // Get posts with pagination - try to populate villageId but handle gracefully if it fails
-            const posts = await this.postModel
+            const posts: any[] = await this.postModel
                 .find(filter)
                 .populate('userId', 'id fullName email profilePic')
                 .populate('villageId', 'id name')
@@ -248,7 +248,7 @@ export class PostService {
 
             // Process posts to include vote percentages and user voting status
             const processedPosts: PostResponseDTO[] = await Promise.all(
-                posts.map(async (post) => {
+                posts.map(async (post: any) => {
                     let optionsWithPercentages: PostOptionResponseDTO[] = [];
                     let hasVoted = false;
                     let votedOptionId: string | undefined;
@@ -525,7 +525,7 @@ export class PostService {
         try {
             console.log(`🔗 User ${userId} sharing post ${postId}`);
             
-            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+            const post: any = await this.postModel.findOne({ id: postId, isDeleted: false });
 
             if (!post) {
                 throw new NotFoundException('Post not found');
