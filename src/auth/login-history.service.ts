@@ -14,7 +14,7 @@ export class LoginHistoryService {
    * Record a login attempt
    */
   async recordLogin(data: {
-    userId: string;
+    userId: string | null; // Allow null for failed logins where user doesn't exist
     email: string;
     deviceInfo?: DeviceInfoDTO;
     ipAddress: string;
@@ -38,9 +38,16 @@ export class LoginHistoryService {
       console.log('   status:', data.status);
       console.log('   failureReason:', data.failureReason);
       
+      // Ensure email is provided and valid
+      const email = data.email?.toLowerCase().trim();
+      if (!email) {
+        console.error('❌ [LOGIN HISTORY] Email is required but not provided');
+        return; // Don't record if email is missing
+      }
+
       const record = await this._loginHistoryModel.create({
-        userId: data.userId,
-        email: data.email,
+        userId: data.userId || undefined, // Use undefined instead of null for optional field
+        email: email,
         deviceId: data.deviceInfo?.deviceId || null,
         deviceName: data.deviceInfo?.deviceName || 'Unknown Device',
         deviceType: data.deviceInfo?.deviceType || 'other',

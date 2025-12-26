@@ -8,6 +8,7 @@ import {
   PostResponseDTO, 
   VoteResponseDTO 
 } from './dto/post.dto';
+import { ReportPostDTO, ReportPostResponseDTO } from './dto/report-post.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/swagger';
 import { User } from 'src/decorators/user.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -58,6 +59,35 @@ export class PostController {
     getAllPosts(@Query() query: PostQueryDTO, @User() user?) {
         // Pass user ID if authenticated, otherwise undefined for public access
         return this.postService.getAllPosts(query, user?.id);
+    }
+
+    @ApiOperation({ summary: 'Get saved posts for the current user' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Saved posts retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: {
+                    type: 'object',
+                    properties: {
+                        posts: { type: 'array', items: { $ref: '#/components/schemas/PostResponseDTO' } },
+                        total: { type: 'number' },
+                        offset: { type: 'number' },
+                        limit: { type: 'number' }
+                    }
+                }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Bad request' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Get('saved')
+    getSavedPosts(@Query() query: PostQueryDTO, @User() user) {
+        return this.postService.getSavedPosts(user.id, query);
     }
 
     @ApiOperation({ summary: 'Get a specific post by ID' })
@@ -172,5 +202,69 @@ export class PostController {
     @Post(':id/share')
     sharePost(@Param('id') postId: string, @User() user) {
         return this.postService.sharePost(postId, user.id);
+    }
+
+    @ApiOperation({ summary: 'Save or unsave a post' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Post save status updated successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/PostResponseDTO' }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Bad request' })
+    @ApiResponse({ status: 404, description: 'Post not found' })
+    @ApiParam({ name: 'id', description: 'Post ID' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Save or unsave a post' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Post save status updated successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/PostResponseDTO' }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Bad request' })
+    @ApiResponse({ status: 404, description: 'Post not found' })
+    @ApiParam({ name: 'id', description: 'Post ID' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Post(':id/save')
+    toggleSavePost(@Param('id') postId: string, @User() user) {
+        return this.postService.toggleSavePost(postId, user.id);
+    }
+
+    @ApiOperation({ summary: 'Report a post' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Post reported successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/ReportPostResponseDTO' }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Bad request - Already reported or invalid input' })
+    @ApiResponse({ status: 404, description: 'Post not found' })
+    @ApiParam({ name: 'id', description: 'Post ID' })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Post(':id/report')
+    reportPost(@Param('id') postId: string, @Body() reportPostDTO: ReportPostDTO, @User() user) {
+        return this.postService.reportPost(postId, user.id, reportPostDTO.reason, reportPostDTO.description);
     }
 }

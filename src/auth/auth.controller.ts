@@ -47,7 +47,10 @@ export class AuthController {
   @Post('login')
   login(@Body() loginDto: LoginDTO, @Req() req: Request) {
     console.log('🔵 [AUTH CONTROLLER] Login request received');
+    console.log('📦 [AUTH CONTROLLER] Raw body:', JSON.stringify(req.body, null, 2));
     console.log('📦 [AUTH CONTROLLER] LoginDto:', JSON.stringify(loginDto, null, 2));
+    console.log('📦 [AUTH CONTROLLER] Email in DTO:', loginDto?.email);
+    console.log('📦 [AUTH CONTROLLER] Password in DTO:', loginDto?.password ? '***' : 'MISSING');
     
     // Extract device info if provided
     let deviceInfo: DeviceInfoDTO | undefined;

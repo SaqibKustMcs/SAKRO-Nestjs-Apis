@@ -60,8 +60,8 @@ export class ShopController {
   })
   @ApiResponse({ status: 404, description: 'Shop not found' })
   @Get(':id')
-  getShopById(@Param('id') id: string) {
-    return this.shopService.getShopById(id);
+  getShopById(@Param('id') id: string, @User() user?: any) {
+    return this.shopService.getShopById(id, user?.id);
   }
 
   @ApiOperation({ summary: 'Update shop by ID' })
@@ -96,5 +96,37 @@ export class ShopController {
   @Delete(':id')
   deleteShop(@Param('id') id: string, @User() user) {
     return this.shopService.deleteShop(id, user.id);
+  }
+
+  @ApiOperation({ summary: 'Follow or unfollow a shop' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Shop follow status toggled successfully',
+    type: ShopResponseDTO
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Shop not found' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/follow')
+  toggleFollowShop(@Param('id') id: string, @User() user) {
+    return this.shopService.toggleFollowShop(id, user.id);
+  }
+
+  @ApiOperation({ summary: 'Get shop followers (shop owner only)' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Shop followers retrieved successfully'
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Not shop owner' })
+  @ApiResponse({ status: 404, description: 'Shop not found' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/followers')
+  getShopFollowers(@Param('id') id: string, @User() user) {
+    return this.shopService.getShopFollowers(id, user.id);
   }
 }

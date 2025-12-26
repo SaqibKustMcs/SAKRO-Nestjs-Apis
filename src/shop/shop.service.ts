@@ -72,13 +72,14 @@ export class ShopService {
     }
   }
 
-  async getShopById(shopId: string) {
+  async getShopById(shopId: string, userId?: string) {
     try {
       const shop = await this.shopModel
         .findById(shopId)
         .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
         .populate('villageId', 'id name')
         .populate('categoryId', 'id name')
+        .populate('followers', 'id fullName email profilePic')
         .exec();
 
       if (!shop) {
@@ -89,6 +90,16 @@ export class ShopService {
       if (shop && shop.user) {
         const userObj = shop.user as any;
         delete userObj.password;
+      }
+
+      // Add isFollowing flag if userId is provided
+      if (userId) {
+        const shopObj: any = shop.toObject ? shop.toObject() : (shop as any);
+        shopObj.isFollowing = shop.followers && shop.followers.some((follower: any) => {
+          const followerId = typeof follower === 'string' ? follower : (follower._id || follower.id);
+          return followerId === userId;
+        });
+        return shopObj;
       }
 
       return shop;
@@ -245,6 +256,82 @@ export class ShopService {
       // Return empty array instead of throwing error
       // This prevents 400 error when user has no shops
       return [];
+    }
+  }
+
+  async toggleFollowShop(shopId: string, userId: string) {
+    try {
+      const shop = await this.shopModel.findById(shopId);
+      if (!shop) {
+        throw new Error('Shop not found');
+      }
+
+      // Check if user is already following
+      const isFollowing = shop.followers && shop.followers.includes(userId);
+      
+      let updatedShop;
+      if (isFollowing) {
+        // Unfollow: remove user from followers array
+        updatedShop = await this.shopModel.findByIdAndUpdate(
+          shopId,
+          { $pull: { followers: userId } },
+          { new: true }
+        ).populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+         .populate('villageId', 'id name')
+         .populate('categoryId', 'id name')
+         .populate('followers', 'id fullName email profilePic');
+      } else {
+        // Follow: add user to followers array
+        updatedShop = await this.shopModel.findByIdAndUpdate(
+          shopId,
+          { $addToSet: { followers: userId } },
+          { new: true }
+        ).populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+         .populate('villageId', 'id name')
+         .populate('categoryId', 'id name')
+         .populate('followers', 'id fullName email profilePic');
+      }
+
+      // Remove password from user object
+      if (updatedShop && updatedShop.user) {
+        const userObj = updatedShop.user as any;
+        delete userObj.password;
+      }
+
+      return {
+        shop: updatedShop,
+        isFollowing: !isFollowing,
+        message: isFollowing ? 'Shop unfollowed successfully' : 'Shop followed successfully'
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to toggle follow shop');
+    }
+  }
+
+  async getShopFollowers(shopId: string, userId: string) {
+    try {
+      const shop = await this.shopModel.findById(shopId)
+        .populate('followers', 'id fullName email profilePic')
+        .exec();
+
+      if (!shop) {
+        throw new Error('Shop not found');
+      }
+
+      // Check if user is the shop owner
+      const isOwner = shop.ownerId === userId || shop.user === userId;
+      if (!isOwner) {
+        throw new Error('Only shop owner can view followers');
+      }
+
+      return {
+        followers: shop.followers || [],
+        count: shop.followers ? shop.followers.length : 0
+      };
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to get shop followers');
     }
   }
 }

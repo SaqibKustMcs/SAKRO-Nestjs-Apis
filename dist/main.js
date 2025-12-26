@@ -561,7 +561,10 @@ let AuthController = exports.AuthController = class AuthController {
     }
     login(loginDto, req) {
         console.log('🔵 [AUTH CONTROLLER] Login request received');
+        console.log('📦 [AUTH CONTROLLER] Raw body:', JSON.stringify(req.body, null, 2));
         console.log('📦 [AUTH CONTROLLER] LoginDto:', JSON.stringify(loginDto, null, 2));
+        console.log('📦 [AUTH CONTROLLER] Email in DTO:', loginDto?.email);
+        console.log('📦 [AUTH CONTROLLER] Password in DTO:', loginDto?.password ? '***' : 'MISSING');
         let deviceInfo;
         if (loginDto.deviceId && loginDto.deviceName) {
             deviceInfo = {
@@ -1146,30 +1149,65 @@ let AuthService = exports.AuthService = class AuthService {
     }
     async login(loginDto, deviceInfo, ipAddress) {
         console.log('🟢 [AUTH SERVICE] Login method called');
-        console.log('📧 [AUTH SERVICE] Email:', loginDto.email);
+        console.log('📦 [AUTH SERVICE] Full loginDto:', JSON.stringify(loginDto, null, 2));
+        console.log('📧 [AUTH SERVICE] Email:', loginDto?.email);
+        console.log('🔑 [AUTH SERVICE] Password present:', !!loginDto?.password);
         console.log('📱 [AUTH SERVICE] Device info received:', deviceInfo ? 'YES' : 'NO');
         if (deviceInfo) {
             console.log('📱 [AUTH SERVICE] Device info details:', JSON.stringify(deviceInfo, null, 2));
         }
         console.log('🌐 [AUTH SERVICE] IP Address:', ipAddress);
+        if (!loginDto?.email) {
+            console.error('❌ [AUTH SERVICE] Email is missing from request');
+            throw new Error('Email is required');
+        }
         try {
+            const normalizedEmail = loginDto.email.toLowerCase().trim();
+            if (!normalizedEmail) {
+                throw new Error('Email is required');
+            }
             let user = await this._userModel.findOne({
-                email: loginDto.email,
+                email: normalizedEmail,
                 isEmailVerified: true,
                 isDeleted: false,
             });
             console.log('👤 [AUTH SERVICE] User found:', user ? 'YES' : 'NO');
+            if (user) {
+                console.log('👤 [AUTH SERVICE] User ID:', user._id?.toString());
+                console.log('👤 [AUTH SERVICE] User email:', user.email);
+            }
             if (!user) {
-                console.log('❌ [AUTH SERVICE] User not found, recording failed login');
-                await this.loginHistoryService.recordLogin({
-                    userId: null,
-                    email: loginDto.email,
-                    deviceInfo,
-                    ipAddress: ipAddress || 'Unknown',
-                    loginMethod: 'password',
-                    status: 'failed',
-                    failureReason: 'User not found',
-                });
+                console.log('❌ [AUTH SERVICE] User not found');
+                console.log('   Searched for email:', normalizedEmail);
+                console.log('   Conditions: isEmailVerified=true, isDeleted=false');
+                const userExists = await this._userModel.findOne({ email: normalizedEmail });
+                if (userExists) {
+                    console.log('   ⚠️ User exists but:');
+                    console.log('      - isEmailVerified:', userExists.isEmailVerified);
+                    console.log('      - isDeleted:', userExists.isDeleted);
+                }
+                if (normalizedEmail) {
+                    try {
+                        await this.loginHistoryService.recordLogin({
+                            userId: null,
+                            email: normalizedEmail,
+                            deviceInfo,
+                            ipAddress: ipAddress || 'Unknown',
+                            loginMethod: 'password',
+                            status: 'failed',
+                            failureReason: userExists
+                                ? `User exists but email not verified or account deleted (verified: ${userExists.isEmailVerified}, deleted: ${userExists.isDeleted})`
+                                : 'User not found',
+                        });
+                        console.log('✅ [AUTH SERVICE] Failed login history recorded');
+                    }
+                    catch (historyError) {
+                        console.error('❌ [AUTH SERVICE] Failed to record login history:', historyError);
+                        if (historyError instanceof Error) {
+                            console.error('❌ [AUTH SERVICE] History error message:', historyError.message);
+                        }
+                    }
+                }
                 throw new Error('Incorrect credentials');
             }
             console.log('🔐 [AUTH SERVICE] Comparing password...');
@@ -1398,15 +1436,22 @@ let AuthService = exports.AuthService = class AuthService {
                 isDeleted: false,
             });
             if (!user) {
-                await this.loginHistoryService.recordLogin({
-                    userId: null,
-                    email: email.toLowerCase(),
-                    deviceInfo,
-                    ipAddress: ipAddress || 'Unknown',
-                    loginMethod: '2fa',
-                    status: 'failed',
-                    failureReason: 'User not found',
-                });
+                if (email) {
+                    try {
+                        await this.loginHistoryService.recordLogin({
+                            userId: null,
+                            email: email.toLowerCase().trim(),
+                            deviceInfo,
+                            ipAddress: ipAddress || 'Unknown',
+                            loginMethod: '2fa',
+                            status: 'failed',
+                            failureReason: 'User not found',
+                        });
+                    }
+                    catch (historyError) {
+                        console.error('❌ [AUTH SERVICE] Failed to record login history:', historyError);
+                    }
+                }
                 throw new common_1.UnauthorizedException('Invalid credentials');
             }
             const userId = user._id.toString();
@@ -2420,11 +2465,16 @@ class LoginDTO {
 }
 exports.LoginDTO = LoginDTO;
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'User email address', example: 'user@example.com' }),
+    (0, class_validator_1.IsEmail)({}, { message: 'Please provide a valid email address' }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Email is required' }),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], LoginDTO.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ description: 'User password' }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Password is required' }),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], LoginDTO.prototype, "password", void 0);
 __decorate([
@@ -2916,9 +2966,14 @@ let LoginHistoryService = exports.LoginHistoryService = class LoginHistoryServic
             console.log('   loginMethod:', data.loginMethod);
             console.log('   status:', data.status);
             console.log('   failureReason:', data.failureReason);
+            const email = data.email?.toLowerCase().trim();
+            if (!email) {
+                console.error('❌ [LOGIN HISTORY] Email is required but not provided');
+                return;
+            }
             const record = await this._loginHistoryModel.create({
-                userId: data.userId,
-                email: data.email,
+                userId: data.userId || undefined,
+                email: email,
                 deviceId: data.deviceInfo?.deviceId || null,
                 deviceName: data.deviceInfo?.deviceName || 'Unknown Device',
                 deviceType: data.deviceInfo?.deviceType || 'other',
@@ -6161,6 +6216,256 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 /***/ }),
 
+/***/ "./src/order/dto/ecommerce-order.dto.ts":
+/*!**********************************************!*\
+  !*** ./src/order/dto/ecommerce-order.dto.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ConfirmStripePaymentDTO = exports.CreateStripePaymentIntentDTO = exports.GetAllOrdersDTO = exports.UpdateOrderStatusDTO = exports.CreateEcommerceOrderDTO = exports.OrderItemDTO = exports.ShippingAddressDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+class ShippingAddressDTO {
+}
+exports.ShippingAddressDTO = ShippingAddressDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ShippingAddressDTO.prototype, "fullName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ShippingAddressDTO.prototype, "phone", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ShippingAddressDTO.prototype, "address", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ShippingAddressDTO.prototype, "city", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ShippingAddressDTO.prototype, "state", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ShippingAddressDTO.prototype, "zipCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ShippingAddressDTO.prototype, "country", void 0);
+class OrderItemDTO {
+}
+exports.OrderItemDTO = OrderItemDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OrderItemDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", Object)
+], OrderItemDTO.prototype, "product", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], OrderItemDTO.prototype, "quantity", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], OrderItemDTO.prototype, "price", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OrderItemDTO.prototype, "selectedSize", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OrderItemDTO.prototype, "selectedColor", void 0);
+class CreateEcommerceOrderDTO {
+}
+exports.CreateEcommerceOrderDTO = CreateEcommerceOrderDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateEcommerceOrderDTO.prototype, "buyerId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateEcommerceOrderDTO.prototype, "sellerId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateEcommerceOrderDTO.prototype, "shopId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: [OrderItemDTO] }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => OrderItemDTO),
+    __metadata("design:type", Array)
+], CreateEcommerceOrderDTO.prototype, "items", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateEcommerceOrderDTO.prototype, "subtotal", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateEcommerceOrderDTO.prototype, "deliveryFee", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateEcommerceOrderDTO.prototype, "discount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateEcommerceOrderDTO.prototype, "total", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 'PKR' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateEcommerceOrderDTO.prototype, "currency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: ['cashOnDelivery', 'stripe', 'paypal', 'applePay', 'googlePay'], default: 'cashOnDelivery' }),
+    (0, class_validator_1.IsEnum)(['cashOnDelivery', 'stripe', 'paypal', 'applePay', 'googlePay']),
+    __metadata("design:type", String)
+], CreateEcommerceOrderDTO.prototype, "paymentMethod", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: ShippingAddressDTO }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => ShippingAddressDTO),
+    __metadata("design:type", ShippingAddressDTO)
+], CreateEcommerceOrderDTO.prototype, "shippingAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateEcommerceOrderDTO.prototype, "notes", void 0);
+class UpdateOrderStatusDTO {
+}
+exports.UpdateOrderStatusDTO = UpdateOrderStatusDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'] }),
+    (0, class_validator_1.IsEnum)(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']),
+    __metadata("design:type", String)
+], UpdateOrderStatusDTO.prototype, "status", void 0);
+class GetAllOrdersDTO {
+}
+exports.GetAllOrdersDTO = GetAllOrdersDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GetAllOrdersDTO.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GetAllOrdersDTO.prototype, "shopId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']),
+    __metadata("design:type", String)
+], GetAllOrdersDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 0 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === null || value === undefined || value === '')
+            return 0;
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? 0 : parsed;
+    }),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], GetAllOrdersDTO.prototype, "offset", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 20 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === null || value === undefined || value === '')
+            return 20;
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? 20 : parsed;
+    }),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], GetAllOrdersDTO.prototype, "limit", void 0);
+class CreateStripePaymentIntentDTO {
+}
+exports.CreateStripePaymentIntentDTO = CreateStripePaymentIntentDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateStripePaymentIntentDTO.prototype, "orderId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateStripePaymentIntentDTO.prototype, "amount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateStripePaymentIntentDTO.prototype, "currency", void 0);
+class ConfirmStripePaymentDTO {
+}
+exports.ConfirmStripePaymentDTO = ConfirmStripePaymentDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ConfirmStripePaymentDTO.prototype, "orderId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ConfirmStripePaymentDTO.prototype, "paymentIntentId", void 0);
+
+
+/***/ }),
+
 /***/ "./src/order/dto/order.dto.ts":
 /*!************************************!*\
   !*** ./src/order/dto/order.dto.ts ***!
@@ -6317,6 +6622,294 @@ __decorate([
 
 /***/ }),
 
+/***/ "./src/order/ecommerce-order.controller.ts":
+/*!*************************************************!*\
+  !*** ./src/order/ecommerce-order.controller.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EcommerceOrderController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const ecommerce_order_service_1 = __webpack_require__(/*! ./ecommerce-order.service */ "./src/order/ecommerce-order.service.ts");
+const ecommerce_order_dto_1 = __webpack_require__(/*! ./dto/ecommerce-order.dto */ "./src/order/dto/ecommerce-order.dto.ts");
+let EcommerceOrderController = exports.EcommerceOrderController = class EcommerceOrderController {
+    constructor(ecommerceOrderService) {
+        this.ecommerceOrderService = ecommerceOrderService;
+    }
+    async createOrder(createOrderDTO) {
+        const order = await this.ecommerceOrderService.createOrder(createOrderDTO);
+        return {
+            success: true,
+            message: 'Order created successfully',
+            data: order,
+        };
+    }
+    async getAllOrders(query) {
+        const orders = await this.ecommerceOrderService.getAllOrders(query);
+        return {
+            success: true,
+            message: 'Orders retrieved successfully',
+            data: orders,
+        };
+    }
+    async getOrderById(orderId) {
+        const order = await this.ecommerceOrderService.getOrderById(orderId);
+        return {
+            success: true,
+            message: 'Order retrieved successfully',
+            data: order,
+        };
+    }
+    async updateOrderStatus(orderId, updateStatusDTO) {
+        const order = await this.ecommerceOrderService.updateOrderStatus(orderId, updateStatusDTO.status);
+        return {
+            success: true,
+            message: 'Order status updated successfully',
+            data: order,
+        };
+    }
+    async cancelOrder(orderId) {
+        const order = await this.ecommerceOrderService.cancelOrder(orderId);
+        return {
+            success: true,
+            message: 'Order cancelled successfully',
+            data: order,
+        };
+    }
+};
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new e-commerce order' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Order created successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof ecommerce_order_dto_1.CreateEcommerceOrderDTO !== "undefined" && ecommerce_order_dto_1.CreateEcommerceOrderDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], EcommerceOrderController.prototype, "createOrder", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all e-commerce orders' }),
+    (0, swagger_1.ApiQuery)({ name: 'userId', required: false, description: 'Filter by buyer ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'shopId', required: false, description: 'Filter by shop ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false, description: 'Filter by order status' }),
+    (0, swagger_1.ApiQuery)({ name: 'offset', required: false, type: Number, description: 'Pagination offset' }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, type: Number, description: 'Pagination limit' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Orders retrieved successfully' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof ecommerce_order_dto_1.GetAllOrdersDTO !== "undefined" && ecommerce_order_dto_1.GetAllOrdersDTO) === "function" ? _c : Object]),
+    __metadata("design:returntype", Promise)
+], EcommerceOrderController.prototype, "getAllOrders", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get order by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Order ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Order retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Order not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], EcommerceOrderController.prototype, "getOrderById", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update order status' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Order ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Order status updated successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Order not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)(':id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_d = typeof ecommerce_order_dto_1.UpdateOrderStatusDTO !== "undefined" && ecommerce_order_dto_1.UpdateOrderStatusDTO) === "function" ? _d : Object]),
+    __metadata("design:returntype", Promise)
+], EcommerceOrderController.prototype, "updateOrderStatus", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Cancel order' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Order ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Order cancelled successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Order not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)(':id/cancel'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], EcommerceOrderController.prototype, "cancelOrder", null);
+exports.EcommerceOrderController = EcommerceOrderController = __decorate([
+    (0, swagger_1.ApiTags)('E-commerce Orders'),
+    (0, common_1.Controller)('orders'),
+    __metadata("design:paramtypes", [typeof (_a = typeof ecommerce_order_service_1.EcommerceOrderService !== "undefined" && ecommerce_order_service_1.EcommerceOrderService) === "function" ? _a : Object])
+], EcommerceOrderController);
+
+
+/***/ }),
+
+/***/ "./src/order/ecommerce-order.service.ts":
+/*!**********************************************!*\
+  !*** ./src/order/ecommerce-order.service.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EcommerceOrderService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
+let EcommerceOrderService = exports.EcommerceOrderService = class EcommerceOrderService {
+    constructor(ecommerceOrderModel) {
+        this.ecommerceOrderModel = ecommerceOrderModel;
+    }
+    async createOrder(createOrderDTO) {
+        try {
+            const order = new this.ecommerceOrderModel(createOrderDTO);
+            return await order.save();
+        }
+        catch (error) {
+            console.error('❌ Error creating e-commerce order:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to create order');
+        }
+    }
+    async getAllOrders(query) {
+        try {
+            const filter = { isDeleted: false };
+            if (query.userId) {
+                filter.buyerId = query.userId;
+            }
+            if (query.shopId) {
+                filter.shopId = query.shopId;
+            }
+            if (query.status) {
+                filter.status = query.status;
+            }
+            const offset = query.offset || 0;
+            const limit = query.limit || 20;
+            const orders = await this.ecommerceOrderModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(offset)
+                .limit(limit)
+                .exec();
+            return orders;
+        }
+        catch (error) {
+            console.error('❌ Error fetching e-commerce orders:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to fetch orders');
+        }
+    }
+    async getOrderById(orderId) {
+        try {
+            const order = await this.ecommerceOrderModel
+                .findOne({ id: orderId, isDeleted: false })
+                .exec();
+            if (!order) {
+                throw new common_1.NotFoundException('Order not found');
+            }
+            return order;
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException) {
+                throw error;
+            }
+            console.error('❌ Error fetching e-commerce order:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to fetch order');
+        }
+    }
+    async updateOrderStatus(orderId, status) {
+        try {
+            const order = await this.ecommerceOrderModel.findOne({ id: orderId, isDeleted: false }).exec();
+            if (!order) {
+                throw new common_1.NotFoundException('Order not found');
+            }
+            order.status = status;
+            if (status === 'delivered') {
+                order.deliveredAt = new Date();
+            }
+            else if (status === 'cancelled') {
+                order.cancelledAt = new Date();
+            }
+            return await order.save();
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException) {
+                throw error;
+            }
+            console.error('❌ Error updating order status:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to update order status');
+        }
+    }
+    async cancelOrder(orderId) {
+        try {
+            const order = await this.ecommerceOrderModel.findOne({ id: orderId, isDeleted: false }).exec();
+            if (!order) {
+                throw new common_1.NotFoundException('Order not found');
+            }
+            if (order.status === 'delivered' || order.status === 'cancelled') {
+                throw new common_1.BadRequestException('Cannot cancel order with current status');
+            }
+            order.status = 'cancelled';
+            order.cancelledAt = new Date();
+            return await order.save();
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException) {
+                throw error;
+            }
+            console.error('❌ Error cancelling order:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to cancel order');
+        }
+    }
+};
+exports.EcommerceOrderService = EcommerceOrderService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(ecommerce_order_schema_1.EcommerceOrder.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], EcommerceOrderService);
+
+
+/***/ }),
+
 /***/ "./src/order/order.controller.ts":
 /*!***************************************!*\
   !*** ./src/order/order.controller.ts ***!
@@ -6433,23 +7026,31 @@ exports.OrderModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const order_schema_1 = __webpack_require__(/*! src/schema/order/order.schema */ "./src/schema/order/order.schema.ts");
+const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
 const order_controller_1 = __webpack_require__(/*! ./order.controller */ "./src/order/order.controller.ts");
 const order_service_1 = __webpack_require__(/*! ./order.service */ "./src/order/order.service.ts");
+const ecommerce_order_controller_1 = __webpack_require__(/*! ./ecommerce-order.controller */ "./src/order/ecommerce-order.controller.ts");
+const ecommerce_order_service_1 = __webpack_require__(/*! ./ecommerce-order.service */ "./src/order/ecommerce-order.service.ts");
 let OrderModule = exports.OrderModule = class OrderModule {
 };
 exports.OrderModule = OrderModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
-            mongoose_1.MongooseModule.forFeature([{
+            mongoose_1.MongooseModule.forFeature([
+                {
                     name: order_schema_1.Order.name,
                     schema: order_schema_1.OrderSchema,
                 },
+                {
+                    name: ecommerce_order_schema_1.EcommerceOrder.name,
+                    schema: ecommerce_order_schema_1.EcommerceOrderSchema,
+                },
             ])
         ],
-        controllers: [order_controller_1.OrderController],
-        providers: [order_service_1.OrderService, order_schema_1.Order],
-        exports: [order_service_1.OrderService]
+        controllers: [order_controller_1.OrderController, ecommerce_order_controller_1.EcommerceOrderController],
+        providers: [order_service_1.OrderService, order_schema_1.Order, ecommerce_order_service_1.EcommerceOrderService],
+        exports: [order_service_1.OrderService, ecommerce_order_service_1.EcommerceOrderService]
     })
 ], OrderModule);
 
@@ -6674,9 +7275,12 @@ class UpdatePostDTO {
 }
 exports.UpdatePostDTO = UpdatePostDTO;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Post ID to update' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Post ID to update (optional, ID is also in URL path)',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], UpdatePostDTO.prototype, "id", void 0);
 __decorate([
@@ -6742,8 +7346,6 @@ __decorate([
 ], VotePostDTO.prototype, "optionId", void 0);
 class PostQueryDTO {
     constructor() {
-        this.offset = 0;
-        this.limit = 10;
         this.sortBy = 'createdAt';
         this.sortOrder = 'desc';
     }
@@ -6790,10 +7392,16 @@ __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Page offset for pagination',
         default: 0,
-        minimum: 0
+        minimum: 0,
+        required: false
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_transformer_1.Type)(() => Number),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === null || value === undefined || value === '')
+            return 0;
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? 0 : parsed;
+    }),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
@@ -6803,10 +7411,16 @@ __decorate([
         description: 'Number of posts per page',
         default: 10,
         minimum: 1,
-        maximum: 100
+        maximum: 100,
+        required: false
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_transformer_1.Type)(() => Number),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === null || value === undefined || value === '')
+            return 10;
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? 10 : parsed;
+    }),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(1),
     (0, class_validator_1.Max)(100),
@@ -6927,6 +7541,10 @@ __decorate([
     __metadata("design:type", String)
 ], PostResponseDTO.prototype, "votedOptionId", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Whether the current user has saved this post', required: false }),
+    __metadata("design:type", Boolean)
+], PostResponseDTO.prototype, "isSaved", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ description: 'Is post deleted' }),
     __metadata("design:type", Boolean)
 ], PostResponseDTO.prototype, "isDeleted", void 0);
@@ -6957,6 +7575,87 @@ __decorate([
 
 /***/ }),
 
+/***/ "./src/post/dto/report-post.dto.ts":
+/*!*****************************************!*\
+  !*** ./src/post/dto/report-post.dto.ts ***!
+  \*****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ReportPostResponseDTO = exports.ReportPostDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class ReportPostDTO {
+}
+exports.ReportPostDTO = ReportPostDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Reason for reporting the post',
+        enum: ['spam', 'inappropriate', 'harassment', 'false_information', 'violence', 'other'],
+        example: 'spam'
+    }),
+    (0, class_validator_1.IsEnum)(['spam', 'inappropriate', 'harassment', 'false_information', 'violence', 'other']),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ReportPostDTO.prototype, "reason", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Additional details about the report (optional)',
+        example: 'This post contains misleading information',
+        required: false,
+        maxLength: 500
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(500),
+    __metadata("design:type", String)
+], ReportPostDTO.prototype, "description", void 0);
+class ReportPostResponseDTO {
+}
+exports.ReportPostResponseDTO = ReportPostResponseDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Report ID' }),
+    __metadata("design:type", String)
+], ReportPostResponseDTO.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Post ID that was reported' }),
+    __metadata("design:type", String)
+], ReportPostResponseDTO.prototype, "postId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User ID who reported the post' }),
+    __metadata("design:type", String)
+], ReportPostResponseDTO.prototype, "reportedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Reason for the report' }),
+    __metadata("design:type", String)
+], ReportPostResponseDTO.prototype, "reason", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Additional description', required: false }),
+    __metadata("design:type", String)
+], ReportPostResponseDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Whether the report has been resolved' }),
+    __metadata("design:type", Boolean)
+], ReportPostResponseDTO.prototype, "isResolved", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Creation timestamp' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], ReportPostResponseDTO.prototype, "createdAt", void 0);
+
+
+/***/ }),
+
 /***/ "./src/post/post.controller.ts":
 /*!*************************************!*\
   !*** ./src/post/post.controller.ts ***!
@@ -6976,12 +7675,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PostController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const post_service_1 = __webpack_require__(/*! ./post.service */ "./src/post/post.service.ts");
 const post_dto_1 = __webpack_require__(/*! ./dto/post.dto */ "./src/post/dto/post.dto.ts");
+const report_post_dto_1 = __webpack_require__(/*! ./dto/report-post.dto */ "./src/post/dto/report-post.dto.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
 const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
@@ -6994,6 +7694,9 @@ let PostController = exports.PostController = class PostController {
     }
     getAllPosts(query, user) {
         return this.postService.getAllPosts(query, user?.id);
+    }
+    getSavedPosts(query, user) {
+        return this.postService.getSavedPosts(user.id, query);
     }
     getPostById(postId, user) {
         return this.postService.getPostById(postId, user?.id);
@@ -7012,6 +7715,12 @@ let PostController = exports.PostController = class PostController {
     }
     sharePost(postId, user) {
         return this.postService.sharePost(postId, user.id);
+    }
+    toggleSavePost(postId, user) {
+        return this.postService.toggleSavePost(postId, user.id);
+    }
+    reportPost(postId, reportPostDTO, user) {
+        return this.postService.reportPost(postId, user.id, reportPostDTO.reason, reportPostDTO.description);
     }
 };
 __decorate([
@@ -7063,6 +7772,38 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PostController.prototype, "getAllPosts", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get saved posts for the current user' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Saved posts retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: {
+                    type: 'object',
+                    properties: {
+                        posts: { type: 'array', items: { $ref: '#/components/schemas/PostResponseDTO' } },
+                        total: { type: 'number' },
+                        offset: { type: 'number' },
+                        limit: { type: 'number' }
+                    }
+                }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('saved'),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof post_dto_1.PostQueryDTO !== "undefined" && post_dto_1.PostQueryDTO) === "function" ? _d : Object, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "getSavedPosts", null);
+__decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get a specific post by ID' }),
     (0, swagger_1.ApiResponse)({
         status: 200,
@@ -7095,7 +7836,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_d = typeof post_dto_1.UpdatePostDTO !== "undefined" && post_dto_1.UpdatePostDTO) === "function" ? _d : Object, Object]),
+    __metadata("design:paramtypes", [String, typeof (_e = typeof post_dto_1.UpdatePostDTO !== "undefined" && post_dto_1.UpdatePostDTO) === "function" ? _e : Object, Object]),
     __metadata("design:returntype", void 0)
 ], PostController.prototype, "updatePost", null);
 __decorate([
@@ -7140,7 +7881,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_e = typeof post_dto_1.VotePostDTO !== "undefined" && post_dto_1.VotePostDTO) === "function" ? _e : Object, Object]),
+    __metadata("design:paramtypes", [String, typeof (_f = typeof post_dto_1.VotePostDTO !== "undefined" && post_dto_1.VotePostDTO) === "function" ? _f : Object, Object]),
     __metadata("design:returntype", void 0)
 ], PostController.prototype, "voteOnPost", null);
 __decorate([
@@ -7195,6 +7936,77 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], PostController.prototype, "sharePost", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Save or unsave a post' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Post save status updated successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/PostResponseDTO' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Post not found' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Save or unsave a post' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Post save status updated successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/PostResponseDTO' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Post not found' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(':id/save'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "toggleSavePost", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Report a post' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Post reported successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                message: { type: 'string' },
+                data: { $ref: '#/components/schemas/ReportPostResponseDTO' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - Already reported or invalid input' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Post not found' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Post ID' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(':id/report'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_g = typeof report_post_dto_1.ReportPostDTO !== "undefined" && report_post_dto_1.ReportPostDTO) === "function" ? _g : Object, Object]),
+    __metadata("design:returntype", void 0)
+], PostController.prototype, "reportPost", null);
 exports.PostController = PostController = __decorate([
     (0, swagger_1.ApiTags)('Community Posts'),
     (0, common_1.Controller)('posts'),
@@ -7227,6 +8039,7 @@ const post_service_1 = __webpack_require__(/*! ./post.service */ "./src/post/pos
 const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 const village_schema_1 = __webpack_require__(/*! src/schema/village/village.schema */ "./src/schema/village/village.schema.ts");
 const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
+const post_report_schema_1 = __webpack_require__(/*! src/schema/post-report/post-report.schema */ "./src/schema/post-report/post-report.schema.ts");
 let PostModule = exports.PostModule = class PostModule {
 };
 exports.PostModule = PostModule = __decorate([
@@ -7236,7 +8049,8 @@ exports.PostModule = PostModule = __decorate([
                 { name: post_schema_1.Post.name, schema: post_schema_1.PostSchema },
                 { name: 'User', schema: user_schema_1.UserSchema },
                 { name: 'Village', schema: village_schema_1.VillageSchema },
-                { name: comments_schema_1.Comments.name, schema: comments_schema_1.CommentsSchema }
+                { name: comments_schema_1.Comments.name, schema: comments_schema_1.CommentsSchema },
+                { name: post_report_schema_1.PostReport.name, schema: post_report_schema_1.PostReportSchema }
             ])
         ],
         controllers: [post_controller_1.PostController],
@@ -7267,7 +8081,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PostService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -7275,13 +8089,15 @@ const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
 const post_schema_1 = __webpack_require__(/*! src/schema/post/post.schema */ "./src/schema/post/post.schema.ts");
 const comments_schema_1 = __webpack_require__(/*! src/schema/comments/comments.schema */ "./src/schema/comments/comments.schema.ts");
+const post_report_schema_1 = __webpack_require__(/*! src/schema/post-report/post-report.schema */ "./src/schema/post-report/post-report.schema.ts");
 const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
 let PostService = exports.PostService = class PostService {
-    constructor(postModel, userModel, villageModel, commentsModel) {
+    constructor(postModel, userModel, villageModel, commentsModel, postReportModel) {
         this.postModel = postModel;
         this.userModel = userModel;
         this.villageModel = villageModel;
         this.commentsModel = commentsModel;
+        this.postReportModel = postReportModel;
     }
     validatePostData(createPostDTO) {
         const { type, text, mediaUrl, mediaType, question, options } = createPostDTO;
@@ -7344,6 +8160,7 @@ let PostService = exports.PostService = class PostService {
             villageIdResponse = villageIdResponse.id || populatedPost.villageId;
         }
         const commentsCount = await this.calculateCommentsCount(populatedPost.id);
+        const isSaved = currentUserId ? await this.isPostSaved(populatedPost.id, currentUserId) : false;
         return {
             id: populatedPost.id,
             userId: populatedPost.userId,
@@ -7362,10 +8179,24 @@ let PostService = exports.PostService = class PostService {
             isLiked: currentUserId ? (populatedPost.likedBy || []).includes(currentUserId) : false,
             hasVoted: populatedPost.type === 'question' ? hasVoted : undefined,
             votedOptionId: populatedPost.type === 'question' ? votedOptionId : undefined,
+            isSaved: isSaved,
             isDeleted: populatedPost.isDeleted,
             createdAt: populatedPost.createdAt,
             updatedAt: populatedPost.updatedAt
         };
+    }
+    async isPostSaved(postId, userId) {
+        try {
+            const user = await this.userModel.findOne({ _id: userId, isDeleted: false });
+            if (!user || !user.savedPosts) {
+                return false;
+            }
+            return user.savedPosts.includes(postId);
+        }
+        catch (error) {
+            console.log('❌ Error checking if post is saved:', error);
+            return false;
+        }
     }
     async calculateCommentsCount(postId) {
         try {
@@ -7575,8 +8406,9 @@ let PostService = exports.PostService = class PostService {
                     votes: []
                 }));
             }
+            const { id, ...updateFields } = updatePostDTO;
             const updatedPost = await this.postModel
-                .findOneAndUpdate({ id: postId }, { $set: updatePostDTO }, { new: true })
+                .findOneAndUpdate({ id: postId }, { $set: updateFields }, { new: true })
                 .populate('userId', 'id fullName email profilePic')
                 .populate('villageId', 'id name')
                 .lean();
@@ -7694,6 +8526,218 @@ let PostService = exports.PostService = class PostService {
             throw new common_1.BadRequestException(error?.message || 'Failed to share post');
         }
     }
+    async toggleSavePost(postId, userId) {
+        try {
+            console.log(`💾 User ${userId} toggling save for post ${postId}`);
+            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+            if (!post) {
+                throw new common_1.NotFoundException('Post not found');
+            }
+            const user = await this.userModel.findOne({ _id: userId, isDeleted: false });
+            if (!user) {
+                throw new common_1.NotFoundException('User not found');
+            }
+            const isSaved = user.savedPosts && user.savedPosts.includes(postId);
+            if (isSaved) {
+                user.savedPosts = user.savedPosts.filter((id) => id !== postId);
+                await user.save();
+                console.log(`✅ Post ${postId} unsaved by user ${userId}`);
+            }
+            else {
+                if (!user.savedPosts) {
+                    user.savedPosts = [];
+                }
+                user.savedPosts.push(postId);
+                await user.save();
+                console.log(`✅ Post ${postId} saved by user ${userId}`);
+            }
+            const populatedPost = await this.populatePostData(post, userId);
+            return {
+                success: true,
+                message: isSaved ? 'Post unsaved successfully' : 'Post saved successfully',
+                data: populatedPost
+            };
+        }
+        catch (error) {
+            console.log('❌ Error toggling save post:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to save/unsave post');
+        }
+    }
+    async getSavedPosts(userId, query) {
+        try {
+            console.log(`📚 Fetching saved posts for user ${userId}`);
+            console.log(`📋 Query params:`, JSON.stringify(query));
+            if (!userId) {
+                throw new common_1.BadRequestException('User ID is required');
+            }
+            const user = await this.userModel.findOne({ _id: userId, isDeleted: false });
+            if (!user) {
+                throw new common_1.NotFoundException('User not found');
+            }
+            const savedPostIds = user.savedPosts || [];
+            console.log(`💾 User has ${savedPostIds.length} saved posts`);
+            if (savedPostIds.length === 0) {
+                return {
+                    success: true,
+                    message: 'No saved posts found',
+                    data: {
+                        posts: [],
+                        total: 0,
+                        offset: query.offset || 0,
+                        limit: query.limit || 10
+                    }
+                };
+            }
+            const offset = query.offset !== undefined && query.offset !== null ? Number(query.offset) : 0;
+            const limit = query.limit !== undefined && query.limit !== null ? Number(query.limit) : 10;
+            const sortBy = query.sortBy || 'createdAt';
+            const sortOrder = query.sortOrder || 'desc';
+            if (isNaN(offset) || offset < 0) {
+                throw new common_1.BadRequestException('Invalid offset value');
+            }
+            if (isNaN(limit) || limit < 1 || limit > 100) {
+                throw new common_1.BadRequestException('Invalid limit value. Must be between 1 and 100');
+            }
+            console.log(`📊 Pagination: offset=${offset}, limit=${limit}, sortBy=${sortBy}, sortOrder=${sortOrder}`);
+            const filter = {
+                id: { $in: savedPostIds },
+                isDeleted: false
+            };
+            const sort = {};
+            sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+            const total = await this.postModel.countDocuments(filter);
+            const posts = await this.postModel
+                .find(filter)
+                .populate('userId', 'id fullName email profilePic')
+                .populate('villageId', 'id name')
+                .sort(sort)
+                .skip(offset)
+                .limit(limit)
+                .lean();
+            console.log(`📊 Processing ${posts.length} saved posts...`);
+            const processedPosts = await Promise.all(posts.map(async (post) => {
+                let optionsWithPercentages = [];
+                let hasVoted = false;
+                let votedOptionId;
+                if (post.type === 'question' && post.options) {
+                    const totalVotes = post.totalVotes || 0;
+                    optionsWithPercentages = post.options.map(option => {
+                        const isVotedByCurrentUser = option.votes.includes(userId);
+                        if (isVotedByCurrentUser) {
+                            hasVoted = true;
+                            votedOptionId = option.id;
+                        }
+                        return {
+                            id: option.id,
+                            text: option.text,
+                            voteCount: option.votes.length,
+                            percentage: totalVotes > 0 ? Math.round((option.votes.length / totalVotes) * 100) : 0,
+                            isVotedByCurrentUser
+                        };
+                    });
+                }
+                let villageIdResponse = null;
+                if (post.villageId && typeof post.villageId === 'object') {
+                    villageIdResponse = post.villageId.id || post.villageId._id;
+                }
+                else if (post.villageId && typeof post.villageId === 'string') {
+                    villageIdResponse = post.villageId;
+                }
+                const commentsCount = await this.calculateCommentsCount(post.id);
+                return {
+                    id: post.id,
+                    userId: post.userId,
+                    villageId: villageIdResponse,
+                    type: post.type,
+                    text: post.text || '',
+                    mediaUrl: post.mediaUrl || '',
+                    mediaType: post.mediaType || null,
+                    question: post.question || '',
+                    options: optionsWithPercentages,
+                    totalVotes: post.totalVotes || 0,
+                    likedBy: post.likedBy || [],
+                    likesCount: post.likesCount || 0,
+                    commentsCount: commentsCount,
+                    sharesCount: post.sharesCount || 0,
+                    isLiked: (post.likedBy || []).includes(userId),
+                    hasVoted: post.type === 'question' ? hasVoted : undefined,
+                    votedOptionId: post.type === 'question' ? votedOptionId : undefined,
+                    isSaved: true,
+                    isDeleted: post.isDeleted || false,
+                    createdAt: post.createdAt,
+                    updatedAt: post.updatedAt
+                };
+            }));
+            return {
+                success: true,
+                message: 'Saved posts retrieved successfully',
+                data: {
+                    posts: processedPosts,
+                    total,
+                    offset,
+                    limit
+                }
+            };
+        }
+        catch (error) {
+            console.log('❌ Error fetching saved posts:', error);
+            console.log('❌ Error stack:', error?.stack);
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException) {
+                throw error;
+            }
+            throw new common_1.BadRequestException(error?.message || 'Failed to retrieve saved posts');
+        }
+    }
+    async reportPost(postId, userId, reason, description) {
+        try {
+            console.log(`🚨 User ${userId} reporting post ${postId} for reason: ${reason}`);
+            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+            if (!post) {
+                throw new common_1.NotFoundException('Post not found');
+            }
+            const existingReport = await this.postReportModel.findOne({
+                postId: postId,
+                reportedBy: userId,
+                isDeleted: false
+            });
+            if (existingReport) {
+                throw new common_1.BadRequestException('You have already reported this post');
+            }
+            if (post.userId === userId) {
+                throw new common_1.BadRequestException('You cannot report your own post');
+            }
+            const report = new this.postReportModel({
+                postId: postId,
+                reportedBy: userId,
+                reason: reason,
+                description: description || '',
+                isResolved: false,
+                isDeleted: false
+            });
+            await report.save();
+            console.log(`✅ Post ${postId} reported successfully by user ${userId}`);
+            return {
+                success: true,
+                message: 'Post reported successfully. Our team will review it shortly.',
+                data: {
+                    id: report.id,
+                    postId: report.postId,
+                    reportedBy: report.reportedBy,
+                    reason: report.reason,
+                    description: report.description,
+                    isResolved: report.isResolved,
+                    createdAt: report.createdAt
+                }
+            };
+        }
+        catch (error) {
+            console.log('❌ Error reporting post:', error);
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException) {
+                throw error;
+            }
+            throw new common_1.BadRequestException(error?.message || 'Failed to report post');
+        }
+    }
 };
 exports.PostService = PostService = __decorate([
     (0, common_1.Injectable)(),
@@ -7701,7 +8745,8 @@ exports.PostService = PostService = __decorate([
     __param(1, (0, mongoose_1.InjectModel)('User')),
     __param(2, (0, mongoose_1.InjectModel)('Village')),
     __param(3, (0, mongoose_1.InjectModel)(comments_schema_1.Comments.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object])
+    __param(4, (0, mongoose_1.InjectModel)(post_report_schema_1.PostReport.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object])
 ], PostService);
 
 
@@ -9981,6 +11026,156 @@ exports.DeviceSchema.index({ userId: 1, deviceId: 1 });
 
 /***/ }),
 
+/***/ "./src/schema/ecommerce-order/ecommerce-order.schema.ts":
+/*!**************************************************************!*\
+  !*** ./src/schema/ecommerce-order/ecommerce-order.schema.ts ***!
+  \**************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EcommerceOrderSchema = exports.EcommerceOrder = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+let EcommerceOrder = exports.EcommerceOrder = class EcommerceOrder {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true, unique: true }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "orderNumber", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "buyerId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "sellerId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "shopId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Array, required: true }),
+    __metadata("design:type", typeof (_a = typeof Array !== "undefined" && Array) === "function" ? _a : Object)
+], EcommerceOrder.prototype, "items", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, required: true, default: 0 }),
+    __metadata("design:type", Number)
+], EcommerceOrder.prototype, "subtotal", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, required: true, default: 0 }),
+    __metadata("design:type", Number)
+], EcommerceOrder.prototype, "deliveryFee", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, required: true, default: 0 }),
+    __metadata("design:type", Number)
+], EcommerceOrder.prototype, "discount", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, required: true, default: 0 }),
+    __metadata("design:type", Number)
+], EcommerceOrder.prototype, "total", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: 'PKR' }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "currency", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+        default: 'pending',
+    }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        enum: ['cashOnDelivery', 'stripe', 'paypal', 'applePay', 'googlePay'],
+        default: 'cashOnDelivery',
+    }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "paymentMethod", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        enum: ['pending', 'paid', 'failed', 'refunded'],
+        default: 'pending',
+    }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "paymentStatus", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: false }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "paymentIntentId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: {
+            fullName: String,
+            phone: String,
+            address: String,
+            city: String,
+            state: String,
+            zipCode: String,
+            country: String,
+        },
+        required: true,
+    }),
+    __metadata("design:type", Object)
+], EcommerceOrder.prototype, "shippingAddress", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: false }),
+    __metadata("design:type", String)
+], EcommerceOrder.prototype, "notes", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, required: false }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], EcommerceOrder.prototype, "deliveredAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, required: false }),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], EcommerceOrder.prototype, "cancelledAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], EcommerceOrder.prototype, "isDeleted", void 0);
+exports.EcommerceOrder = EcommerceOrder = __decorate([
+    (0, mongoose_1.Schema)()
+], EcommerceOrder);
+exports.EcommerceOrderSchema = mongoose_1.SchemaFactory.createForClass(EcommerceOrder);
+exports.EcommerceOrderSchema.set('timestamps', true);
+exports.EcommerceOrderSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+exports.EcommerceOrderSchema.pre('save', async function (next) {
+    if (!this.orderNumber) {
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 10000);
+        this.orderNumber = `ORD-${timestamp}-${random}`;
+    }
+    next();
+});
+
+
+/***/ }),
+
 /***/ "./src/schema/login-history.schema.ts":
 /*!********************************************!*\
   !*** ./src/schema/login-history.schema.ts ***!
@@ -9995,12 +11190,13 @@ exports.LoginHistorySchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+        required: false,
         index: true,
     },
     email: {
         type: String,
         required: true,
+        index: true,
     },
     deviceId: {
         type: String,
@@ -10208,6 +11404,97 @@ exports.OtpSchema.set('toJSON', {
         delete ret._id;
     },
 });
+
+
+/***/ }),
+
+/***/ "./src/schema/post-report/post-report.schema.ts":
+/*!******************************************************!*\
+  !*** ./src/schema/post-report/post-report.schema.ts ***!
+  \******************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PostReportSchema = exports.PostReport = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+let PostReport = exports.PostReport = class PostReport {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], PostReport.prototype, "id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true, ref: 'Post' }),
+    __metadata("design:type", String)
+], PostReport.prototype, "postId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true, ref: 'User' }),
+    __metadata("design:type", String)
+], PostReport.prototype, "reportedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        required: true,
+        enum: ['spam', 'inappropriate', 'harassment', 'false_information', 'violence', 'other']
+    }),
+    __metadata("design:type", String)
+], PostReport.prototype, "reason", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], PostReport.prototype, "description", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], PostReport.prototype, "isResolved", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], PostReport.prototype, "resolvedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, default: null }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], PostReport.prototype, "resolvedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], PostReport.prototype, "isDeleted", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, default: Date.now }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], PostReport.prototype, "createdAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date, default: Date.now }),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], PostReport.prototype, "updatedAt", void 0);
+exports.PostReport = PostReport = __decorate([
+    (0, mongoose_1.Schema)()
+], PostReport);
+exports.PostReportSchema = mongoose_1.SchemaFactory.createForClass(PostReport);
+exports.PostReportSchema.set('timestamps', true);
+exports.PostReportSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, ret) {
+        delete ret._id;
+    },
+});
+exports.PostReportSchema.index({ postId: 1 });
+exports.PostReportSchema.index({ reportedBy: 1 });
+exports.PostReportSchema.index({ isResolved: 1 });
+exports.PostReportSchema.index({ createdAt: -1 });
 
 
 /***/ }),
@@ -10578,6 +11865,7 @@ exports.UserSchema = new mongoose_1.Schema({
     buyOrders: { type: Number, default: 0 },
     wishlist: { type: [String], default: [] },
     cart: { type: [String], default: [] },
+    savedPosts: { type: [String], default: [] },
     twoFactorSecret: { type: String, default: null },
     isTwoFactorEnabled: { type: Boolean, default: false },
     isBiometric: { type: Boolean, default: false },
@@ -11034,14 +12322,20 @@ let ShopController = exports.ShopController = class ShopController {
     getAllShops() {
         return this.shopService.getAllShops();
     }
-    getShopById(id) {
-        return this.shopService.getShopById(id);
+    getShopById(id, user) {
+        return this.shopService.getShopById(id, user?.id);
     }
     updateShop(id, updateShopDto, user) {
         return this.shopService.updateShop(id, updateShopDto, user.id);
     }
     deleteShop(id, user) {
         return this.shopService.deleteShop(id, user.id);
+    }
+    toggleFollowShop(id, user) {
+        return this.shopService.toggleFollowShop(id, user.id);
+    }
+    getShopFollowers(id, user) {
+        return this.shopService.getShopFollowers(id, user.id);
     }
 };
 __decorate([
@@ -11100,8 +12394,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Shop not found' }),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ShopController.prototype, "getShopById", null);
 __decorate([
@@ -11145,6 +12440,44 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ShopController.prototype, "deleteShop", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Follow or unfollow a shop' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Shop follow status toggled successfully',
+        type: shop_response_dto_1.ShopResponseDTO
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Shop not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(':id/follow'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "toggleFollowShop", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get shop followers (shop owner only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Shop followers retrieved successfully'
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Not shop owner' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Shop not found' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(':id/followers'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "getShopFollowers", null);
 exports.ShopController = ShopController = __decorate([
     (0, swagger_1.ApiTags)('Shop'),
     (0, common_1.Controller)('shop'),
@@ -11268,13 +12601,14 @@ let ShopService = exports.ShopService = class ShopService {
             throw new common_1.BadRequestException(err?.message || 'Failed to create shop');
         }
     }
-    async getShopById(shopId) {
+    async getShopById(shopId, userId) {
         try {
             const shop = await this.shopModel
                 .findById(shopId)
                 .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
                 .populate('villageId', 'id name')
                 .populate('categoryId', 'id name')
+                .populate('followers', 'id fullName email profilePic')
                 .exec();
             if (!shop) {
                 throw new Error('Shop not found');
@@ -11282,6 +12616,14 @@ let ShopService = exports.ShopService = class ShopService {
             if (shop && shop.user) {
                 const userObj = shop.user;
                 delete userObj.password;
+            }
+            if (userId) {
+                const shopObj = shop.toObject ? shop.toObject() : shop;
+                shopObj.isFollowing = shop.followers && shop.followers.some((follower) => {
+                    const followerId = typeof follower === 'string' ? follower : (follower._id || follower.id);
+                    return followerId === userId;
+                });
+                return shopObj;
             }
             return shop;
         }
@@ -11398,6 +12740,63 @@ let ShopService = exports.ShopService = class ShopService {
         catch (err) {
             console.log('❌ Error getting user shops:', err);
             return [];
+        }
+    }
+    async toggleFollowShop(shopId, userId) {
+        try {
+            const shop = await this.shopModel.findById(shopId);
+            if (!shop) {
+                throw new Error('Shop not found');
+            }
+            const isFollowing = shop.followers && shop.followers.includes(userId);
+            let updatedShop;
+            if (isFollowing) {
+                updatedShop = await this.shopModel.findByIdAndUpdate(shopId, { $pull: { followers: userId } }, { new: true }).populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                    .populate('villageId', 'id name')
+                    .populate('categoryId', 'id name')
+                    .populate('followers', 'id fullName email profilePic');
+            }
+            else {
+                updatedShop = await this.shopModel.findByIdAndUpdate(shopId, { $addToSet: { followers: userId } }, { new: true }).populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                    .populate('villageId', 'id name')
+                    .populate('categoryId', 'id name')
+                    .populate('followers', 'id fullName email profilePic');
+            }
+            if (updatedShop && updatedShop.user) {
+                const userObj = updatedShop.user;
+                delete userObj.password;
+            }
+            return {
+                shop: updatedShop,
+                isFollowing: !isFollowing,
+                message: isFollowing ? 'Shop unfollowed successfully' : 'Shop followed successfully'
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to toggle follow shop');
+        }
+    }
+    async getShopFollowers(shopId, userId) {
+        try {
+            const shop = await this.shopModel.findById(shopId)
+                .populate('followers', 'id fullName email profilePic')
+                .exec();
+            if (!shop) {
+                throw new Error('Shop not found');
+            }
+            const isOwner = shop.ownerId === userId || shop.user === userId;
+            if (!isOwner) {
+                throw new Error('Only shop owner can view followers');
+            }
+            return {
+                followers: shop.followers || [],
+                count: shop.followers ? shop.followers.length : 0
+            };
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get shop followers');
         }
     }
 };
@@ -12381,7 +13780,15 @@ const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const app_module_1 = __webpack_require__(/*! ./app.module */ "./src/app.module.ts");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    app.useGlobalPipes(new common_1.ValidationPipe());
+    app.useGlobalPipes(new common_1.ValidationPipe({
+        transform: true,
+        transformOptions: {
+            enableImplicitConversion: true,
+        },
+        whitelist: true,
+        forbidNonWhitelisted: false,
+        skipMissingProperties: false,
+    }));
     const config = new swagger_1.DocumentBuilder()
         .setTitle('Shop app')
         .setDescription('Shop App APIs')

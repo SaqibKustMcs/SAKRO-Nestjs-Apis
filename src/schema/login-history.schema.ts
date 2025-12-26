@@ -5,12 +5,13 @@ export const LoginHistorySchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false, // Allow null for failed logins where user doesn't exist
       index: true,
     },
     email: {
       type: String,
       required: true,
+      index: true,
     },
     deviceId: {
       type: String,

@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsString, IsEnum, IsOptional, IsArray, IsNumber, IsBoolean, IsNotEmpty, ValidateNested, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class PostOptionDTO {
   @ApiProperty({ description: 'Option text', example: 'Option 1' })
@@ -76,10 +76,13 @@ export class CreatePostDTO {
 }
 
 export class UpdatePostDTO {
-  @ApiProperty({ description: 'Post ID to update' })
+  @ApiProperty({ 
+    description: 'Post ID to update (optional, ID is also in URL path)', 
+    required: false
+  })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  id: string;
+  id?: string;
 
   @ApiProperty({ 
     description: 'Updated post text', 
@@ -173,26 +176,36 @@ export class PostQueryDTO {
   @ApiProperty({ 
     description: 'Page offset for pagination', 
     default: 0,
-    minimum: 0
+    minimum: 0,
+    required: false
   })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return 0;
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  })
   @IsNumber()
   @Min(0)
-  offset?: number = 0;
+  offset?: number;
 
   @ApiProperty({ 
     description: 'Number of posts per page', 
     default: 10,
     minimum: 1,
-    maximum: 100
+    maximum: 100,
+    required: false
   })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return 10;
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 10 : parsed;
+  })
   @IsNumber()
   @Min(1)
   @Max(100)
-  limit?: number = 10;
+  limit?: number;
 
   @ApiProperty({ 
     description: 'Sort by field', 
@@ -282,6 +295,9 @@ export class PostResponseDTO {
 
   @ApiProperty({ description: 'The option ID that the current user voted for', required: false })
   votedOptionId?: string;
+
+  @ApiProperty({ description: 'Whether the current user has saved this post', required: false })
+  isSaved?: boolean;
 
   @ApiProperty({ description: 'Is post deleted' })
   isDeleted: boolean;

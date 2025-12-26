@@ -15,6 +15,8 @@ import { Post as PostInterface, PostOption as PostOptionInterface } from 'src/in
 import { User } from 'src/interface/user/user.interface';
 import { VillageInterface } from 'src/interface/village/village.interface';
 import { Comments } from 'src/schema/comments/comments.schema';
+import { PostReport } from 'src/schema/post-report/post-report.schema';
+import { PostReport as PostReportInterface } from 'src/interface/post-report/post-report.interface';
 import { generateStringId } from 'src/utils/utils';
 
 @Injectable()
@@ -24,6 +26,7 @@ export class PostService {
         @InjectModel('User') private userModel: Model<User>,
         @InjectModel('Village') private villageModel: Model<VillageInterface>,
         @InjectModel(Comments.name) private commentsModel: Model<Comments>,
+        @InjectModel(PostReport.name) private postReportModel: Model<PostReportInterface>,
     ) {}
 
     private validatePostData(createPostDTO: CreatePostDTO): void {
@@ -103,6 +106,9 @@ export class PostService {
         // Calculate total comments count (including replies)
         const commentsCount = await this.calculateCommentsCount(populatedPost.id);
 
+        // Check if post is saved by current user
+        const isSaved = currentUserId ? await this.isPostSaved(populatedPost.id, currentUserId) : false;
+
         return {
             id: populatedPost.id,
             userId: populatedPost.userId as any,
@@ -121,10 +127,27 @@ export class PostService {
             isLiked: currentUserId ? (populatedPost.likedBy || []).includes(currentUserId) : false,
             hasVoted: populatedPost.type === 'question' ? hasVoted : undefined,
             votedOptionId: populatedPost.type === 'question' ? votedOptionId : undefined,
+            isSaved: isSaved,
             isDeleted: populatedPost.isDeleted,
             createdAt: populatedPost.createdAt,
             updatedAt: populatedPost.updatedAt
         };
+    }
+
+    /**
+     * Check if a post is saved by a user
+     */
+    private async isPostSaved(postId: string, userId: string): Promise<boolean> {
+        try {
+            const user = await this.userModel.findOne({ _id: userId, isDeleted: false });
+            if (!user || !user.savedPosts) {
+                return false;
+            }
+            return user.savedPosts.includes(postId);
+        } catch (error) {
+            console.log('❌ Error checking if post is saved:', error);
+            return false;
+        }
     }
 
     /**
@@ -391,10 +414,13 @@ export class PostService {
                 }));
             }
 
+            // Remove id from updatePostDTO if present (we use postId from URL parameter)
+            const { id, ...updateFields } = updatePostDTO;
+            
             const updatedPost = await this.postModel
                 .findOneAndUpdate(
                     { id: postId },
-                    { $set: updatePostDTO },
+                    { $set: updateFields },
                     { new: true }
                 )
                 .populate('userId', 'id fullName email profilePic')
@@ -548,6 +574,271 @@ export class PostService {
         } catch (error) {
             console.log('❌ Error sharing post:', error);
             throw new BadRequestException(error?.message || 'Failed to share post');
+        }
+    }
+
+    async toggleSavePost(postId: string, userId: string): Promise<{ success: boolean; message: string; data: PostResponseDTO }> {
+        try {
+            console.log(`💾 User ${userId} toggling save for post ${postId}`);
+            
+            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+
+            if (!post) {
+                throw new NotFoundException('Post not found');
+            }
+
+            const user = await this.userModel.findOne({ _id: userId, isDeleted: false });
+
+            if (!user) {
+                throw new NotFoundException('User not found');
+            }
+
+            // Check if post is already saved
+            const isSaved = user.savedPosts && user.savedPosts.includes(postId);
+
+            if (isSaved) {
+                // Unsave the post
+                user.savedPosts = user.savedPosts.filter((id: string) => id !== postId);
+                await user.save();
+                console.log(`✅ Post ${postId} unsaved by user ${userId}`);
+            } else {
+                // Save the post
+                if (!user.savedPosts) {
+                    user.savedPosts = [];
+                }
+                user.savedPosts.push(postId);
+                await user.save();
+                console.log(`✅ Post ${postId} saved by user ${userId}`);
+            }
+
+            const populatedPost = await this.populatePostData(post, userId);
+
+            return {
+                success: true,
+                message: isSaved ? 'Post unsaved successfully' : 'Post saved successfully',
+                data: populatedPost
+            };
+        } catch (error) {
+            console.log('❌ Error toggling save post:', error);
+            throw new BadRequestException(error?.message || 'Failed to save/unsave post');
+        }
+    }
+
+    async getSavedPosts(userId: string, query: PostQueryDTO): Promise<{ success: boolean; message: string; data: { posts: PostResponseDTO[]; total: number; offset: number; limit: number } }> {
+        try {
+            console.log(`📚 Fetching saved posts for user ${userId}`);
+            console.log(`📋 Query params:`, JSON.stringify(query));
+
+            if (!userId) {
+                throw new BadRequestException('User ID is required');
+            }
+
+            const user = await this.userModel.findOne({ _id: userId, isDeleted: false });
+
+            if (!user) {
+                throw new NotFoundException('User not found');
+            }
+
+            const savedPostIds = user.savedPosts || [];
+            console.log(`💾 User has ${savedPostIds.length} saved posts`);
+
+            if (savedPostIds.length === 0) {
+                return {
+                    success: true,
+                    message: 'No saved posts found',
+                    data: {
+                        posts: [],
+                        total: 0,
+                        offset: query.offset || 0,
+                        limit: query.limit || 10
+                    }
+                };
+            }
+
+            // Ensure offset and limit are numbers with proper defaults
+            const offset = query.offset !== undefined && query.offset !== null ? Number(query.offset) : 0;
+            const limit = query.limit !== undefined && query.limit !== null ? Number(query.limit) : 10;
+            const sortBy = query.sortBy || 'createdAt';
+            const sortOrder = query.sortOrder || 'desc';
+            
+            // Validate offset and limit are valid numbers
+            if (isNaN(offset) || offset < 0) {
+                throw new BadRequestException('Invalid offset value');
+            }
+            if (isNaN(limit) || limit < 1 || limit > 100) {
+                throw new BadRequestException('Invalid limit value. Must be between 1 and 100');
+            }
+
+            console.log(`📊 Pagination: offset=${offset}, limit=${limit}, sortBy=${sortBy}, sortOrder=${sortOrder}`);
+
+            // Build filter for saved posts
+            const filter: any = { 
+                id: { $in: savedPostIds },
+                isDeleted: false 
+            };
+
+            // Build sort object
+            const sort: any = {};
+            sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+            // Get total count
+            const total = await this.postModel.countDocuments(filter);
+
+            // Get posts with pagination
+            const posts: any[] = await this.postModel
+                .find(filter)
+                .populate('userId', 'id fullName email profilePic')
+                .populate('villageId', 'id name')
+                .sort(sort)
+                .skip(offset)
+                .limit(limit)
+                .lean();
+
+            console.log(`📊 Processing ${posts.length} saved posts...`);
+
+            // Process posts to include vote percentages and user voting status
+            const processedPosts: PostResponseDTO[] = await Promise.all(
+                posts.map(async (post: any) => {
+                    let optionsWithPercentages: PostOptionResponseDTO[] = [];
+                    let hasVoted = false;
+                    let votedOptionId: string | undefined;
+
+                    if (post.type === 'question' && post.options) {
+                        const totalVotes = post.totalVotes || 0;
+                        optionsWithPercentages = post.options.map(option => {
+                            const isVotedByCurrentUser = option.votes.includes(userId);
+                            
+                            if (isVotedByCurrentUser) {
+                                hasVoted = true;
+                                votedOptionId = option.id;
+                            }
+
+                            return {
+                                id: option.id,
+                                text: option.text,
+                                voteCount: option.votes.length,
+                                percentage: totalVotes > 0 ? Math.round((option.votes.length / totalVotes) * 100) : 0,
+                                isVotedByCurrentUser
+                            };
+                        });
+                    }
+
+                    // Handle villageId
+                    let villageIdResponse: any = null;
+                    if (post.villageId && typeof post.villageId === 'object') {
+                        villageIdResponse = (post.villageId as any).id || (post.villageId as any)._id;
+                    } else if (post.villageId && typeof post.villageId === 'string') {
+                        villageIdResponse = post.villageId;
+                    }
+
+                    // Calculate comments count
+                    const commentsCount = await this.calculateCommentsCount(post.id);
+
+                    return {
+                        id: post.id,
+                        userId: post.userId as any,
+                        villageId: villageIdResponse,
+                        type: post.type,
+                        text: post.text || '',
+                        mediaUrl: post.mediaUrl || '',
+                        mediaType: post.mediaType || null,
+                        question: post.question || '',
+                        options: optionsWithPercentages,
+                        totalVotes: post.totalVotes || 0,
+                        likedBy: post.likedBy || [],
+                        likesCount: post.likesCount || 0,
+                        commentsCount: commentsCount,
+                        sharesCount: post.sharesCount || 0,
+                        isLiked: (post.likedBy || []).includes(userId),
+                        hasVoted: post.type === 'question' ? hasVoted : undefined,
+                        votedOptionId: post.type === 'question' ? votedOptionId : undefined,
+                        isSaved: true, // All posts in saved posts list are saved
+                        isDeleted: post.isDeleted || false,
+                        createdAt: post.createdAt,
+                        updatedAt: post.updatedAt
+                    };
+                })
+            );
+
+            return {
+                success: true,
+                message: 'Saved posts retrieved successfully',
+                data: {
+                    posts: processedPosts,
+                    total,
+                    offset,
+                    limit
+                }
+            };
+        } catch (error) {
+            console.log('❌ Error fetching saved posts:', error);
+            console.log('❌ Error stack:', error?.stack);
+            if (error instanceof NotFoundException || error instanceof BadRequestException) {
+                throw error;
+            }
+            throw new BadRequestException(error?.message || 'Failed to retrieve saved posts');
+        }
+    }
+
+    async reportPost(postId: string, userId: string, reason: string, description?: string): Promise<{ success: boolean; message: string; data: any }> {
+        try {
+            console.log(`🚨 User ${userId} reporting post ${postId} for reason: ${reason}`);
+
+            // Check if post exists
+            const post = await this.postModel.findOne({ id: postId, isDeleted: false });
+            if (!post) {
+                throw new NotFoundException('Post not found');
+            }
+
+            // Check if user already reported this post
+            const existingReport = await this.postReportModel.findOne({
+                postId: postId,
+                reportedBy: userId,
+                isDeleted: false
+            });
+
+            if (existingReport) {
+                throw new BadRequestException('You have already reported this post');
+            }
+
+            // Check if user is trying to report their own post
+            if (post.userId === userId) {
+                throw new BadRequestException('You cannot report your own post');
+            }
+
+            // Create the report
+            const report = new this.postReportModel({
+                postId: postId,
+                reportedBy: userId,
+                reason: reason,
+                description: description || '',
+                isResolved: false,
+                isDeleted: false
+            });
+
+            await report.save();
+
+            console.log(`✅ Post ${postId} reported successfully by user ${userId}`);
+
+            return {
+                success: true,
+                message: 'Post reported successfully. Our team will review it shortly.',
+                data: {
+                    id: report.id,
+                    postId: report.postId,
+                    reportedBy: report.reportedBy,
+                    reason: report.reason,
+                    description: report.description,
+                    isResolved: report.isResolved,
+                    createdAt: report.createdAt
+                }
+            };
+        } catch (error) {
+            console.log('❌ Error reporting post:', error);
+            if (error instanceof NotFoundException || error instanceof BadRequestException) {
+                throw error;
+            }
+            throw new BadRequestException(error?.message || 'Failed to report post');
         }
     }
 }

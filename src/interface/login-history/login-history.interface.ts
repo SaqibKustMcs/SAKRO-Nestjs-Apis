@@ -2,7 +2,7 @@ import { Document } from 'mongoose';
 
 export interface LoginHistory extends Document {
   id: string;
-  userId: string;
+  userId?: string; // Optional for failed logins where user doesn't exist
   email: string;
   deviceId?: string;
   deviceName?: string;

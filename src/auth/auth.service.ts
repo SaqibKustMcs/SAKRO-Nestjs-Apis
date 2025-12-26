@@ -295,34 +295,77 @@ export class AuthService {
 
   async login(loginDto: LoginDTO, deviceInfo?: DeviceInfoDTO, ipAddress?: string) {
     console.log('🟢 [AUTH SERVICE] Login method called');
-    console.log('📧 [AUTH SERVICE] Email:', loginDto.email);
+    console.log('📦 [AUTH SERVICE] Full loginDto:', JSON.stringify(loginDto, null, 2));
+    console.log('📧 [AUTH SERVICE] Email:', loginDto?.email);
+    console.log('🔑 [AUTH SERVICE] Password present:', !!loginDto?.password);
     console.log('📱 [AUTH SERVICE] Device info received:', deviceInfo ? 'YES' : 'NO');
     if (deviceInfo) {
       console.log('📱 [AUTH SERVICE] Device info details:', JSON.stringify(deviceInfo, null, 2));
     }
     console.log('🌐 [AUTH SERVICE] IP Address:', ipAddress);
     
+    // Validate email is provided
+    if (!loginDto?.email) {
+      console.error('❌ [AUTH SERVICE] Email is missing from request');
+      throw new Error('Email is required');
+    }
+    
     try {
+      // Normalize email
+      const normalizedEmail = loginDto.email.toLowerCase().trim();
+      if (!normalizedEmail) {
+        throw new Error('Email is required');
+      }
+
       let user = await this._userModel.findOne({
-        email: loginDto.email,
+        email: normalizedEmail,
         isEmailVerified: true,
         isDeleted: false,
       });
       
       console.log('👤 [AUTH SERVICE] User found:', user ? 'YES' : 'NO');
+      if (user) {
+        console.log('👤 [AUTH SERVICE] User ID:', user._id?.toString());
+        console.log('👤 [AUTH SERVICE] User email:', user.email);
+      }
       
       if (!user) {
-        console.log('❌ [AUTH SERVICE] User not found, recording failed login');
-        // Record failed login attempt
-        await this.loginHistoryService.recordLogin({
-          userId: null, // User not found
-          email: loginDto.email,
-          deviceInfo,
-          ipAddress: ipAddress || 'Unknown',
-          loginMethod: 'password',
-          status: 'failed',
-          failureReason: 'User not found',
-        });
+        console.log('❌ [AUTH SERVICE] User not found');
+        console.log('   Searched for email:', normalizedEmail);
+        console.log('   Conditions: isEmailVerified=true, isDeleted=false');
+        
+        // Check if user exists but doesn't meet conditions
+        const userExists = await this._userModel.findOne({ email: normalizedEmail });
+        if (userExists) {
+          console.log('   ⚠️ User exists but:');
+          console.log('      - isEmailVerified:', userExists.isEmailVerified);
+          console.log('      - isDeleted:', userExists.isDeleted);
+        }
+        
+        // Record failed login attempt (only if email is provided)
+        if (normalizedEmail) {
+          try {
+            await this.loginHistoryService.recordLogin({
+              userId: null, // User not found
+              email: normalizedEmail,
+              deviceInfo,
+              ipAddress: ipAddress || 'Unknown',
+              loginMethod: 'password',
+              status: 'failed',
+              failureReason: userExists 
+                ? `User exists but email not verified or account deleted (verified: ${userExists.isEmailVerified}, deleted: ${userExists.isDeleted})`
+                : 'User not found',
+            });
+            console.log('✅ [AUTH SERVICE] Failed login history recorded');
+          } catch (historyError) {
+            // Don't fail login if history recording fails
+            console.error('❌ [AUTH SERVICE] Failed to record login history:', historyError);
+            // Only log error message, not full stack for cleaner logs
+            if (historyError instanceof Error) {
+              console.error('❌ [AUTH SERVICE] History error message:', historyError.message);
+            }
+          }
+        }
         throw new Error('Incorrect credentials');
       }
 
@@ -614,16 +657,23 @@ export class AuthService {
       });
 
       if (!user) {
-        // Record failed login attempt
-        await this.loginHistoryService.recordLogin({
-          userId: null,
-          email: email.toLowerCase(),
-          deviceInfo,
-          ipAddress: ipAddress || 'Unknown',
-          loginMethod: '2fa',
-          status: 'failed',
-          failureReason: 'User not found',
-        });
+        // Record failed login attempt (only if email is provided)
+        if (email) {
+          try {
+            await this.loginHistoryService.recordLogin({
+              userId: null,
+              email: email.toLowerCase().trim(),
+              deviceInfo,
+              ipAddress: ipAddress || 'Unknown',
+              loginMethod: '2fa',
+              status: 'failed',
+              failureReason: 'User not found',
+            });
+          } catch (historyError) {
+            // Don't fail login if history recording fails
+            console.error('❌ [AUTH SERVICE] Failed to record login history:', historyError);
+          }
+        }
         throw new UnauthorizedException('Invalid credentials');
       }
 

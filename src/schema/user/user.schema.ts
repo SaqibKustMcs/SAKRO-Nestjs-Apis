@@ -30,6 +30,7 @@ export const UserSchema = new Schema(
     buyOrders: { type: Number, default: 0 },
     wishlist: { type: [String], default: [] },
     cart: { type: [String], default: [] },
+    savedPosts: { type: [String], default: [] }, // Array of saved post IDs
 
     // Two-Factor Authentication fields
     twoFactorSecret: { type: String, default: null },

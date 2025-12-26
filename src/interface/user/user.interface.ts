@@ -28,6 +28,7 @@ export interface User extends Document {
   buyOrders: number;
   wishlist: string[];
   cart: string[];
+  savedPosts: string[]; // Array of saved post IDs
   
   // Two-Factor Authentication fields
   twoFactorSecret: string | null;
