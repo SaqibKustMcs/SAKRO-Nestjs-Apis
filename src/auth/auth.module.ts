@@ -21,7 +21,7 @@ export class AuthModule {
     return {
       imports: [
         JwtModule.register({
-          secret: process.env.JWT_SECRET,
+          secret: process.env.JWT_SECRET || 'fallback-secret-key-change-in-production',
           signOptions: { expiresIn: '9999999999s' },
           global: true, // Make JWT module global to avoid conflicts
         }),
@@ -36,6 +36,7 @@ export class AuthModule {
       ],
       controllers: [AuthController, TwoFactorController, Auth2FAController],
       providers: [AuthService, TwoFactorService, DeviceService, LoginHistoryService, JwtStrategy, UtilsService],
+      exports: [AuthService],
       module: AuthModule,
     };
   }

@@ -13,6 +13,7 @@ import { ShopModule } from './shop/shop.module';
 import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
 import { ChatModule } from './chat/chat.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { ChatModule } from './chat/chat.module';
     VillageModule,
     ShopModule,
     CategoryModule,
-    ProductModule
+    ProductModule,
+    AdminModule
   ],
   controllers: [AppController],
   providers: [AppService],

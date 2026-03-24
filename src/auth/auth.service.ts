@@ -10,6 +10,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { SignupDTO } from './dto/signup.dto';
 import { UpdateProfileDTO } from './dto/update-profile.dto';
 import { LoginDTO } from './dto/login.dto';
+import { AdminLoginDTO } from '../admin/dto/admin-login.dto';
 var bcrypt = require('bcryptjs');
 //import * as otpGenerator from 'otp-generator';
 import { OtpTypeEnum } from 'src/enum/otp.enum';
@@ -459,6 +460,166 @@ export class AuthService {
     } catch (err) {
       console.log(err);
       throw new UnauthorizedException(err?.message);
+    }
+  }
+
+  async adminLogin(loginDto: AdminLoginDTO, ipAddress?: string) {
+    console.log('🟢 [AUTH SERVICE] Admin login method called');
+    console.log('📧 [AUTH SERVICE] Email:', loginDto?.email);
+    console.log('🌐 [AUTH SERVICE] IP Address:', ipAddress);
+    
+    try {
+      // Normalize email
+      const normalizedEmail = loginDto.email.toLowerCase().trim();
+      if (!normalizedEmail) {
+        throw new Error('Email is required');
+      }
+
+      // Find user with admin role
+      const user = await this._userModel.findOne({
+        email: normalizedEmail,
+        isEmailVerified: true,
+        isDeleted: false,
+        userRole: 'admin', // Only admin users can login
+      });
+
+      if (!user) {
+        console.log('❌ [AUTH SERVICE] Admin user not found or not an admin');
+        throw new UnauthorizedException('Invalid credentials or insufficient permissions');
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+      
+      if (isPasswordValid) {
+        // Generate token
+        const payload = {
+          id: user._id,
+          email: user.email,
+          userRole: user.userRole,
+        };
+        
+        const token = this.generateToken(payload);
+
+        // Return user data without password
+        const userData = {
+          id: user._id.toString(),
+          email: user.email,
+          fullName: user.fullName || user.name,
+          userRole: user.userRole,
+          userStatus: user.userStatus,
+          profilePic: user.profilePic || user.pic,
+        };
+
+        return {
+          accessToken: token.access_token,
+          user: userData,
+          expiresIn: 9999999999, // Token expiration in seconds
+        };
+      } else {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+    } catch (err) {
+      console.log('❌ [AUTH SERVICE] Admin login error:', err);
+      if (err instanceof UnauthorizedException) {
+        throw err;
+      }
+      throw new UnauthorizedException(err?.message || 'Login failed');
+    }
+  }
+
+  async getAllUsersForAdmin(query: {
+    search?: string;
+    userRole?: 'normal' | 'seller' | 'admin';
+    userStatus?: 'active' | 'inactive' | 'suspended';
+    userLevel?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+    limit?: number;
+    offset?: number;
+  }) {
+    try {
+      const limit = query.limit || 100;
+      const offset = query.offset || 0;
+
+      // Build filter query
+      const filter: any = {
+        isDeleted: false, // Only get non-deleted users
+      };
+
+      // Add role filter
+      if (query.userRole) {
+        filter.userRole = query.userRole;
+      }
+
+      // Add status filter
+      if (query.userStatus) {
+        filter.userStatus = query.userStatus;
+      }
+
+      // Add level filter
+      if (query.userLevel) {
+        filter.userLevel = query.userLevel;
+      }
+
+      // Add search filter
+      if (query.search) {
+        const searchRegex = { $regex: query.search, $options: 'i' };
+        filter.$or = [
+          { email: searchRegex },
+          { name: searchRegex },
+          { fullName: searchRegex },
+        ];
+      }
+
+      // Get users with pagination
+      const users = await this._userModel
+        .find(filter)
+        .select('-password -twoFactorSecret') // Exclude sensitive fields
+        .sort({ createdAt: -1 })
+        .skip(offset)
+        .limit(limit)
+        .lean();
+
+      // Get total count
+      const total = await this._userModel.countDocuments(filter);
+
+      // Transform users to response format
+      const transformedUsers = users.map((user: any) => {
+        // Handle _id field (Mongoose returns _id, but schema transform converts it to id)
+        const userId = user.id || user._id?.toString() || '';
+        
+        return {
+          id: userId,
+          email: user.email || '',
+          name: user.name || '',
+          fullName: user.fullName || user.name || '',
+          phoneNumber: user.phoneNumber || '',
+          userRole: user.userRole || 'normal',
+          userStatus: user.userStatus || 'active',
+          userLevel: user.userLevel || 'beginner',
+          profilePic: user.profilePic || user.pic || '',
+          pic: user.pic || '',
+          color: user.color || '#3B82F6',
+          village: user.village || '',
+          country: user.country || '',
+          homeAddress: user.homeAddress || '',
+          zipcode: user.zipcode || '',
+          isEmailVerified: user.isEmailVerified || false,
+          isTwoFactorEnabled: user.isTwoFactorEnabled || false,
+          isBiometric: user.isBiometric || false,
+          sellOrders: user.sellOrders || 0,
+          buyOrders: user.buyOrders || 0,
+          createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
+          updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(),
+        };
+      });
+
+      return {
+        users: transformedUsers,
+        total: total,
+      };
+    } catch (error) {
+      console.error('Error getting all users for admin:', error);
+      throw new Error('Failed to retrieve users');
     }
   }
 

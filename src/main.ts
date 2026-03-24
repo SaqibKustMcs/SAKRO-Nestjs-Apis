@@ -31,9 +31,17 @@ async function bootstrap() {
   const networkIp = process.env.NETWORK_IP || 'localhost';
 
   // Enable CORS
+  const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];
+  // Always add localhost:4200 for Angular dev server
+  if (!corsOrigins.includes('http://localhost:4200') && corsOrigins[0] !== '*') {
+    corsOrigins.push('http://localhost:4200');
+  }
+  
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') || '*',
+    origin: corsOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   // Listen on all network interfaces (0.0.0.0) to allow connections from same network
