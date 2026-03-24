@@ -51,7 +51,7 @@ async function createAdminUser() {
   try {
     // Connect to MongoDB
     console.log('🔌 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
     const adminEmail = 'admin@jhamat.com';

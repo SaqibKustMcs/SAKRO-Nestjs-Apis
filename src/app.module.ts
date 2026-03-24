@@ -18,7 +18,7 @@ import { AdminModule } from './admin/admin.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_URI),
+    MongooseModule.forRoot(process.env.MONGODB_URI),
     AuthModule.forRoot(),
     ChatModule,
     MediaUploadModule,

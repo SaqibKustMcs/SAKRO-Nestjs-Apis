@@ -4,6 +4,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  const port = parseInt(process.env.PORT || '3000', 10);
+  const host = process.env.HOST || '0.0.0.0';
+  const networkIp = process.env.NETWORK_IP || 'localhost';
+  const hasMongoUri = Boolean(process.env.MONGODB_URI);
+
+  // Startup diagnostics without exposing secrets
+  console.log(`[BOOT] PORT=${port}`);
+  console.log(`[BOOT] MONGODB_URI configured: ${hasMongoUri ? 'YES' : 'NO'}`);
+
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
@@ -24,11 +33,6 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
-
-  // Get configuration from environment variables
-  const port = process.env.PORT || 3101;
-  const host = process.env.HOST || '0.0.0.0';
-  const networkIp = process.env.NETWORK_IP || 'localhost';
 
   // Enable CORS
   const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];

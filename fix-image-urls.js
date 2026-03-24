@@ -3,10 +3,11 @@
  * This replaces the old domain with the new local IP address
  */
 
+require('dotenv').config();
 const mongoose = require('mongoose');
 
 // MongoDB connection
-const MONGO_URI = 'mongodb://localhost:27017/ShopApp';
+const MONGO_URI = process.env.MONGODB_URI;
 
 // Old and new URLs
 const OLD_URL = 'https://chatapi.blockyfy.com/';
@@ -14,6 +15,9 @@ const NEW_URL = 'http://192.168.18.32:3101/';
 
 async function fixImageUrls() {
   try {
+    if (!MONGO_URI) {
+      throw new Error('MONGODB_URI is not configured');
+    }
     console.log('🔌 Connecting to MongoDB...');
     await mongoose.connect(MONGO_URI);
     console.log('✅ Connected to MongoDB');

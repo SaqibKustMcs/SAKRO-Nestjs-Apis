@@ -8,8 +8,6 @@ import { CommentsService } from './comments.service';
 
 @Module({
     imports: [
-      
-        MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
         MongooseModule.forFeature([
           {
             name: Comments.name,
@@ -23,8 +21,7 @@ import { CommentsService } from './comments.service';
             name: Post.name,
             schema: PostSchema,
           }
-        ]),
-        CommentsModule
+        ])
       ],
       controllers: [CommentsController],
       providers: [CommentsService],

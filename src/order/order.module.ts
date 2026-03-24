@@ -9,8 +9,6 @@ import { EcommerceOrderService } from './ecommerce-order.service';
 
 @Module({
     imports: [
-      
-        MongooseModule.forRoot("mongodb://127.0.0.1:27017/exampleChatNew"),
         MongooseModule.forFeature([
           {
             name: Order.name,
