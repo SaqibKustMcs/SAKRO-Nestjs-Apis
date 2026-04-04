@@ -1,8 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Shop } from 'src/interface/shop/shop.interface';
 import { User } from 'src/interface/user/user.interface';
+import { AdminUpdateShopDto } from './dto/admin-update-shop.dto';
 import { CreateShopDTO } from './dto/create-shop.dto';
 import { UpdateShopDTO } from './dto/update-shop.dto';
 
@@ -11,6 +12,7 @@ export class ShopService {
   constructor(
     @InjectModel('Shop') private shopModel: Model<Shop>,
     @InjectModel('User') private userModel: Model<User>,
+    @InjectModel('ShopCategory') private readonly shopCategoryModel: Model<Record<string, unknown>>,
   ) {}
 
   async createShop(createShopDto: CreateShopDTO, userId: string) {
@@ -132,6 +134,58 @@ export class ShopService {
       console.log(err);
       throw new BadRequestException(err?.message || 'Failed to get shops');
     }
+  }
+
+  /** Admin: update any shop by id (no owner check). */
+  async updateShopForAdmin(shopId: string, dto: AdminUpdateShopDto) {
+    try {
+      const existing = await this.shopModel.findOne({ _id: shopId }).exec();
+      if (!existing) {
+        throw new NotFoundException('Shop not found');
+      }
+
+      const patch: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(dto)) {
+        if (value !== undefined) {
+          patch[key] = value;
+        }
+      }
+
+      const updatedShop = await this.shopModel
+        .findByIdAndUpdate(shopId, patch, { new: true })
+        .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+        .populate('villageId', 'id name')
+        .populate('categoryId', 'id name')
+        .exec();
+
+      if (updatedShop && updatedShop.user) {
+        const userObj = updatedShop.user as { password?: string };
+        delete userObj.password;
+      }
+
+      return {
+        shop: updatedShop,
+        message: 'Shop updated successfully',
+      };
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      }
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to update shop');
+    }
+  }
+
+  async listActiveShopCategories(): Promise<{ id: string; name: string }[]> {
+    const rows = await this.shopCategoryModel
+      .find({ isActive: true })
+      .sort({ name: 1 })
+      .lean()
+      .exec();
+    return rows.map((r) => ({
+      id: String(r._id ?? ''),
+      name: String(r.name ?? ''),
+    }));
   }
 
   async updateShop(shopId: string, updateShopDto: UpdateShopDTO, userId: string) {
@@ -332,6 +386,32 @@ export class ShopService {
     } catch (err) {
       console.log(err);
       throw new BadRequestException(err?.message || 'Failed to get shop followers');
+    }
+  }
+
+  async getFollowedShops(userId: string) {
+    try {
+      const shops = await this.shopModel
+        .find({ status: 'active', followers: userId })
+        .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+        .populate('villageId', 'id name')
+        .populate('categoryId', 'id name')
+        .populate('followers', 'id fullName email profilePic')
+        .sort({ createdAt: -1 })
+        .exec();
+
+      return shops.map(shop => {
+        if (shop.user) {
+          const userObj = shop.user as any;
+          delete userObj.password;
+        }
+        const shopObj: any = shop.toObject ? shop.toObject() : (shop as any);
+        shopObj.isFollowing = true;
+        return shopObj;
+      });
+    } catch (err) {
+      console.log(err);
+      throw new BadRequestException(err?.message || 'Failed to get followed shops');
     }
   }
 }

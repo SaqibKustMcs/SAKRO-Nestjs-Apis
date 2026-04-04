@@ -9,7 +9,11 @@ export class EcommerceOrder {
   @Prop({ type: String, default: generateStringId })
   id: string;
 
-  @Prop({ type: String, required: true, unique: true })
+  @Prop({
+    type: String,
+    unique: true,
+    default: () => `ORD-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+  })
   orderNumber: string;
 
   @Prop({ type: String, required: true })
@@ -116,13 +120,4 @@ EcommerceOrderSchema.set('toJSON', {
   },
 });
 
-// Generate unique order number
-EcommerceOrderSchema.pre('save', async function (next) {
-  if (!this.orderNumber) {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000);
-    this.orderNumber = `ORD-${timestamp}-${random}`;
-  }
-  next();
-});
 

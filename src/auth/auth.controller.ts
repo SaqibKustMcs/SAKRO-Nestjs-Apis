@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put, UseGuards, Req, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards, Req, Query } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
@@ -241,6 +241,24 @@ export class AuthController {
       success: true,
       data: statistics,
     };
+  }
+
+  // ─── Wishlist ────────────────────────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'Toggle product in wishlist (add or remove)' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('wishlist/toggle/:productId')
+  toggleWishlist(@Param('productId') productId: string, @User() user) {
+    return this.authService.toggleWishlist(user.id, productId);
+  }
+
+  @ApiOperation({ summary: 'Get current user wishlist with product details' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('wishlist')
+  getWishlist(@User() user) {
+    return this.authService.getWishlist(user.id);
   }
 
 }

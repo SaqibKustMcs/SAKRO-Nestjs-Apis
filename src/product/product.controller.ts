@@ -18,6 +18,7 @@ import {
   ApiParam 
 } from '@nestjs/swagger';
 import { ProductService } from './product.service';
+import { ProductReviewService } from './product-review.service';
 import { CreateProductDTO } from './dto/create-product.dto';
 import { UpdateProductDTO } from './dto/update-product.dto';
 import { ProductQueryDTO } from './dto/product-query.dto';
@@ -32,7 +33,10 @@ import { User } from 'src/decorators/user.decorator';
 @ApiTags('Products')
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly productReviewService: ProductReviewService,
+  ) {}
 
   @ApiOperation({ summary: 'Create a new product' })
   @ApiResponse({ 
@@ -52,6 +56,28 @@ export class ProductController {
       success: true,
       message: 'Product created successfully',
       data: product
+    };
+  }
+
+  @ApiOperation({ summary: 'List reviews for a product' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'offset', required: false })
+  @Get(':id/reviews')
+  async getProductReviews(
+    @Param('id') id: string,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    const result = await this.productReviewService.listReviewsForProduct(
+      id,
+      limit ?? 20,
+      offset ?? 0,
+    );
+    return {
+      success: true,
+      message: 'Reviews retrieved',
+      data: result,
     };
   }
 

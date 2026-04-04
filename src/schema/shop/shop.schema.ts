@@ -17,8 +17,14 @@ export const ShopSchema = new Schema(
     followers: [{ type: String, ref: 'User' }],
     products: [{ type: String, ref: 'Product' }],
     rating: { type: Number, default: 0 },
+    /** Total product reviews across all products in this shop (denormalized). */
+    reviewCount: { type: Number, default: 0 },
     reviews: [{ type: String, ref: 'Review' }],
     isVerified: { type: Boolean, default: false },
+    badges: [{
+      type: String,
+      enum: ['top_seller', 'new_arrival', 'premium', 'hot_deal', 'flash_sale', 'trusted', 'best_value', 'staff_pick'],
+    }],
     status: { 
       type: String, 
       default: 'active', 

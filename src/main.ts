@@ -34,15 +34,25 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
 
-  // Enable CORS
-  const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];
-  // Always add localhost:4200 for Angular dev server
-  if (!corsOrigins.includes('http://localhost:4200') && corsOrigins[0] !== '*') {
-    corsOrigins.push('http://localhost:4200');
-  }
-  
+  // CORS: list frontend app origins (e.g. http://localhost:4200), not the API URL.
+  // Use CORS_ORIGIN=reflect to mirror the request Origin (works for LAN IPs during dev).
+  const corsTokens = (process.env.CORS_ORIGIN?.split(',') ?? [])
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const useReflect =
+    corsTokens.length === 0 ||
+    corsTokens[0] === '*' ||
+    corsTokens[0].toLowerCase() === 'reflect';
+  const origin: boolean | string[] = useReflect
+    ? true
+    : [...corsTokens, 'http://localhost:4200'].filter((v, i, a) => a.indexOf(v) === i);
+
+  console.log(
+    `[BOOT] CORS: ${useReflect ? 'reflect Origin (dev/LAN)' : `whitelist (${(origin as string[]).length} origins)`}`,
+  );
+
   app.enableCors({
-    origin: corsOrigins,
+    origin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

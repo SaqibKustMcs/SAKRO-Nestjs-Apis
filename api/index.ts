@@ -34,9 +34,19 @@ async function createHandler() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
 
-  const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];
+  const corsTokens = (process.env.CORS_ORIGIN?.split(',') ?? [])
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const useReflect =
+    corsTokens.length === 0 ||
+    corsTokens[0] === '*' ||
+    corsTokens[0].toLowerCase() === 'reflect';
+  const origin: boolean | string[] = useReflect
+    ? true
+    : [...corsTokens, 'http://localhost:4200'].filter((v, i, a) => a.indexOf(v) === i);
+
   app.enableCors({
-    origin: corsOrigins,
+    origin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

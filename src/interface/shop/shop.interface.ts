@@ -14,8 +14,10 @@ export interface Shop extends Document {
   followers: string[];
   products: string[];
   rating: number;
+  reviewCount?: number;
   reviews: string[];
   isVerified: boolean;
+  badges?: string[];
   status: 'active' | 'suspended' | 'closed';
   createdAt: Date;
   updatedAt: Date;

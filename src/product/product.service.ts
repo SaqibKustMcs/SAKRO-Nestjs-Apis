@@ -248,6 +248,99 @@ export class ProductService {
     }
   }
 
+  /** Create product without shop-owner check (admin panel). */
+  async createProductAsAdmin(createProductDto: CreateProductDTO) {
+    try {
+      const shop = await this.shopModel.findOne({
+        _id: createProductDto.shopId,
+        status: 'active',
+      });
+      if (!shop) {
+        throw new BadRequestException('Shop not found or inactive');
+      }
+
+      await this.validateCategories(createProductDto);
+
+      if (createProductDto.sku) {
+        const existingProduct = await this.productModel.findOne({
+          sku: createProductDto.sku,
+        });
+        if (existingProduct) {
+          throw new BadRequestException('SKU already exists');
+        }
+      }
+
+      const product = await new this.productModel(createProductDto).save();
+      return await this.getProductById(product.id);
+    } catch (err) {
+      console.log(err);
+      if (err instanceof BadRequestException) {
+        throw err;
+      }
+      throw new BadRequestException(err?.message || 'Failed to create product');
+    }
+  }
+
+  /** Update product without shop-owner check (admin panel). */
+  async updateProductAsAdmin(id: string, updateProductDto: UpdateProductDTO) {
+    try {
+      const product = await this.productModel.findById(id);
+      if (!product) {
+        throw new NotFoundException('Product not found');
+      }
+
+      if (updateProductDto.sku && updateProductDto.sku !== product.sku) {
+        const existingProduct = await this.productModel.findOne({
+          sku: updateProductDto.sku,
+          _id: { $ne: id },
+        });
+        if (existingProduct) {
+          throw new BadRequestException('SKU already exists');
+        }
+      }
+
+      const updatedProduct = await this.productModel
+        .findByIdAndUpdate(id, updateProductDto, { new: true })
+        .populate({
+          path: 'shopId',
+          populate: {
+            path: 'user',
+            select:
+              'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt',
+          },
+        })
+        .populate('shopCategoryId', 'id name type')
+        .populate('productCategoryId', 'id name type')
+        .populate('subCategoryId', 'id name type');
+
+      return this.formatProductResponse(updatedProduct);
+    } catch (err) {
+      console.log(err);
+      if (err instanceof NotFoundException || err instanceof BadRequestException) {
+        throw err;
+      }
+      throw new BadRequestException(err?.message || 'Failed to update product');
+    }
+  }
+
+  /** Delete product without shop-owner check (admin panel). */
+  async deleteProductAsAdmin(id: string) {
+    try {
+      const product = await this.productModel.findById(id);
+      if (!product) {
+        throw new NotFoundException('Product not found');
+      }
+      await this.productModel.findByIdAndDelete(id);
+      return { message: 'Product deleted successfully' };
+    } catch (err) {
+      console.log(err);
+      if (err instanceof NotFoundException) {
+        throw err;
+      }
+      throw new BadRequestException(err?.message || 'Failed to delete product');
+    }
+  }
+
   async getProductsByShop(shopId: string, query: ProductQueryDTO) {
     try {
       const shopQuery = { ...query, shopId };

@@ -83,6 +83,630 @@ exports.AdminAuthController = AdminAuthController = __decorate([
 
 /***/ }),
 
+/***/ "./src/admin/admin-dashboard.controller.ts":
+/*!*************************************************!*\
+  !*** ./src/admin/admin-dashboard.controller.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminDashboardController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const admin_role_guard_1 = __webpack_require__(/*! ../auth/admin-role.guard */ "./src/auth/admin-role.guard.ts");
+const admin_dashboard_service_1 = __webpack_require__(/*! ./admin-dashboard.service */ "./src/admin/admin-dashboard.service.ts");
+let AdminDashboardController = exports.AdminDashboardController = class AdminDashboardController {
+    constructor(dashboardService) {
+        this.dashboardService = dashboardService;
+    }
+    async getStats() {
+        const data = await this.dashboardService.getStats();
+        return {
+            success: true,
+            message: 'Dashboard stats retrieved',
+            data,
+        };
+    }
+};
+__decorate([
+    (0, common_1.Get)('stats'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Dashboard KPIs and charts (admin)',
+        description: 'Aggregates ecommerce orders, catalog counts, travel orders sample, and current-year monthly series.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Dashboard stats' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden — not admin' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminDashboardController.prototype, "getStats", null);
+exports.AdminDashboardController = AdminDashboardController = __decorate([
+    (0, swagger_1.ApiTags)('adminApis'),
+    (0, common_1.Controller)('admin/dashboard'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof admin_dashboard_service_1.AdminDashboardService !== "undefined" && admin_dashboard_service_1.AdminDashboardService) === "function" ? _a : Object])
+], AdminDashboardController);
+
+
+/***/ }),
+
+/***/ "./src/admin/admin-dashboard.service.ts":
+/*!**********************************************!*\
+  !*** ./src/admin/admin-dashboard.service.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminDashboardService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
+const order_schema_1 = __webpack_require__(/*! src/schema/order/order.schema */ "./src/schema/order/order.schema.ts");
+const MONTHS = 12;
+const ESTIMATED_PROFIT_RATIO = 0.3;
+let AdminDashboardService = exports.AdminDashboardService = class AdminDashboardService {
+    constructor(ecommerceOrderModel, orderModel, productModel, shopModel, userModel) {
+        this.ecommerceOrderModel = ecommerceOrderModel;
+        this.orderModel = orderModel;
+        this.productModel = productModel;
+        this.shopModel = shopModel;
+        this.userModel = userModel;
+    }
+    async getStats() {
+        const year = new Date().getFullYear();
+        const start = new Date(year, 0, 1);
+        const end = new Date(year + 1, 0, 1);
+        const [totalProducts, totalShops, totalUsers, totalEcomOrders, revenueAgg, lossAgg, monthlyRevOrders, monthlyOrderCounts, monthlyLossRows, topProductsAgg, recentTravelOrders,] = await Promise.all([
+            this.productModel.countDocuments({}).exec(),
+            this.shopModel.countDocuments({}).exec(),
+            this.userModel.countDocuments({ isDeleted: false }).exec(),
+            this.ecommerceOrderModel
+                .countDocuments({ isDeleted: { $ne: true } })
+                .exec(),
+            this.ecommerceOrderModel
+                .aggregate([
+                {
+                    $match: {
+                        isDeleted: { $ne: true },
+                        status: { $nin: ['cancelled', 'refunded'] },
+                    },
+                },
+                { $group: { _id: null, total: { $sum: '$total' } } },
+            ])
+                .exec(),
+            this.ecommerceOrderModel
+                .aggregate([
+                {
+                    $match: {
+                        isDeleted: { $ne: true },
+                        status: { $in: ['cancelled', 'refunded'] },
+                    },
+                },
+                { $group: { _id: null, total: { $sum: '$total' } } },
+            ])
+                .exec(),
+            this.ecommerceOrderModel
+                .aggregate([
+                {
+                    $match: {
+                        isDeleted: { $ne: true },
+                        status: { $nin: ['cancelled', 'refunded'] },
+                        createdAt: { $gte: start, $lt: end },
+                    },
+                },
+                {
+                    $group: {
+                        _id: { $month: '$createdAt' },
+                        revenue: { $sum: '$total' },
+                    },
+                },
+            ])
+                .exec(),
+            this.ecommerceOrderModel
+                .aggregate([
+                {
+                    $match: {
+                        isDeleted: { $ne: true },
+                        createdAt: { $gte: start, $lt: end },
+                    },
+                },
+                {
+                    $group: {
+                        _id: { $month: '$createdAt' },
+                        count: { $sum: 1 },
+                    },
+                },
+            ])
+                .exec(),
+            this.ecommerceOrderModel
+                .aggregate([
+                {
+                    $match: {
+                        isDeleted: { $ne: true },
+                        status: { $in: ['cancelled', 'refunded'] },
+                        createdAt: { $gte: start, $lt: end },
+                    },
+                },
+                {
+                    $group: {
+                        _id: { $month: '$createdAt' },
+                        loss: { $sum: '$total' },
+                    },
+                },
+            ])
+                .exec(),
+            this.ecommerceOrderModel
+                .aggregate([
+                {
+                    $match: {
+                        isDeleted: { $ne: true },
+                        items: { $exists: true, $not: { $size: 0 } },
+                    },
+                },
+                { $unwind: '$items' },
+                {
+                    $group: {
+                        _id: {
+                            $ifNull: [
+                                '$items.product.id',
+                                { $concat: ['$items.product.name', '-', { $toString: '$items.price' }] },
+                            ],
+                        },
+                        name: {
+                            $first: {
+                                $ifNull: ['$items.product.name', 'Product'],
+                            },
+                        },
+                        soldCount: { $sum: '$items.quantity' },
+                        revenue: {
+                            $sum: {
+                                $multiply: ['$items.quantity', '$items.price'],
+                            },
+                        },
+                    },
+                },
+                { $sort: { revenue: -1 } },
+                { $limit: 5 },
+            ])
+                .exec(),
+            this.orderModel
+                .find({ isDeleted: { $ne: true } })
+                .sort({ createdAt: -1 })
+                .limit(5)
+                .select('id departureCountry arrivalCountry createdAt')
+                .lean()
+                .exec(),
+        ]);
+        const totalRevenue = Math.round(revenueAgg[0]?.total ?? 0);
+        const totalLoss = Math.round(lossAgg[0]?.total ?? 0);
+        const totalProfit = Math.round(totalRevenue * ESTIMATED_PROFIT_RATIO);
+        const monthlyRevenue = Array(MONTHS).fill(0);
+        const monthlyOrders = Array(MONTHS).fill(0);
+        const monthlyProfit = Array(MONTHS).fill(0);
+        const monthlyLoss = Array(MONTHS).fill(0);
+        for (const row of monthlyRevOrders) {
+            const m = row._id - 1;
+            if (m >= 0 && m < MONTHS) {
+                monthlyRevenue[m] = Math.round(row.revenue ?? 0);
+                monthlyProfit[m] = Math.round(monthlyRevenue[m] * ESTIMATED_PROFIT_RATIO);
+            }
+        }
+        for (const row of monthlyOrderCounts) {
+            const m = row._id - 1;
+            if (m >= 0 && m < MONTHS) {
+                monthlyOrders[m] = row.count ?? 0;
+            }
+        }
+        for (const row of monthlyLossRows) {
+            const m = row._id - 1;
+            if (m >= 0 && m < MONTHS) {
+                monthlyLoss[m] = Math.round(row.loss ?? 0);
+            }
+        }
+        const topProductsMapped = topProductsAgg.map((p) => ({
+            name: String(p.name ?? 'Product'),
+            soldCount: Math.round(p.soldCount ?? 0),
+            revenue: Math.round(p.revenue ?? 0),
+        }));
+        const recentOrdersMapped = recentTravelOrders.map((o) => {
+            const row = o;
+            const created = row['createdAt'];
+            return {
+                id: String(o.id ?? ''),
+                departureCountry: String(o.departureCountry ?? ''),
+                arrivalCountry: String(o.arrivalCountry ?? ''),
+                createdAt: created
+                    ? new Date(created).toISOString()
+                    : new Date(0).toISOString(),
+            };
+        });
+        return {
+            totalProducts,
+            totalOrders: totalEcomOrders,
+            totalShops,
+            totalUsers,
+            totalRevenue,
+            totalProfit,
+            totalLoss,
+            monthlyRevenue,
+            monthlyOrders,
+            monthlyProfit,
+            monthlyLoss,
+            topProducts: topProductsMapped,
+            recentOrders: recentOrdersMapped,
+        };
+    }
+};
+exports.AdminDashboardService = AdminDashboardService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(ecommerce_order_schema_1.EcommerceOrder.name)),
+    __param(1, (0, mongoose_1.InjectModel)(order_schema_1.Order.name)),
+    __param(2, (0, mongoose_1.InjectModel)('Product')),
+    __param(3, (0, mongoose_1.InjectModel)('Shop')),
+    __param(4, (0, mongoose_1.InjectModel)('User')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object])
+], AdminDashboardService);
+
+
+/***/ }),
+
+/***/ "./src/admin/admin-orders.controller.ts":
+/*!**********************************************!*\
+  !*** ./src/admin/admin-orders.controller.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminOrdersController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const admin_role_guard_1 = __webpack_require__(/*! ../auth/admin-role.guard */ "./src/auth/admin-role.guard.ts");
+const ecommerce_order_service_1 = __webpack_require__(/*! ../order/ecommerce-order.service */ "./src/order/ecommerce-order.service.ts");
+const ecommerce_order_dto_1 = __webpack_require__(/*! ../order/dto/ecommerce-order.dto */ "./src/order/dto/ecommerce-order.dto.ts");
+const admin_orders_query_dto_1 = __webpack_require__(/*! ./dto/admin-orders-query.dto */ "./src/admin/dto/admin-orders-query.dto.ts");
+let AdminOrdersController = exports.AdminOrdersController = class AdminOrdersController {
+    constructor(ecommerceOrderService) {
+        this.ecommerceOrderService = ecommerceOrderService;
+    }
+    async list(query) {
+        const result = await this.ecommerceOrderService.getAllOrdersForAdmin({
+            search: query.search,
+            userId: query.userId,
+            shopId: query.shopId,
+            status: query.status,
+            limit: query.limit,
+            offset: query.offset,
+        });
+        return {
+            success: true,
+            message: 'Orders retrieved successfully',
+            data: result,
+        };
+    }
+    async getOne(id) {
+        const order = await this.ecommerceOrderService.getOrderByIdWithNames(id);
+        return {
+            success: true,
+            message: 'Order retrieved successfully',
+            data: order,
+        };
+    }
+    async updateStatus(id, dto) {
+        const order = await this.ecommerceOrderService.updateOrderStatus(id, dto.status);
+        const data = await this.ecommerceOrderService.wrapOrderForAdmin(order);
+        return {
+            success: true,
+            message: 'Order status updated successfully',
+            data,
+        };
+    }
+    async cancel(id) {
+        const order = await this.ecommerceOrderService.cancelOrder(id);
+        const data = await this.ecommerceOrderService.wrapOrderForAdmin(order);
+        return {
+            success: true,
+            message: 'Order cancelled successfully',
+            data,
+        };
+    }
+};
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'List e-commerce orders (admin)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Paginated orders + total' }),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof admin_orders_query_dto_1.AdminOrdersQueryDto !== "undefined" && admin_orders_query_dto_1.AdminOrdersQueryDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get e-commerce order by id (admin)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Order id' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Not found' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "getOne", null);
+__decorate([
+    (0, common_1.Put)(':id/status'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update order status (admin)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Order id' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof ecommerce_order_dto_1.UpdateOrderStatusDTO !== "undefined" && ecommerce_order_dto_1.UpdateOrderStatusDTO) === "function" ? _c : Object]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Put)(':id/cancel'),
+    (0, swagger_1.ApiOperation)({ summary: 'Cancel order (admin)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Order id' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminOrdersController.prototype, "cancel", null);
+exports.AdminOrdersController = AdminOrdersController = __decorate([
+    (0, swagger_1.ApiTags)('adminApis'),
+    (0, common_1.Controller)('admin/orders'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof ecommerce_order_service_1.EcommerceOrderService !== "undefined" && ecommerce_order_service_1.EcommerceOrderService) === "function" ? _a : Object])
+], AdminOrdersController);
+
+
+/***/ }),
+
+/***/ "./src/admin/admin-products.controller.ts":
+/*!************************************************!*\
+  !*** ./src/admin/admin-products.controller.ts ***!
+  \************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminProductsController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const admin_role_guard_1 = __webpack_require__(/*! ../auth/admin-role.guard */ "./src/auth/admin-role.guard.ts");
+const product_service_1 = __webpack_require__(/*! ../product/product.service */ "./src/product/product.service.ts");
+const create_product_dto_1 = __webpack_require__(/*! ../product/dto/create-product.dto */ "./src/product/dto/create-product.dto.ts");
+const update_product_dto_1 = __webpack_require__(/*! ../product/dto/update-product.dto */ "./src/product/dto/update-product.dto.ts");
+const product_query_dto_1 = __webpack_require__(/*! ../product/dto/product-query.dto */ "./src/product/dto/product-query.dto.ts");
+let AdminProductsController = exports.AdminProductsController = class AdminProductsController {
+    constructor(productService) {
+        this.productService = productService;
+    }
+    async list(query) {
+        const result = await this.productService.getAllProducts(query);
+        return {
+            success: true,
+            message: 'Products retrieved successfully',
+            data: result,
+        };
+    }
+    async create(dto) {
+        const product = await this.productService.createProductAsAdmin(dto);
+        return {
+            success: true,
+            message: 'Product created successfully',
+            data: product,
+        };
+    }
+    async update(id, dto) {
+        const product = await this.productService.updateProductAsAdmin(id, dto);
+        return {
+            success: true,
+            message: 'Product updated successfully',
+            data: product,
+        };
+    }
+    async remove(id) {
+        const result = await this.productService.deleteProductAsAdmin(id);
+        return {
+            success: true,
+            message: result.message,
+            data: result,
+        };
+    }
+};
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'List products (admin)',
+        description: 'Same filters as public catalog; admin-only.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Paginated products' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden — not admin' }),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], AdminProductsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create product (admin)' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Created' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Validation error' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof create_product_dto_1.CreateProductDTO !== "undefined" && create_product_dto_1.CreateProductDTO) === "function" ? _c : Object]),
+    __metadata("design:returntype", Promise)
+], AdminProductsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update product (admin)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product id' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Updated' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Not found' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_d = typeof update_product_dto_1.UpdateProductDTO !== "undefined" && update_product_dto_1.UpdateProductDTO) === "function" ? _d : Object]),
+    __metadata("design:returntype", Promise)
+], AdminProductsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete product (admin)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product id' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Deleted' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Not found' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminProductsController.prototype, "remove", null);
+exports.AdminProductsController = AdminProductsController = __decorate([
+    (0, swagger_1.ApiTags)('adminApis'),
+    (0, common_1.Controller)('admin/products'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof product_service_1.ProductService !== "undefined" && product_service_1.ProductService) === "function" ? _a : Object])
+], AdminProductsController);
+
+
+/***/ }),
+
+/***/ "./src/admin/admin-shops.controller.ts":
+/*!*********************************************!*\
+  !*** ./src/admin/admin-shops.controller.ts ***!
+  \*********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminShopsController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const admin_role_guard_1 = __webpack_require__(/*! ../auth/admin-role.guard */ "./src/auth/admin-role.guard.ts");
+const shop_service_1 = __webpack_require__(/*! ../shop/shop.service */ "./src/shop/shop.service.ts");
+const admin_update_shop_dto_1 = __webpack_require__(/*! ../shop/dto/admin-update-shop.dto */ "./src/shop/dto/admin-update-shop.dto.ts");
+let AdminShopsController = exports.AdminShopsController = class AdminShopsController {
+    constructor(shopService) {
+        this.shopService = shopService;
+    }
+    async listCategories() {
+        const categories = await this.shopService.listActiveShopCategories();
+        return {
+            success: true,
+            message: 'Categories retrieved successfully',
+            data: categories,
+        };
+    }
+    async update(id, dto) {
+        const result = await this.shopService.updateShopForAdmin(id, dto);
+        return {
+            success: true,
+            message: result.message,
+            data: result.shop,
+        };
+    }
+};
+__decorate([
+    (0, common_1.Get)('categories'),
+    (0, swagger_1.ApiOperation)({ summary: 'List active shop categories (admin, for dropdowns)' }),
+    (0, swagger_1.ApiResponse)({ status: 200 }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminShopsController.prototype, "listCategories", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update shop by id (admin)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Shop id' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Not found' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_b = typeof admin_update_shop_dto_1.AdminUpdateShopDto !== "undefined" && admin_update_shop_dto_1.AdminUpdateShopDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], AdminShopsController.prototype, "update", null);
+exports.AdminShopsController = AdminShopsController = __decorate([
+    (0, swagger_1.ApiTags)('adminApis'),
+    (0, common_1.Controller)('admin/shops'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof shop_service_1.ShopService !== "undefined" && shop_service_1.ShopService) === "function" ? _a : Object])
+], AdminShopsController);
+
+
+/***/ }),
+
 /***/ "./src/admin/admin-users.controller.ts":
 /*!*********************************************!*\
   !*** ./src/admin/admin-users.controller.ts ***!
@@ -102,101 +726,135 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdminUsersController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const auth_service_1 = __webpack_require__(/*! ../auth/auth.service */ "./src/auth/auth.service.ts");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const admin_role_guard_1 = __webpack_require__(/*! ../auth/admin-role.guard */ "./src/auth/admin-role.guard.ts");
 const admin_users_response_dto_1 = __webpack_require__(/*! ./dto/admin-users-response.dto */ "./src/admin/dto/admin-users-response.dto.ts");
+const update_admin_user_dto_1 = __webpack_require__(/*! ./dto/update-admin-user.dto */ "./src/admin/dto/update-admin-user.dto.ts");
 let AdminUsersController = exports.AdminUsersController = class AdminUsersController {
     constructor(authService) {
         this.authService = authService;
     }
     async getAllUsers(query) {
-        console.log('🔵 [ADMIN USERS CONTROLLER] Get all users request received');
-        console.log('📦 [ADMIN USERS CONTROLLER] Query params:', query);
-        try {
-            const result = await this.authService.getAllUsersForAdmin(query);
-            console.log('✅ [ADMIN USERS CONTROLLER] Users retrieved:', result.total, 'total users');
-            console.log('✅ [ADMIN USERS CONTROLLER] Returning', result.users?.length || 0, 'users');
-            return {
-                success: true,
-                message: 'Users retrieved successfully',
-                data: result
-            };
-        }
-        catch (error) {
-            console.error('❌ [ADMIN USERS CONTROLLER] Error:', error);
-            throw error;
-        }
+        const result = await this.authService.getAllUsersForAdmin(query);
+        return {
+            success: true,
+            message: 'Users retrieved successfully',
+            data: result,
+        };
+    }
+    async updateUser(id, dto) {
+        return this.authService.updateUserForAdmin(id, dto);
+    }
+    async deleteUser(id, req) {
+        return this.authService.deleteUserForAdmin(id, req.user);
     }
 };
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Get all users (Admin only)',
-        description: 'Retrieve all users with optional filters. Only accessible by admin users.'
+        description: 'Retrieve all users with optional filters. Only accessible by admin users.',
     }),
     (0, swagger_1.ApiQuery)({
         name: 'search',
         required: false,
         type: String,
-        description: 'Search users by email, name, or fullName'
+        description: 'Search users by email, name, or fullName',
     }),
     (0, swagger_1.ApiQuery)({
         name: 'userRole',
         required: false,
         enum: ['normal', 'seller', 'admin'],
-        description: 'Filter by user role'
+        description: 'Filter by user role',
     }),
     (0, swagger_1.ApiQuery)({
         name: 'userStatus',
         required: false,
         enum: ['active', 'inactive', 'suspended'],
-        description: 'Filter by user status'
+        description: 'Filter by user status',
     }),
     (0, swagger_1.ApiQuery)({
         name: 'userLevel',
         required: false,
         enum: ['beginner', 'intermediate', 'advanced', 'expert'],
-        description: 'Filter by user level'
+        description: 'Filter by user level',
     }),
     (0, swagger_1.ApiQuery)({
         name: 'limit',
         required: false,
         type: Number,
-        description: 'Number of users to return (default: 100)'
+        description: 'Number of users to return (default: 100)',
     }),
     (0, swagger_1.ApiQuery)({
         name: 'offset',
         required: false,
         type: Number,
-        description: 'Number of users to skip (default: 0)'
+        description: 'Number of users to skip (default: 0)',
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Users retrieved successfully',
-        type: admin_users_response_dto_1.AdminUsersResponseDTO
+        type: admin_users_response_dto_1.AdminUsersResponseDTO,
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: 'Unauthorized - Invalid or missing token'
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 403,
-        description: 'Forbidden - User is not an admin'
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden — not admin' }),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AdminUsersController.prototype, "getAllUsers", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update user (admin)' }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'User document id',
+        example: '507f1f77bcf86cd799439011',
+    }),
+    (0, swagger_1.ApiBody)({ type: update_admin_user_dto_1.UpdateAdminUserDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User updated' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
+    (0, swagger_1.ApiResponse)({
+        status: 403,
+        description: 'Forbidden — e.g. demoting the last admin',
+    }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_b = typeof update_admin_user_dto_1.UpdateAdminUserDto !== "undefined" && update_admin_user_dto_1.UpdateAdminUserDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], AdminUsersController.prototype, "updateUser", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Soft-delete user (admin)' }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'User document id',
+        example: '507f1f77bcf86cd799439011',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User soft-deleted (inactive + isDeleted)' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Cannot delete your own account' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
+    (0, swagger_1.ApiResponse)({
+        status: 403,
+        description: 'Forbidden — e.g. deleting the last admin',
+    }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AdminUsersController.prototype, "deleteUser", null);
 exports.AdminUsersController = AdminUsersController = __decorate([
     (0, swagger_1.ApiTags)('adminApis'),
     (0, common_1.Controller)('admin/users'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_role_guard_1.AdminRoleGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
 ], AdminUsersController);
@@ -220,15 +878,47 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdminModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const admin_auth_controller_1 = __webpack_require__(/*! ./admin-auth.controller */ "./src/admin/admin-auth.controller.ts");
 const admin_users_controller_1 = __webpack_require__(/*! ./admin-users.controller */ "./src/admin/admin-users.controller.ts");
-const auth_module_1 = __webpack_require__(/*! ../auth/auth.module */ "./src/auth/auth.module.ts");
+const admin_dashboard_controller_1 = __webpack_require__(/*! ./admin-dashboard.controller */ "./src/admin/admin-dashboard.controller.ts");
+const admin_dashboard_service_1 = __webpack_require__(/*! ./admin-dashboard.service */ "./src/admin/admin-dashboard.service.ts");
+const admin_products_controller_1 = __webpack_require__(/*! ./admin-products.controller */ "./src/admin/admin-products.controller.ts");
+const admin_orders_controller_1 = __webpack_require__(/*! ./admin-orders.controller */ "./src/admin/admin-orders.controller.ts");
+const admin_shops_controller_1 = __webpack_require__(/*! ./admin-shops.controller */ "./src/admin/admin-shops.controller.ts");
+const product_module_1 = __webpack_require__(/*! src/product/product.module */ "./src/product/product.module.ts");
+const order_module_1 = __webpack_require__(/*! src/order/order.module */ "./src/order/order.module.ts");
+const shop_module_1 = __webpack_require__(/*! src/shop/shop.module */ "./src/shop/shop.module.ts");
+const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
+const order_schema_1 = __webpack_require__(/*! src/schema/order/order.schema */ "./src/schema/order/order.schema.ts");
+const product_schema_1 = __webpack_require__(/*! src/schema/product/product.schema */ "./src/schema/product/product.schema.ts");
+const shop_schema_1 = __webpack_require__(/*! src/schema/shop/shop.schema */ "./src/schema/shop/shop.schema.ts");
+const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 let AdminModule = exports.AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule = __decorate([
     (0, common_1.Module)({
-        imports: [auth_module_1.AuthModule.forRoot()],
-        controllers: [admin_auth_controller_1.AdminAuthController, admin_users_controller_1.AdminUsersController],
+        imports: [
+            mongoose_1.MongooseModule.forFeature([
+                { name: ecommerce_order_schema_1.EcommerceOrder.name, schema: ecommerce_order_schema_1.EcommerceOrderSchema },
+                { name: order_schema_1.Order.name, schema: order_schema_1.OrderSchema },
+                { name: 'Product', schema: product_schema_1.ProductSchema },
+                { name: 'Shop', schema: shop_schema_1.ShopSchema },
+                { name: 'User', schema: user_schema_1.UserSchema },
+            ]),
+            product_module_1.ProductModule,
+            order_module_1.OrderModule,
+            shop_module_1.ShopModule,
+        ],
+        controllers: [
+            admin_auth_controller_1.AdminAuthController,
+            admin_users_controller_1.AdminUsersController,
+            admin_dashboard_controller_1.AdminDashboardController,
+            admin_products_controller_1.AdminProductsController,
+            admin_orders_controller_1.AdminOrdersController,
+            admin_shops_controller_1.AdminShopsController,
+        ],
+        providers: [admin_dashboard_service_1.AdminDashboardService],
     })
 ], AdminModule);
 
@@ -348,6 +1038,94 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], AdminLoginDTO.prototype, "password", void 0);
+
+
+/***/ }),
+
+/***/ "./src/admin/dto/admin-orders-query.dto.ts":
+/*!*************************************************!*\
+  !*** ./src/admin/dto/admin-orders-query.dto.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminOrdersQueryDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const STATUSES = [
+    'pending',
+    'confirmed',
+    'processing',
+    'shipped',
+    'delivered',
+    'cancelled',
+    'refunded',
+];
+class AdminOrdersQueryDto {
+}
+exports.AdminOrdersQueryDto = AdminOrdersQueryDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Search order number, id, buyer, or shop id' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminOrdersQueryDto.prototype, "search", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminOrdersQueryDto.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminOrdersQueryDto.prototype, "shopId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: STATUSES }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(STATUSES),
+    __metadata("design:type", Object)
+], AdminOrdersQueryDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ default: 0 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === null || value === undefined || value === '')
+            return 0;
+        const n = parseInt(String(value), 10);
+        return Number.isNaN(n) ? 0 : n;
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], AdminOrdersQueryDto.prototype, "offset", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ default: 20 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === null || value === undefined || value === '')
+            return 20;
+        const n = parseInt(String(value), 10);
+        return Number.isNaN(n) ? 20 : n;
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(100),
+    __metadata("design:type", Number)
+], AdminOrdersQueryDto.prototype, "limit", void 0);
 
 
 /***/ }),
@@ -478,6 +1256,111 @@ __decorate([
 
 /***/ }),
 
+/***/ "./src/admin/dto/update-admin-user.dto.ts":
+/*!************************************************!*\
+  !*** ./src/admin/dto/update-admin-user.dto.ts ***!
+  \************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateAdminUserDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class UpdateAdminUserDto {
+}
+exports.UpdateAdminUserDto = UpdateAdminUserDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(200),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "fullName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(40),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "phoneNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(120),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "village", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(120),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "country", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(500),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "homeAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(20),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "zipcode", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: ['beginner', 'intermediate', 'advanced', 'expert'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['beginner', 'intermediate', 'advanced', 'expert']),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "userLevel", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: ['active', 'inactive', 'suspended'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['active', 'inactive', 'suspended']),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "userStatus", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: ['normal', 'seller', 'admin'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['normal', 'seller', 'admin']),
+    __metadata("design:type", String)
+], UpdateAdminUserDto.prototype, "userRole", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateAdminUserDto.prototype, "isEmailVerified", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateAdminUserDto.prototype, "isTwoFactorEnabled", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateAdminUserDto.prototype, "isBiometric", void 0);
+
+
+/***/ }),
+
 /***/ "./src/app.controller.ts":
 /*!*******************************!*\
   !*** ./src/app.controller.ts ***!
@@ -548,13 +1431,18 @@ const category_module_1 = __webpack_require__(/*! ./category/category.module */ 
 const product_module_1 = __webpack_require__(/*! ./product/product.module */ "./src/product/product.module.ts");
 const chat_module_1 = __webpack_require__(/*! ./chat/chat.module */ "./src/chat/chat.module.ts");
 const admin_module_1 = __webpack_require__(/*! ./admin/admin.module */ "./src/admin/admin.module.ts");
+const banner_module_1 = __webpack_require__(/*! ./banner/banner.module */ "./src/banner/banner.module.ts");
+const notification_module_1 = __webpack_require__(/*! ./notification/notification.module */ "./src/notification/notification.module.ts");
+const platform_settings_module_1 = __webpack_require__(/*! ./platform-settings/platform-settings.module */ "./src/platform-settings/platform-settings.module.ts");
 let AppModule = exports.AppModule = class AppModule {
 };
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot(),
-            mongoose_1.MongooseModule.forRoot(process.env.MONGODB_URI),
+            mongoose_1.MongooseModule.forRoot(process.env.MONGODB_URI, {
+                serverSelectionTimeoutMS: 15000,
+            }),
             auth_module_1.AuthModule.forRoot(),
             chat_module_1.ChatModule,
             media_upload_module_1.MediaUploadModule,
@@ -565,7 +1453,10 @@ exports.AppModule = AppModule = __decorate([
             shop_module_1.ShopModule,
             category_module_1.CategoryModule,
             product_module_1.ProductModule,
-            admin_module_1.AdminModule
+            admin_module_1.AdminModule,
+            banner_module_1.BannerModule,
+            notification_module_1.NotificationModule,
+            platform_settings_module_1.PlatformSettingsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
@@ -980,6 +1871,39 @@ exports.TwoFactorService = TwoFactorService = __decorate([
 
 /***/ }),
 
+/***/ "./src/auth/admin-role.guard.ts":
+/*!**************************************!*\
+  !*** ./src/auth/admin-role.guard.ts ***!
+  \**************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminRoleGuard = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+let AdminRoleGuard = exports.AdminRoleGuard = class AdminRoleGuard {
+    canActivate(context) {
+        const req = context.switchToHttp().getRequest();
+        const user = req.user;
+        const role = user?.['userRole'] ?? user?.['role'];
+        if (role === 'admin')
+            return true;
+        throw new common_1.ForbiddenException('Admin access only');
+    }
+};
+exports.AdminRoleGuard = AdminRoleGuard = __decorate([
+    (0, common_1.Injectable)()
+], AdminRoleGuard);
+
+
+/***/ }),
+
 /***/ "./src/auth/auth.controller.ts":
 /*!*************************************!*\
   !*** ./src/auth/auth.controller.ts ***!
@@ -1117,6 +2041,12 @@ let AuthController = exports.AuthController = class AuthController {
             success: true,
             data: statistics,
         };
+    }
+    toggleWishlist(productId, user) {
+        return this.authService.toggleWishlist(user.id, productId);
+    }
+    getWishlist(user) {
+        return this.authService.getWishlist(user.id);
     }
 };
 __decorate([
@@ -1331,6 +2261,27 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getLoginStatistics", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Toggle product in wishlist (add or remove)' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('wishlist/toggle/:productId'),
+    __param(0, (0, common_1.Param)('productId')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "toggleWishlist", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get current user wishlist with product details' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('wishlist'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getWishlist", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),
@@ -1357,10 +2308,13 @@ var AuthModule_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
 const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
+const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
 const auth_controller_1 = __webpack_require__(/*! ./auth.controller */ "./src/auth/auth.controller.ts");
 const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/auth/auth.service.ts");
 const jwt_strategy_1 = __webpack_require__(/*! ./jwt.strategy */ "./src/auth/jwt.strategy.ts");
+const admin_role_guard_1 = __webpack_require__(/*! ./admin-role.guard */ "./src/auth/admin-role.guard.ts");
 const _2fa_controller_1 = __webpack_require__(/*! ./2fa.controller */ "./src/auth/2fa.controller.ts");
 const _2fa_service_1 = __webpack_require__(/*! ./2fa.service */ "./src/auth/2fa.service.ts");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -1368,28 +2322,46 @@ const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./
 const otp_schema_1 = __webpack_require__(/*! src/schema/otp/otp.schema */ "./src/schema/otp/otp.schema.ts");
 const device_schema_1 = __webpack_require__(/*! src/schema/device.schema */ "./src/schema/device.schema.ts");
 const login_history_schema_1 = __webpack_require__(/*! src/schema/login-history.schema */ "./src/schema/login-history.schema.ts");
+const product_schema_1 = __webpack_require__(/*! src/schema/product/product.schema */ "./src/schema/product/product.schema.ts");
 const utils_service_1 = __webpack_require__(/*! ../utils/utils.service */ "./src/utils/utils.service.ts");
 const device_service_1 = __webpack_require__(/*! ./device.service */ "./src/auth/device.service.ts");
 const login_history_service_1 = __webpack_require__(/*! ./login-history.service */ "./src/auth/login-history.service.ts");
 let AuthModule = exports.AuthModule = AuthModule_1 = class AuthModule {
     static forRoot() {
         return {
+            global: true,
             imports: [
-                jwt_1.JwtModule.register({
-                    secret: process.env.JWT_SECRET || 'fallback-secret-key-change-in-production',
-                    signOptions: { expiresIn: '9999999999s' },
+                config_1.ConfigModule,
+                passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
+                jwt_1.JwtModule.registerAsync({
                     global: true,
+                    imports: [config_1.ConfigModule],
+                    useFactory: (config) => ({
+                        secret: config.get('JWT_SECRET') ||
+                            'fallback-secret-key-change-in-production',
+                        signOptions: { expiresIn: '9999999999s' },
+                    }),
+                    inject: [config_1.ConfigService],
                 }),
                 mongoose_1.MongooseModule.forFeature([
                     { name: 'User', schema: user_schema_1.UserSchema },
                     { name: 'Otp', schema: otp_schema_1.OtpSchema },
                     { name: 'Device', schema: device_schema_1.DeviceSchema },
                     { name: 'LoginHistory', schema: login_history_schema_1.LoginHistorySchema },
+                    { name: 'Product', schema: product_schema_1.ProductSchema },
                 ]),
             ],
             controllers: [auth_controller_1.AuthController, _2fa_controller_1.TwoFactorController, _2fa_controller_1.Auth2FAController],
-            providers: [auth_service_1.AuthService, _2fa_service_1.TwoFactorService, device_service_1.DeviceService, login_history_service_1.LoginHistoryService, jwt_strategy_1.JwtStrategy, utils_service_1.UtilsService],
-            exports: [auth_service_1.AuthService],
+            providers: [
+                auth_service_1.AuthService,
+                _2fa_service_1.TwoFactorService,
+                device_service_1.DeviceService,
+                login_history_service_1.LoginHistoryService,
+                jwt_strategy_1.JwtStrategy,
+                utils_service_1.UtilsService,
+                admin_role_guard_1.AdminRoleGuard,
+            ],
+            exports: [auth_service_1.AuthService, jwt_1.JwtModule, admin_role_guard_1.AdminRoleGuard],
             module: AuthModule_1,
         };
     }
@@ -1420,7 +2392,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -1437,10 +2409,11 @@ const device_service_1 = __webpack_require__(/*! ./device.service */ "./src/auth
 const login_history_service_1 = __webpack_require__(/*! ./login-history.service */ "./src/auth/login-history.service.ts");
 const GO_CARDLESS_ACTIVE = false;
 let AuthService = exports.AuthService = class AuthService {
-    constructor(jwtService, _userModel, _otpModel, utilsService, twoFactorService, deviceService, loginHistoryService) {
+    constructor(jwtService, _userModel, _otpModel, _productModel, utilsService, twoFactorService, deviceService, loginHistoryService) {
         this.jwtService = jwtService;
         this._userModel = _userModel;
         this._otpModel = _otpModel;
+        this._productModel = _productModel;
         this.utilsService = utilsService;
         this.twoFactorService = twoFactorService;
         this.deviceService = deviceService;
@@ -1787,7 +2760,8 @@ let AuthService = exports.AuthService = class AuthService {
             const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
             if (isPasswordValid) {
                 const payload = {
-                    id: user._id,
+                    sub: user._id.toString(),
+                    id: user._id.toString(),
                     email: user.email,
                     userRole: user.userRole,
                 };
@@ -1850,33 +2824,7 @@ let AuthService = exports.AuthService = class AuthService {
                 .limit(limit)
                 .lean();
             const total = await this._userModel.countDocuments(filter);
-            const transformedUsers = users.map((user) => {
-                const userId = user.id || user._id?.toString() || '';
-                return {
-                    id: userId,
-                    email: user.email || '',
-                    name: user.name || '',
-                    fullName: user.fullName || user.name || '',
-                    phoneNumber: user.phoneNumber || '',
-                    userRole: user.userRole || 'normal',
-                    userStatus: user.userStatus || 'active',
-                    userLevel: user.userLevel || 'beginner',
-                    profilePic: user.profilePic || user.pic || '',
-                    pic: user.pic || '',
-                    color: user.color || '#3B82F6',
-                    village: user.village || '',
-                    country: user.country || '',
-                    homeAddress: user.homeAddress || '',
-                    zipcode: user.zipcode || '',
-                    isEmailVerified: user.isEmailVerified || false,
-                    isTwoFactorEnabled: user.isTwoFactorEnabled || false,
-                    isBiometric: user.isBiometric || false,
-                    sellOrders: user.sellOrders || 0,
-                    buyOrders: user.buyOrders || 0,
-                    createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
-                    updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(),
-                };
-            });
+            const transformedUsers = users.map((user) => this.mapOneUserForAdminResponse(user));
             return {
                 users: transformedUsers,
                 total: total,
@@ -1886,6 +2834,115 @@ let AuthService = exports.AuthService = class AuthService {
             console.error('Error getting all users for admin:', error);
             throw new Error('Failed to retrieve users');
         }
+    }
+    async countActiveAdmins() {
+        return this._userModel.countDocuments({
+            userRole: 'admin',
+            isDeleted: false,
+        });
+    }
+    mapOneUserForAdminResponse(user) {
+        const userId = user.id || user._id?.toString() || '';
+        return {
+            id: userId,
+            email: user.email || '',
+            name: user.name || '',
+            fullName: user.fullName || user.name || '',
+            phoneNumber: user.phoneNumber || '',
+            userRole: user.userRole || 'normal',
+            userStatus: user.userStatus || 'active',
+            userLevel: user.userLevel || 'beginner',
+            profilePic: user.profilePic || user.pic || '',
+            pic: user.pic || '',
+            color: user.color || '#3B82F6',
+            village: user.village || '',
+            country: user.country || '',
+            homeAddress: user.homeAddress || '',
+            zipcode: user.zipcode || '',
+            isEmailVerified: user.isEmailVerified || false,
+            isTwoFactorEnabled: user.isTwoFactorEnabled || false,
+            isBiometric: user.isBiometric || false,
+            sellOrders: user.sellOrders || 0,
+            buyOrders: user.buyOrders || 0,
+            createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
+            updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(),
+        };
+    }
+    async updateUserForAdmin(targetId, dto) {
+        const existing = await this._userModel
+            .findOne({ _id: targetId, isDeleted: false })
+            .exec();
+        if (!existing) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        const wasAdmin = existing.userRole === 'admin';
+        const nextRole = dto.userRole ?? existing.userRole;
+        if (wasAdmin && nextRole !== 'admin') {
+            const admins = await this.countActiveAdmins();
+            if (admins <= 1) {
+                throw new common_1.ForbiddenException('Cannot change role of the last admin');
+            }
+        }
+        const $set = {};
+        const keys = [
+            'fullName',
+            'phoneNumber',
+            'village',
+            'country',
+            'homeAddress',
+            'zipcode',
+            'userLevel',
+            'userStatus',
+            'userRole',
+            'isEmailVerified',
+            'isTwoFactorEnabled',
+            'isBiometric',
+        ];
+        for (const k of keys) {
+            if (dto[k] !== undefined)
+                $set[k] = dto[k];
+        }
+        if (Object.keys($set).length === 0) {
+            const lean = existing.toObject();
+            return {
+                success: true,
+                message: 'No changes',
+                data: this.mapOneUserForAdminResponse(lean),
+            };
+        }
+        const updated = await this._userModel
+            .findOneAndUpdate({ _id: targetId, isDeleted: false }, { $set }, { new: true })
+            .select('-password -twoFactorSecret')
+            .lean()
+            .exec();
+        if (!updated) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        return {
+            success: true,
+            message: 'User updated',
+            data: this.mapOneUserForAdminResponse(updated),
+        };
+    }
+    async deleteUserForAdmin(targetId, jwtUser) {
+        const requesterId = String(jwtUser['id'] ?? jwtUser['sub'] ?? '');
+        if (requesterId && targetId === requesterId) {
+            throw new common_1.BadRequestException('Cannot delete your own account');
+        }
+        const existing = await this._userModel
+            .findOne({ _id: targetId, isDeleted: false })
+            .exec();
+        if (!existing) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        if (existing.userRole === 'admin') {
+            const admins = await this.countActiveAdmins();
+            if (admins <= 1) {
+                throw new common_1.ForbiddenException('Cannot delete the last admin');
+            }
+        }
+        await this._userModel.updateOne({ _id: targetId }, { $set: { isDeleted: true, userStatus: 'inactive' } });
+        return { success: true, message: 'User deleted' };
     }
     async forgotPassword(emailDto) {
         try {
@@ -2296,12 +3353,55 @@ let AuthService = exports.AuthService = class AuthService {
             throw new common_1.BadRequestException(err?.message || 'Failed to get OTPs');
         }
     }
+    async toggleWishlist(userId, productId) {
+        try {
+            const user = await this._userModel.findById(userId);
+            if (!user)
+                throw new common_1.NotFoundException('User not found');
+            const alreadyIn = user.wishlist.includes(productId);
+            if (alreadyIn) {
+                await this._userModel.findByIdAndUpdate(userId, { $pull: { wishlist: productId } });
+            }
+            else {
+                await this._userModel.findByIdAndUpdate(userId, { $addToSet: { wishlist: productId } });
+            }
+            const updated = await this._userModel.findById(userId);
+            return {
+                success: true,
+                added: !alreadyIn,
+                message: alreadyIn ? 'Product removed from wishlist' : 'Product added to wishlist',
+                wishlistIds: updated.wishlist,
+            };
+        }
+        catch (err) {
+            throw new common_1.BadRequestException(err?.message || 'Failed to toggle wishlist');
+        }
+    }
+    async getWishlist(userId) {
+        try {
+            const user = await this._userModel.findById(userId);
+            if (!user)
+                throw new common_1.NotFoundException('User not found');
+            const products = await this._productModel
+                .find({ _id: { $in: user.wishlist } })
+                .exec();
+            return {
+                success: true,
+                wishlistIds: user.wishlist,
+                products,
+            };
+        }
+        catch (err) {
+            throw new common_1.BadRequestException(err?.message || 'Failed to get wishlist');
+        }
+    }
 };
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(1, (0, mongoose_2.InjectModel)('User')),
     __param(2, (0, mongoose_2.InjectModel)('Otp')),
-    __metadata("design:paramtypes", [typeof (_a = typeof dist_1.JwtService !== "undefined" && dist_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _c : Object, typeof (_d = typeof utils_service_1.UtilsService !== "undefined" && utils_service_1.UtilsService) === "function" ? _d : Object, typeof (_e = typeof _2fa_service_1.TwoFactorService !== "undefined" && _2fa_service_1.TwoFactorService) === "function" ? _e : Object, typeof (_f = typeof device_service_1.DeviceService !== "undefined" && device_service_1.DeviceService) === "function" ? _f : Object, typeof (_g = typeof login_history_service_1.LoginHistoryService !== "undefined" && login_history_service_1.LoginHistoryService) === "function" ? _g : Object])
+    __param(3, (0, mongoose_2.InjectModel)('Product')),
+    __metadata("design:paramtypes", [typeof (_a = typeof dist_1.JwtService !== "undefined" && dist_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_1.Model !== "undefined" && mongoose_1.Model) === "function" ? _d : Object, typeof (_e = typeof utils_service_1.UtilsService !== "undefined" && utils_service_1.UtilsService) === "function" ? _e : Object, typeof (_f = typeof _2fa_service_1.TwoFactorService !== "undefined" && _2fa_service_1.TwoFactorService) === "function" ? _f : Object, typeof (_g = typeof device_service_1.DeviceService !== "undefined" && device_service_1.DeviceService) === "function" ? _g : Object, typeof (_h = typeof login_history_service_1.LoginHistoryService !== "undefined" && login_history_service_1.LoginHistoryService) === "function" ? _h : Object])
 ], AuthService);
 
 
@@ -3497,29 +4597,29 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JwtStrategy = void 0;
 const passport_jwt_1 = __webpack_require__(/*! passport-jwt */ "passport-jwt");
 const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
 let JwtStrategy = exports.JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
-    constructor() {
-        const secretOrKey = process.env.JWT_SECRET || 'fallback-secret-key-change-in-production';
+    constructor(config) {
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: secretOrKey,
+            secretOrKey: config.get('JWT_SECRET') ||
+                'fallback-secret-key-change-in-production',
         });
-        console.log('🔑 [JWT STRATEGY] Initialized with secret:', secretOrKey ? 'Secret configured' : 'No secret');
     }
     async validate(payload) {
-        console.log('✅ [JWT STRATEGY] Token validated, payload:', payload);
         return payload;
     }
 };
 exports.JwtStrategy = JwtStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
+    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object])
 ], JwtStrategy);
 
 
@@ -3685,6 +4785,414 @@ exports.LoginHistoryService = LoginHistoryService = __decorate([
 
 /***/ }),
 
+/***/ "./src/banner/banner.controller.ts":
+/*!*****************************************!*\
+  !*** ./src/banner/banner.controller.ts ***!
+  \*****************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BannerController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const banner_service_1 = __webpack_require__(/*! ./banner.service */ "./src/banner/banner.service.ts");
+const banner_dto_1 = __webpack_require__(/*! ./dto/banner.dto */ "./src/banner/dto/banner.dto.ts");
+let BannerController = exports.BannerController = class BannerController {
+    constructor(bannerService) {
+        this.bannerService = bannerService;
+    }
+    async getCarouselBanners() {
+        const banners = await this.bannerService.getCarouselBanners();
+        return { success: true, data: banners };
+    }
+    async getModalBanners() {
+        const banners = await this.bannerService.getModalBanners();
+        return { success: true, data: banners };
+    }
+    async getAllBanners(type) {
+        const banners = await this.bannerService.getAllBanners(type);
+        return { success: true, data: banners };
+    }
+    async getBannerById(id) {
+        const banner = await this.bannerService.getBannerById(id);
+        return { success: true, data: banner };
+    }
+    async createBanner(dto) {
+        const banner = await this.bannerService.createBanner(dto);
+        return { success: true, message: 'Banner created', data: banner };
+    }
+    async updateBanner(id, dto) {
+        const banner = await this.bannerService.updateBanner(id, dto);
+        return { success: true, message: 'Banner updated', data: banner };
+    }
+    async toggleBanner(id) {
+        const banner = await this.bannerService.toggleActive(id);
+        return { success: true, message: 'Banner toggled', data: banner };
+    }
+    async deleteBanner(id) {
+        await this.bannerService.deleteBanner(id);
+        return { success: true, message: 'Banner deleted' };
+    }
+};
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get active carousel banners' }),
+    (0, common_1.Get)('carousel'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BannerController.prototype, "getCarouselBanners", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get active modal banners' }),
+    (0, common_1.Get)('modal'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BannerController.prototype, "getModalBanners", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all banners (admin)' }),
+    (0, swagger_1.ApiQuery)({ name: 'type', required: false, enum: ['carousel', 'modal'] }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('type')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], BannerController.prototype, "getAllBanners", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get banner by id' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], BannerController.prototype, "getBannerById", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Create a banner' }),
+    (0, swagger_1.ApiBody)({ type: banner_dto_1.CreateBannerDTO }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof banner_dto_1.CreateBannerDTO !== "undefined" && banner_dto_1.CreateBannerDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], BannerController.prototype, "createBanner", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update a banner' }),
+    (0, swagger_1.ApiBody)({ type: banner_dto_1.UpdateBannerDTO }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof banner_dto_1.UpdateBannerDTO !== "undefined" && banner_dto_1.UpdateBannerDTO) === "function" ? _c : Object]),
+    __metadata("design:returntype", Promise)
+], BannerController.prototype, "updateBanner", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Toggle banner active/inactive' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Put)(':id/toggle'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], BannerController.prototype, "toggleBanner", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Delete a banner' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], BannerController.prototype, "deleteBanner", null);
+exports.BannerController = BannerController = __decorate([
+    (0, swagger_1.ApiTags)('Banners'),
+    (0, common_1.Controller)('banners'),
+    __metadata("design:paramtypes", [typeof (_a = typeof banner_service_1.BannerService !== "undefined" && banner_service_1.BannerService) === "function" ? _a : Object])
+], BannerController);
+
+
+/***/ }),
+
+/***/ "./src/banner/banner.module.ts":
+/*!*************************************!*\
+  !*** ./src/banner/banner.module.ts ***!
+  \*************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BannerModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const banner_schema_1 = __webpack_require__(/*! src/schema/banner/banner.schema */ "./src/schema/banner/banner.schema.ts");
+const banner_controller_1 = __webpack_require__(/*! ./banner.controller */ "./src/banner/banner.controller.ts");
+const banner_service_1 = __webpack_require__(/*! ./banner.service */ "./src/banner/banner.service.ts");
+let BannerModule = exports.BannerModule = class BannerModule {
+};
+exports.BannerModule = BannerModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: 'Banner', schema: banner_schema_1.BannerSchema }]),
+        ],
+        controllers: [banner_controller_1.BannerController],
+        providers: [banner_service_1.BannerService],
+        exports: [banner_service_1.BannerService],
+    })
+], BannerModule);
+
+
+/***/ }),
+
+/***/ "./src/banner/banner.service.ts":
+/*!**************************************!*\
+  !*** ./src/banner/banner.service.ts ***!
+  \**************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BannerService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let BannerService = exports.BannerService = class BannerService {
+    constructor(bannerModel) {
+        this.bannerModel = bannerModel;
+    }
+    async getCarouselBanners() {
+        return this.bannerModel
+            .find({ type: 'carousel', isActive: true })
+            .sort({ sortOrder: 1, createdAt: -1 })
+            .exec();
+    }
+    async getModalBanners() {
+        return this.bannerModel
+            .find({ type: 'modal', isActive: true })
+            .sort({ sortOrder: 1, createdAt: -1 })
+            .exec();
+    }
+    async getAllBanners(type) {
+        const filter = {};
+        if (type)
+            filter.type = type;
+        return this.bannerModel.find(filter).sort({ sortOrder: 1, createdAt: -1 }).exec();
+    }
+    async getBannerById(id) {
+        const banner = await this.bannerModel.findOne({ _id: id }).exec();
+        if (!banner)
+            throw new common_1.NotFoundException('Banner not found');
+        return banner;
+    }
+    async createBanner(dto) {
+        const banner = new this.bannerModel(dto);
+        return banner.save();
+    }
+    async updateBanner(id, dto) {
+        const banner = await this.bannerModel
+            .findOneAndUpdate({ _id: id }, { $set: dto }, { new: true })
+            .exec();
+        if (!banner)
+            throw new common_1.NotFoundException('Banner not found');
+        return banner;
+    }
+    async deleteBanner(id) {
+        const result = await this.bannerModel.deleteOne({ _id: id }).exec();
+        if (result.deletedCount === 0)
+            throw new common_1.NotFoundException('Banner not found');
+    }
+    async toggleActive(id) {
+        const banner = await this.bannerModel.findOne({ _id: id }).exec();
+        if (!banner)
+            throw new common_1.NotFoundException('Banner not found');
+        banner.isActive = !banner.isActive;
+        return banner.save();
+    }
+};
+exports.BannerService = BannerService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)('Banner')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], BannerService);
+
+
+/***/ }),
+
+/***/ "./src/banner/dto/banner.dto.ts":
+/*!**************************************!*\
+  !*** ./src/banner/dto/banner.dto.ts ***!
+  \**************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateBannerDTO = exports.CreateBannerDTO = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class CreateBannerDTO {
+}
+exports.CreateBannerDTO = CreateBannerDTO;
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'Summer sale banner' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "title", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: ['carousel', 'modal'], default: 'carousel' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['carousel', 'modal']),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'https://example.com/banner.jpg' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "imageUrl", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        enum: ['none', 'shop', 'product', 'category', 'url'],
+        default: 'none',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['none', 'shop', 'product', 'category', 'url']),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "linkType", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        nullable: true,
+        description: 'Target id when linkType is shop, product, or category',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "linkId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        nullable: true,
+        description: 'URL when linkType is url',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "linkUrl", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ default: 0 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateBannerDTO.prototype, "sortOrder", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ default: true }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateBannerDTO.prototype, "isActive", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "subtitle", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "discount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Shop Now' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "buttonText", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: '#FFF2EE' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "bgColorHex", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: '#FFF2EE' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "gradientStartHex", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: '#FFE5DC' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateBannerDTO.prototype, "gradientEndHex", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ default: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateBannerDTO.prototype, "showOnce", void 0);
+class UpdateBannerDTO extends (0, swagger_1.PartialType)(CreateBannerDTO) {
+}
+exports.UpdateBannerDTO = UpdateBannerDTO;
+
+
+/***/ }),
+
 /***/ "./src/category/category.controller.ts":
 /*!*********************************************!*\
   !*** ./src/category/category.controller.ts ***!
@@ -3721,17 +5229,8 @@ let CategoryController = exports.CategoryController = class CategoryController {
     createCategory(createCategoryDto) {
         return this.categoryService.createCategory(createCategoryDto);
     }
-    getCategoryById(id) {
-        return this.categoryService.getCategoryById(id);
-    }
     getAllCategories(query) {
         return this.categoryService.getAllCategories(query);
-    }
-    updateCategory(id, updateCategoryDto) {
-        return this.categoryService.updateCategory(id, updateCategoryDto);
-    }
-    deleteCategory(id) {
-        return this.categoryService.deleteCategory(id);
     }
     getCategoriesByType(type) {
         return this.categoryService.getCategoriesByType(type);
@@ -3739,13 +5238,22 @@ let CategoryController = exports.CategoryController = class CategoryController {
     getCategoryHierarchy() {
         return this.categoryService.getCategoryHierarchy();
     }
+    getCategoryById(id) {
+        return this.categoryService.getCategoryById(id);
+    }
+    updateCategory(id, updateCategoryDto) {
+        return this.categoryService.updateCategory(id, updateCategoryDto);
+    }
+    deleteCategory(id) {
+        return this.categoryService.deleteCategory(id);
+    }
 };
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Create a new category' }),
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Category created successfully',
-        type: category_response_dto_1.CategoryResponseDTO
+        type: category_response_dto_1.CategoryResponseDTO,
     }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - validation failed' }),
     (0, common_1.Post)(),
@@ -3754,21 +5262,6 @@ __decorate([
     __metadata("design:paramtypes", [typeof (_b = typeof create_category_dto_1.CreateCategoryDTO !== "undefined" && create_category_dto_1.CreateCategoryDTO) === "function" ? _b : Object]),
     __metadata("design:returntype", void 0)
 ], CategoryController.prototype, "createCategory", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get category by ID' }),
-    (0, swagger_1.ApiParam)({ name: 'id', description: 'Category ID' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Category retrieved successfully',
-        type: category_response_dto_1.CategoryResponseDTO
-    }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Category not found' }),
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], CategoryController.prototype, "getCategoryById", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all categories with optional filters' }),
     (0, swagger_1.ApiQuery)({ name: 'type', required: false, enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY'] }),
@@ -3779,7 +5272,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Categories retrieved successfully',
-        type: [category_response_dto_1.CategoryResponseDTO]
+        type: [category_response_dto_1.CategoryResponseDTO],
     }),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
@@ -3788,12 +5281,52 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CategoryController.prototype, "getAllCategories", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get categories by type' }),
+    (0, swagger_1.ApiParam)({ name: 'type', enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY'] }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Categories retrieved successfully',
+        type: [category_response_dto_1.CategoryResponseDTO],
+    }),
+    (0, common_1.Get)('type/:type'),
+    __param(0, (0, common_1.Param)('type')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "getCategoriesByType", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get complete category hierarchy' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Category hierarchy retrieved successfully',
+    }),
+    (0, common_1.Get)('hierarchy/all'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "getCategoryHierarchy", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get category by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Category ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Category retrieved successfully',
+        type: category_response_dto_1.CategoryResponseDTO,
+    }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Category not found' }),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CategoryController.prototype, "getCategoryById", null);
+__decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Update category by ID' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Category ID' }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Category updated successfully',
-        type: category_response_dto_1.CategoryResponseDTO
+        type: category_response_dto_1.CategoryResponseDTO,
     }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Category not found' }),
@@ -3816,67 +5349,6 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], CategoryController.prototype, "deleteCategory", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get categories by type' }),
-    (0, swagger_1.ApiParam)({ name: 'type', enum: ['SHOP_CATEGORY', 'PRODUCT_CATEGORY', 'SUBCATEGORY'] }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Categories retrieved successfully',
-        type: [category_response_dto_1.CategoryResponseDTO]
-    }),
-    (0, common_1.Get)('type/:type'),
-    __param(0, (0, common_1.Param)('type')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], CategoryController.prototype, "getCategoriesByType", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get complete category hierarchy' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Category hierarchy retrieved successfully',
-        schema: {
-            type: 'array',
-            items: {
-                type: 'object',
-                properties: {
-                    id: { type: 'string' },
-                    name: { type: 'string' },
-                    type: { type: 'string', enum: ['SHOP_CATEGORY'] },
-                    status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] },
-                    children: {
-                        type: 'array',
-                        items: {
-                            type: 'object',
-                            properties: {
-                                id: { type: 'string' },
-                                name: { type: 'string' },
-                                type: { type: 'string', enum: ['PRODUCT_CATEGORY'] },
-                                status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] },
-                                children: {
-                                    type: 'array',
-                                    items: {
-                                        type: 'object',
-                                        properties: {
-                                            id: { type: 'string' },
-                                            name: { type: 'string' },
-                                            type: { type: 'string', enum: ['SUBCATEGORY'] },
-                                            status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'] }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }),
-    (0, common_1.Get)('hierarchy/all'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], CategoryController.prototype, "getCategoryHierarchy", null);
 exports.CategoryController = CategoryController = __decorate([
     (0, swagger_1.ApiTags)('Category'),
     (0, common_1.Controller)('category'),
@@ -6817,6 +8289,228 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 /***/ }),
 
+/***/ "./src/notification/notification.controller.ts":
+/*!*****************************************************!*\
+  !*** ./src/notification/notification.controller.ts ***!
+  \*****************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NotificationController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+const notification_service_1 = __webpack_require__(/*! ./notification.service */ "./src/notification/notification.service.ts");
+let NotificationController = exports.NotificationController = class NotificationController {
+    constructor(notificationService) {
+        this.notificationService = notificationService;
+    }
+    async unreadCount(user) {
+        const count = await this.notificationService.unreadCount(user.id);
+        return { success: true, data: { count } };
+    }
+    async list(user, limit, offset) {
+        const l = Math.min(parseInt(limit ?? '50', 10) || 50, 100);
+        const o = parseInt(offset ?? '0', 10) || 0;
+        const data = await this.notificationService.listForUser(user.id, l, o);
+        return { success: true, data };
+    }
+    async markRead(user, id) {
+        const doc = await this.notificationService.markRead(user.id, id);
+        return { success: true, data: doc };
+    }
+    async markAllRead(user) {
+        const result = await this.notificationService.markAllRead(user.id);
+        return { success: true, data: result };
+    }
+};
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Unread notification count' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('unread/count'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationController.prototype, "unreadCount", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'List notifications for current user' }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'offset', required: false }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(),
+    __param(0, (0, user_decorator_1.User)()),
+    __param(1, (0, common_1.Query)('limit')),
+    __param(2, (0, common_1.Query)('offset')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], NotificationController.prototype, "list", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Mark one notification as read' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Patch)(':id/read'),
+    __param(0, (0, user_decorator_1.User)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], NotificationController.prototype, "markRead", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Mark all notifications as read' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Patch)('read-all'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationController.prototype, "markAllRead", null);
+exports.NotificationController = NotificationController = __decorate([
+    (0, swagger_1.ApiTags)('Notifications'),
+    (0, common_1.Controller)('notifications'),
+    __metadata("design:paramtypes", [typeof (_a = typeof notification_service_1.NotificationService !== "undefined" && notification_service_1.NotificationService) === "function" ? _a : Object])
+], NotificationController);
+
+
+/***/ }),
+
+/***/ "./src/notification/notification.module.ts":
+/*!*************************************************!*\
+  !*** ./src/notification/notification.module.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NotificationModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const notification_schema_1 = __webpack_require__(/*! src/schema/notification/notification.schema */ "./src/schema/notification/notification.schema.ts");
+const notification_controller_1 = __webpack_require__(/*! ./notification.controller */ "./src/notification/notification.controller.ts");
+const notification_service_1 = __webpack_require__(/*! ./notification.service */ "./src/notification/notification.service.ts");
+let NotificationModule = exports.NotificationModule = class NotificationModule {
+};
+exports.NotificationModule = NotificationModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: 'Notification', schema: notification_schema_1.NotificationSchema }]),
+        ],
+        controllers: [notification_controller_1.NotificationController],
+        providers: [notification_service_1.NotificationService],
+        exports: [notification_service_1.NotificationService],
+    })
+], NotificationModule);
+
+
+/***/ }),
+
+/***/ "./src/notification/notification.service.ts":
+/*!**************************************************!*\
+  !*** ./src/notification/notification.service.ts ***!
+  \**************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NotificationService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const notification_schema_1 = __webpack_require__(/*! src/schema/notification/notification.schema */ "./src/schema/notification/notification.schema.ts");
+let NotificationService = exports.NotificationService = class NotificationService {
+    constructor(notificationModel) {
+        this.notificationModel = notificationModel;
+    }
+    async listForUser(userId, limit = 50, offset = 0) {
+        const filter = { userId: new mongoose_2.Types.ObjectId(userId) };
+        const [items, total] = await Promise.all([
+            this.notificationModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(offset)
+                .limit(Math.min(limit, 100))
+                .lean()
+                .exec(),
+            this.notificationModel.countDocuments(filter),
+        ]);
+        return { items, total, limit, offset };
+    }
+    async unreadCount(userId) {
+        return this.notificationModel.countDocuments({
+            userId: new mongoose_2.Types.ObjectId(userId),
+            read: false,
+        });
+    }
+    async markRead(userId, id) {
+        const doc = await this.notificationModel.findOneAndUpdate({ _id: id, userId: new mongoose_2.Types.ObjectId(userId) }, { $set: { read: true } }, { new: true });
+        if (!doc)
+            throw new common_1.NotFoundException('Notification not found');
+        return doc;
+    }
+    async markAllRead(userId) {
+        const res = await this.notificationModel.updateMany({ userId: new mongoose_2.Types.ObjectId(userId), read: false }, { $set: { read: true } });
+        return { modifiedCount: res.modifiedCount };
+    }
+    async createForUser(userId, payload) {
+        const doc = await this.notificationModel.create({
+            userId: new mongoose_2.Types.ObjectId(userId),
+            title: payload.title,
+            body: payload.body,
+            type: payload.type ?? 'system',
+            read: false,
+            imageUrl: payload.imageUrl ?? '',
+            meta: payload.meta ?? {},
+        });
+        return doc;
+    }
+};
+exports.NotificationService = NotificationService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(notification_schema_1.Notification.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], NotificationService);
+
+
+/***/ }),
+
 /***/ "./src/order/dto/ecommerce-order.dto.ts":
 /*!**********************************************!*\
   !*** ./src/order/dto/ecommerce-order.dto.ts ***!
@@ -6915,7 +8609,8 @@ class CreateEcommerceOrderDTO {
 }
 exports.CreateEcommerceOrderDTO = CreateEcommerceOrderDTO;
 __decorate([
-    (0, swagger_1.ApiProperty)(),
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateEcommerceOrderDTO.prototype, "buyerId", void 0);
@@ -7242,20 +8937,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EcommerceOrderController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
 const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
 const ecommerce_order_service_1 = __webpack_require__(/*! ./ecommerce-order.service */ "./src/order/ecommerce-order.service.ts");
 const ecommerce_order_dto_1 = __webpack_require__(/*! ./dto/ecommerce-order.dto */ "./src/order/dto/ecommerce-order.dto.ts");
+const product_review_service_1 = __webpack_require__(/*! src/product/product-review.service */ "./src/product/product-review.service.ts");
 let EcommerceOrderController = exports.EcommerceOrderController = class EcommerceOrderController {
-    constructor(ecommerceOrderService) {
+    constructor(ecommerceOrderService, productReviewService) {
         this.ecommerceOrderService = ecommerceOrderService;
+        this.productReviewService = productReviewService;
     }
-    async createOrder(createOrderDTO) {
-        const order = await this.ecommerceOrderService.createOrder(createOrderDTO);
+    async createOrder(createOrderDTO, user) {
+        const order = await this.ecommerceOrderService.createOrder({ ...createOrderDTO, buyerId: user.id });
         return {
             success: true,
             message: 'Order created successfully',
@@ -7268,6 +8966,14 @@ let EcommerceOrderController = exports.EcommerceOrderController = class Ecommerc
             success: true,
             message: 'Orders retrieved successfully',
             data: orders,
+        };
+    }
+    async getReviewable(orderId, user) {
+        const data = await this.productReviewService.getReviewableForOrder(orderId, user.id);
+        return {
+            success: true,
+            message: 'OK',
+            data,
         };
     }
     async getOrderById(orderId) {
@@ -7303,8 +9009,9 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof ecommerce_order_dto_1.CreateEcommerceOrderDTO !== "undefined" && ecommerce_order_dto_1.CreateEcommerceOrderDTO) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [typeof (_c = typeof ecommerce_order_dto_1.CreateEcommerceOrderDTO !== "undefined" && ecommerce_order_dto_1.CreateEcommerceOrderDTO) === "function" ? _c : Object, Object]),
     __metadata("design:returntype", Promise)
 ], EcommerceOrderController.prototype, "createOrder", null);
 __decorate([
@@ -7320,9 +9027,22 @@ __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof ecommerce_order_dto_1.GetAllOrdersDTO !== "undefined" && ecommerce_order_dto_1.GetAllOrdersDTO) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [typeof (_d = typeof ecommerce_order_dto_1.GetAllOrdersDTO !== "undefined" && ecommerce_order_dto_1.GetAllOrdersDTO) === "function" ? _d : Object]),
     __metadata("design:returntype", Promise)
 ], EcommerceOrderController.prototype, "getAllOrders", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Line items eligible for product review (delivered orders)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Order ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200 }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(':id/reviewable'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], EcommerceOrderController.prototype, "getReviewable", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get order by ID' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Order ID' }),
@@ -7347,7 +9067,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_d = typeof ecommerce_order_dto_1.UpdateOrderStatusDTO !== "undefined" && ecommerce_order_dto_1.UpdateOrderStatusDTO) === "function" ? _d : Object]),
+    __metadata("design:paramtypes", [String, typeof (_e = typeof ecommerce_order_dto_1.UpdateOrderStatusDTO !== "undefined" && ecommerce_order_dto_1.UpdateOrderStatusDTO) === "function" ? _e : Object]),
     __metadata("design:returntype", Promise)
 ], EcommerceOrderController.prototype, "updateOrderStatus", null);
 __decorate([
@@ -7366,7 +9086,7 @@ __decorate([
 exports.EcommerceOrderController = EcommerceOrderController = __decorate([
     (0, swagger_1.ApiTags)('E-commerce Orders'),
     (0, common_1.Controller)('orders'),
-    __metadata("design:paramtypes", [typeof (_a = typeof ecommerce_order_service_1.EcommerceOrderService !== "undefined" && ecommerce_order_service_1.EcommerceOrderService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof ecommerce_order_service_1.EcommerceOrderService !== "undefined" && ecommerce_order_service_1.EcommerceOrderService) === "function" ? _a : Object, typeof (_b = typeof product_review_service_1.ProductReviewService !== "undefined" && product_review_service_1.ProductReviewService) === "function" ? _b : Object])
 ], EcommerceOrderController);
 
 
@@ -7391,21 +9111,94 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EcommerceOrderService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
 const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
+const notification_service_1 = __webpack_require__(/*! src/notification/notification.service */ "./src/notification/notification.service.ts");
 let EcommerceOrderService = exports.EcommerceOrderService = class EcommerceOrderService {
-    constructor(ecommerceOrderModel) {
+    constructor(ecommerceOrderModel, shopModel, userModel, notificationService) {
         this.ecommerceOrderModel = ecommerceOrderModel;
+        this.shopModel = shopModel;
+        this.userModel = userModel;
+        this.notificationService = notificationService;
+    }
+    async enrichOrdersForAdmin(orders) {
+        if (!orders.length)
+            return [];
+        const shopIds = [...new Set(orders.map((o) => o['shopId']).filter(Boolean))];
+        const buyerIds = [...new Set(orders.map((o) => o['buyerId']).filter(Boolean))];
+        const [shopDocs, userDocs] = await Promise.all([
+            shopIds.length
+                ? this.shopModel.find({ _id: { $in: shopIds } }).select('shopName').lean().exec()
+                : [],
+            buyerIds.length
+                ? this.userModel.find({ _id: { $in: buyerIds } }).select('fullName name email').lean().exec()
+                : [],
+        ]);
+        const shopMap = new Map();
+        for (const s of shopDocs) {
+            const id = s.id ?? s._id?.toString();
+            if (id)
+                shopMap.set(id, String(s.shopName ?? '').trim() || '—');
+        }
+        const userMap = new Map();
+        for (const u of userDocs) {
+            const id = u.id ?? u._id?.toString();
+            const label = [u.fullName, u.name].find((x) => x && String(x).trim()) || u.email || '';
+            if (id)
+                userMap.set(id, String(label).trim() || '—');
+        }
+        return orders.map((o) => ({
+            ...o,
+            shopName: shopMap.get(o['shopId']) ?? '—',
+            buyerName: userMap.get(o['buyerId']) ?? '—',
+        }));
+    }
+    async wrapOrderForAdmin(order) {
+        const doc = order;
+        const plain = doc && typeof doc.toObject === 'function'
+            ? doc.toObject()
+            : { ...order };
+        const [out] = await this.enrichOrdersForAdmin([plain]);
+        return out;
+    }
+    async getOrderByIdWithNames(orderId) {
+        const order = await this.ecommerceOrderModel
+            .findOne({ id: orderId, isDeleted: false })
+            .lean()
+            .exec();
+        if (!order) {
+            throw new common_1.NotFoundException('Order not found');
+        }
+        const [enriched] = await this.enrichOrdersForAdmin([order]);
+        return enriched;
     }
     async createOrder(createOrderDTO) {
         try {
             const order = new this.ecommerceOrderModel(createOrderDTO);
-            return await order.save();
+            const saved = await order.save();
+            try {
+                await this.notificationService.createForUser(saved.sellerId, {
+                    title: 'New order',
+                    body: `Order ${saved.orderNumber} — ${saved.currency} ${saved.total.toFixed(0)}`,
+                    type: 'order',
+                    meta: { orderId: saved.id, shopId: saved.shopId },
+                });
+                await this.notificationService.createForUser(saved.buyerId, {
+                    title: 'Order placed',
+                    body: `Your order ${saved.orderNumber} was received.`,
+                    type: 'order',
+                    meta: { orderId: saved.id, shopId: saved.shopId },
+                });
+            }
+            catch (notifyErr) {
+                console.error('⚠️ Notification create failed (order still saved):', notifyErr);
+            }
+            return saved;
         }
         catch (error) {
             console.error('❌ Error creating e-commerce order:', error);
@@ -7436,6 +9229,48 @@ let EcommerceOrderService = exports.EcommerceOrderService = class EcommerceOrder
         }
         catch (error) {
             console.error('❌ Error fetching e-commerce orders:', error);
+            throw new common_1.BadRequestException(error?.message || 'Failed to fetch orders');
+        }
+    }
+    async getAllOrdersForAdmin(query) {
+        try {
+            const filter = { isDeleted: false };
+            if (query.userId) {
+                filter['buyerId'] = query.userId;
+            }
+            if (query.shopId) {
+                filter['shopId'] = query.shopId;
+            }
+            if (query.status) {
+                filter['status'] = query.status;
+            }
+            const search = query.search?.trim();
+            if (search) {
+                const safe = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                filter['$or'] = [
+                    { orderNumber: { $regex: safe, $options: 'i' } },
+                    { id: search },
+                    { buyerId: search },
+                    { shopId: search },
+                ];
+            }
+            const offset = query.offset ?? 0;
+            const limit = Math.min(query.limit ?? 20, 100);
+            const [orders, total] = await Promise.all([
+                this.ecommerceOrderModel
+                    .find(filter)
+                    .sort({ createdAt: -1 })
+                    .skip(offset)
+                    .limit(limit)
+                    .lean()
+                    .exec(),
+                this.ecommerceOrderModel.countDocuments(filter),
+            ]);
+            const enriched = await this.enrichOrdersForAdmin(orders);
+            return { orders: enriched, total };
+        }
+        catch (error) {
+            console.error('❌ Error fetching admin e-commerce orders:', error);
             throw new common_1.BadRequestException(error?.message || 'Failed to fetch orders');
         }
     }
@@ -7505,7 +9340,9 @@ let EcommerceOrderService = exports.EcommerceOrderService = class EcommerceOrder
 exports.EcommerceOrderService = EcommerceOrderService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(ecommerce_order_schema_1.EcommerceOrder.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __param(1, (0, mongoose_1.InjectModel)('Shop')),
+    __param(2, (0, mongoose_1.InjectModel)('User')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof notification_service_1.NotificationService !== "undefined" && notification_service_1.NotificationService) === "function" ? _d : Object])
 ], EcommerceOrderService);
 
 
@@ -7628,15 +9465,21 @@ const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const order_schema_1 = __webpack_require__(/*! src/schema/order/order.schema */ "./src/schema/order/order.schema.ts");
 const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
+const shop_schema_1 = __webpack_require__(/*! src/schema/shop/shop.schema */ "./src/schema/shop/shop.schema.ts");
+const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 const order_controller_1 = __webpack_require__(/*! ./order.controller */ "./src/order/order.controller.ts");
 const order_service_1 = __webpack_require__(/*! ./order.service */ "./src/order/order.service.ts");
 const ecommerce_order_controller_1 = __webpack_require__(/*! ./ecommerce-order.controller */ "./src/order/ecommerce-order.controller.ts");
 const ecommerce_order_service_1 = __webpack_require__(/*! ./ecommerce-order.service */ "./src/order/ecommerce-order.service.ts");
+const notification_module_1 = __webpack_require__(/*! src/notification/notification.module */ "./src/notification/notification.module.ts");
+const product_module_1 = __webpack_require__(/*! src/product/product.module */ "./src/product/product.module.ts");
 let OrderModule = exports.OrderModule = class OrderModule {
 };
 exports.OrderModule = OrderModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            notification_module_1.NotificationModule,
+            product_module_1.ProductModule,
             mongoose_1.MongooseModule.forFeature([
                 {
                     name: order_schema_1.Order.name,
@@ -7646,6 +9489,8 @@ exports.OrderModule = OrderModule = __decorate([
                     name: ecommerce_order_schema_1.EcommerceOrder.name,
                     schema: ecommerce_order_schema_1.EcommerceOrderSchema,
                 },
+                { name: 'Shop', schema: shop_schema_1.ShopSchema },
+                { name: 'User', schema: user_schema_1.UserSchema },
             ])
         ],
         controllers: [order_controller_1.OrderController, ecommerce_order_controller_1.EcommerceOrderController],
@@ -7762,6 +9607,292 @@ exports.OrderService = OrderService = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(order_schema_1.Order.name)),
     __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
 ], OrderService);
+
+
+/***/ }),
+
+/***/ "./src/platform-settings/admin-platform-settings.controller.ts":
+/*!*********************************************************************!*\
+  !*** ./src/platform-settings/admin-platform-settings.controller.ts ***!
+  \*********************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminPlatformSettingsController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const admin_role_guard_1 = __webpack_require__(/*! ../auth/admin-role.guard */ "./src/auth/admin-role.guard.ts");
+const platform_settings_service_1 = __webpack_require__(/*! ./platform-settings.service */ "./src/platform-settings/platform-settings.service.ts");
+const update_platform_settings_dto_1 = __webpack_require__(/*! ./dto/update-platform-settings.dto */ "./src/platform-settings/dto/update-platform-settings.dto.ts");
+let AdminPlatformSettingsController = exports.AdminPlatformSettingsController = class AdminPlatformSettingsController {
+    constructor(platformSettingsService) {
+        this.platformSettingsService = platformSettingsService;
+    }
+    async get() {
+        const doc = await this.platformSettingsService.getOrCreate();
+        return {
+            success: true,
+            message: 'Platform settings retrieved',
+            data: {
+                maintenanceMode: doc.maintenanceMode,
+                maintenanceMessage: doc.maintenanceMessage ?? '',
+            },
+        };
+    }
+    async patch(dto) {
+        const doc = await this.platformSettingsService.updateForAdmin(dto);
+        return {
+            success: true,
+            message: 'Platform settings updated',
+            data: {
+                maintenanceMode: doc.maintenanceMode,
+                maintenanceMessage: doc.maintenanceMessage ?? '',
+            },
+        };
+    }
+};
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get platform settings (admin)' }),
+    (0, swagger_1.ApiResponse)({ status: 200 }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminPlatformSettingsController.prototype, "get", null);
+__decorate([
+    (0, common_1.Patch)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Update platform settings (admin)' }),
+    (0, swagger_1.ApiResponse)({ status: 200 }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof update_platform_settings_dto_1.UpdatePlatformSettingsDto !== "undefined" && update_platform_settings_dto_1.UpdatePlatformSettingsDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], AdminPlatformSettingsController.prototype, "patch", null);
+exports.AdminPlatformSettingsController = AdminPlatformSettingsController = __decorate([
+    (0, swagger_1.ApiTags)('adminApis'),
+    (0, common_1.Controller)('admin/platform-settings'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof platform_settings_service_1.PlatformSettingsService !== "undefined" && platform_settings_service_1.PlatformSettingsService) === "function" ? _a : Object])
+], AdminPlatformSettingsController);
+
+
+/***/ }),
+
+/***/ "./src/platform-settings/app-maintenance.controller.ts":
+/*!*************************************************************!*\
+  !*** ./src/platform-settings/app-maintenance.controller.ts ***!
+  \*************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AppMaintenanceController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const platform_settings_service_1 = __webpack_require__(/*! ./platform-settings.service */ "./src/platform-settings/platform-settings.service.ts");
+let AppMaintenanceController = exports.AppMaintenanceController = class AppMaintenanceController {
+    constructor(platformSettingsService) {
+        this.platformSettingsService = platformSettingsService;
+    }
+    async getMaintenance() {
+        const data = await this.platformSettingsService.getPublicMaintenance();
+        return {
+            success: true,
+            message: 'OK',
+            data,
+        };
+    }
+};
+__decorate([
+    (0, common_1.Get)('maintenance'),
+    (0, swagger_1.ApiOperation)({ summary: 'Public maintenance status (for mobile app)' }),
+    (0, swagger_1.ApiResponse)({ status: 200 }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AppMaintenanceController.prototype, "getMaintenance", null);
+exports.AppMaintenanceController = AppMaintenanceController = __decorate([
+    (0, swagger_1.ApiTags)('app'),
+    (0, common_1.Controller)('app'),
+    __metadata("design:paramtypes", [typeof (_a = typeof platform_settings_service_1.PlatformSettingsService !== "undefined" && platform_settings_service_1.PlatformSettingsService) === "function" ? _a : Object])
+], AppMaintenanceController);
+
+
+/***/ }),
+
+/***/ "./src/platform-settings/dto/update-platform-settings.dto.ts":
+/*!*******************************************************************!*\
+  !*** ./src/platform-settings/dto/update-platform-settings.dto.ts ***!
+  \*******************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdatePlatformSettingsDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class UpdatePlatformSettingsDto {
+}
+exports.UpdatePlatformSettingsDto = UpdatePlatformSettingsDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdatePlatformSettingsDto.prototype, "maintenanceMode", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ maxLength: 2000 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(2000),
+    __metadata("design:type", String)
+], UpdatePlatformSettingsDto.prototype, "maintenanceMessage", void 0);
+
+
+/***/ }),
+
+/***/ "./src/platform-settings/platform-settings.module.ts":
+/*!***********************************************************!*\
+  !*** ./src/platform-settings/platform-settings.module.ts ***!
+  \***********************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PlatformSettingsModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const platform_settings_schema_1 = __webpack_require__(/*! src/schema/platform-settings/platform-settings.schema */ "./src/schema/platform-settings/platform-settings.schema.ts");
+const platform_settings_service_1 = __webpack_require__(/*! ./platform-settings.service */ "./src/platform-settings/platform-settings.service.ts");
+const app_maintenance_controller_1 = __webpack_require__(/*! ./app-maintenance.controller */ "./src/platform-settings/app-maintenance.controller.ts");
+const admin_platform_settings_controller_1 = __webpack_require__(/*! ./admin-platform-settings.controller */ "./src/platform-settings/admin-platform-settings.controller.ts");
+let PlatformSettingsModule = exports.PlatformSettingsModule = class PlatformSettingsModule {
+};
+exports.PlatformSettingsModule = PlatformSettingsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([
+                { name: platform_settings_schema_1.PlatformSettings.name, schema: platform_settings_schema_1.PlatformSettingsSchema },
+            ]),
+        ],
+        controllers: [app_maintenance_controller_1.AppMaintenanceController, admin_platform_settings_controller_1.AdminPlatformSettingsController],
+        providers: [platform_settings_service_1.PlatformSettingsService],
+        exports: [platform_settings_service_1.PlatformSettingsService],
+    })
+], PlatformSettingsModule);
+
+
+/***/ }),
+
+/***/ "./src/platform-settings/platform-settings.service.ts":
+/*!************************************************************!*\
+  !*** ./src/platform-settings/platform-settings.service.ts ***!
+  \************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PlatformSettingsService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const platform_settings_schema_1 = __webpack_require__(/*! src/schema/platform-settings/platform-settings.schema */ "./src/schema/platform-settings/platform-settings.schema.ts");
+const GLOBAL_KEY = 'global';
+const DEFAULT_MESSAGE = 'We are temporarily unavailable. Please try again later.';
+let PlatformSettingsService = exports.PlatformSettingsService = class PlatformSettingsService {
+    constructor(model) {
+        this.model = model;
+    }
+    async getOrCreate() {
+        let doc = await this.model.findOne({ key: GLOBAL_KEY }).exec();
+        if (!doc) {
+            doc = await this.model.create({
+                key: GLOBAL_KEY,
+                maintenanceMode: false,
+                maintenanceMessage: '',
+            });
+        }
+        return doc;
+    }
+    async getPublicMaintenance() {
+        const doc = await this.getOrCreate();
+        const message = (doc.maintenanceMessage && doc.maintenanceMessage.trim()) ||
+            DEFAULT_MESSAGE;
+        return {
+            maintenanceMode: Boolean(doc.maintenanceMode),
+            maintenanceMessage: message,
+        };
+    }
+    async updateForAdmin(dto) {
+        const doc = await this.getOrCreate();
+        if (dto.maintenanceMode !== undefined) {
+            doc.maintenanceMode = dto.maintenanceMode;
+        }
+        if (dto.maintenanceMessage !== undefined) {
+            doc.maintenanceMessage = dto.maintenanceMessage;
+        }
+        return doc.save();
+    }
+};
+exports.PlatformSettingsService = PlatformSettingsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(platform_settings_schema_1.PlatformSettings.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], PlatformSettingsService);
 
 
 /***/ }),
@@ -9352,6 +11483,57 @@ exports.PostService = PostService = __decorate([
 
 /***/ }),
 
+/***/ "./src/product/dto/create-product-review.dto.ts":
+/*!******************************************************!*\
+  !*** ./src/product/dto/create-product-review.dto.ts ***!
+  \******************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateProductReviewDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class CreateProductReviewDto {
+}
+exports.CreateProductReviewDto = CreateProductReviewDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'E-commerce order id (must be delivered)' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateProductReviewDto.prototype, "orderId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Product id from the order line item' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateProductReviewDto.prototype, "productId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ minimum: 1, maximum: 5 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(5),
+    __metadata("design:type", Number)
+], CreateProductReviewDto.prototype, "rating", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ maxLength: 2000 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(2000),
+    __metadata("design:type", String)
+], CreateProductReviewDto.prototype, "comment", void 0);
+
+
+/***/ }),
+
 /***/ "./src/product/dto/create-product.dto.ts":
 /*!***********************************************!*\
   !*** ./src/product/dto/create-product.dto.ts ***!
@@ -10548,6 +12730,268 @@ __decorate([
 
 /***/ }),
 
+/***/ "./src/product/product-review.controller.ts":
+/*!**************************************************!*\
+  !*** ./src/product/product-review.controller.ts ***!
+  \**************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProductReviewWriteController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
+const product_review_service_1 = __webpack_require__(/*! ./product-review.service */ "./src/product/product-review.service.ts");
+const create_product_review_dto_1 = __webpack_require__(/*! ./dto/create-product-review.dto */ "./src/product/dto/create-product-review.dto.ts");
+let ProductReviewWriteController = exports.ProductReviewWriteController = class ProductReviewWriteController {
+    constructor(productReviewService) {
+        this.productReviewService = productReviewService;
+    }
+    async create(dto, user) {
+        const data = await this.productReviewService.createReview(user.id, dto);
+        return {
+            success: true,
+            message: 'Review submitted',
+            data,
+        };
+    }
+};
+__decorate([
+    (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Submit a product review (delivered orders only)' }),
+    (0, swagger_1.ApiResponse)({ status: 201 }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Already reviewed' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof create_product_review_dto_1.CreateProductReviewDto !== "undefined" && create_product_review_dto_1.CreateProductReviewDto) === "function" ? _b : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ProductReviewWriteController.prototype, "create", null);
+exports.ProductReviewWriteController = ProductReviewWriteController = __decorate([
+    (0, swagger_1.ApiTags)('Products'),
+    (0, common_1.Controller)('product-reviews'),
+    __metadata("design:paramtypes", [typeof (_a = typeof product_review_service_1.ProductReviewService !== "undefined" && product_review_service_1.ProductReviewService) === "function" ? _a : Object])
+], ProductReviewWriteController);
+
+
+/***/ }),
+
+/***/ "./src/product/product-review.service.ts":
+/*!***********************************************!*\
+  !*** ./src/product/product-review.service.ts ***!
+  \***********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProductReviewService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
+const product_review_schema_1 = __webpack_require__(/*! src/schema/product-review/product-review.schema */ "./src/schema/product-review/product-review.schema.ts");
+function productIdFromLineItem(item) {
+    const p = item?.product;
+    if (!p)
+        return null;
+    if (typeof p === 'string')
+        return p;
+    return String(p.id ?? p._id ?? '');
+}
+let ProductReviewService = exports.ProductReviewService = class ProductReviewService {
+    constructor(reviewModel, orderModel, productModel, shopModel) {
+        this.reviewModel = reviewModel;
+        this.orderModel = orderModel;
+        this.productModel = productModel;
+        this.shopModel = shopModel;
+    }
+    async createReview(buyerId, dto) {
+        const order = await this.orderModel
+            .findOne({ id: dto.orderId, isDeleted: false })
+            .exec();
+        if (!order) {
+            throw new common_1.NotFoundException('Order not found');
+        }
+        if (order.buyerId !== buyerId) {
+            throw new common_1.ForbiddenException('You can only review your own orders');
+        }
+        if (order.status !== 'delivered') {
+            throw new common_1.BadRequestException('You can only review delivered orders');
+        }
+        const items = order.items || [];
+        let line = null;
+        for (const it of items) {
+            const pid = productIdFromLineItem(it);
+            if (pid === dto.productId) {
+                line = it;
+                break;
+            }
+        }
+        if (!line) {
+            throw new common_1.BadRequestException('Product is not part of this order');
+        }
+        const product = await this.productModel.findOne({ _id: dto.productId }).exec();
+        if (!product) {
+            throw new common_1.NotFoundException('Product not found');
+        }
+        if (String(product.shopId) !== String(order.shopId)) {
+            throw new common_1.BadRequestException('Product does not belong to this order shop');
+        }
+        const exists = await this.reviewModel
+            .findOne({ orderId: dto.orderId, productId: dto.productId })
+            .exec();
+        if (exists) {
+            throw new common_1.ConflictException('You already reviewed this product for this order');
+        }
+        const doc = await new this.reviewModel({
+            productId: dto.productId,
+            shopId: String(order.shopId),
+            buyerId,
+            orderId: dto.orderId,
+            rating: dto.rating,
+            comment: dto.comment?.trim() ?? '',
+        }).save();
+        await this.recalculateProductStats(dto.productId);
+        await this.recalculateShopStats(String(order.shopId));
+        return doc;
+    }
+    async listReviewsForProduct(productId, limit = 20, offset = 0) {
+        const safeLimit = Math.min(Math.max(limit, 1), 100);
+        const [reviews, total] = await Promise.all([
+            this.reviewModel
+                .find({ productId })
+                .sort({ createdAt: -1 })
+                .skip(offset)
+                .limit(safeLimit)
+                .lean()
+                .exec(),
+            this.reviewModel.countDocuments({ productId }),
+        ]);
+        return { reviews, total };
+    }
+    async getReviewableForOrder(orderId, buyerId) {
+        const order = await this.orderModel.findOne({ id: orderId, isDeleted: false }).exec();
+        if (!order) {
+            throw new common_1.NotFoundException('Order not found');
+        }
+        if (order.buyerId !== buyerId) {
+            throw new common_1.ForbiddenException('Forbidden');
+        }
+        if (order.status !== 'delivered') {
+            return {
+                canReview: false,
+                reason: 'Order is not delivered yet',
+                items: [],
+            };
+        }
+        const items = order.items || [];
+        const out = [];
+        for (const it of items) {
+            const pid = productIdFromLineItem(it);
+            if (!pid)
+                continue;
+            const p = it.product;
+            const name = typeof p === 'object' && p !== null && 'name' in p
+                ? String(p.name ?? 'Product')
+                : 'Product';
+            let image = '';
+            if (typeof p === 'object' && p !== null && 'images' in p) {
+                const imgs = p.images;
+                if (Array.isArray(imgs) && imgs.length > 0)
+                    image = String(imgs[0]);
+            }
+            const reviewed = await this.reviewModel
+                .exists({ orderId, productId: pid })
+                .exec();
+            out.push({
+                productId: pid,
+                productName: name,
+                image,
+                alreadyReviewed: Boolean(reviewed),
+            });
+        }
+        return {
+            canReview: true,
+            items: out,
+        };
+    }
+    async recalculateProductStats(productId) {
+        const agg = await this.reviewModel
+            .aggregate([
+            { $match: { productId } },
+            {
+                $group: {
+                    _id: '$productId',
+                    avg: { $avg: '$rating' },
+                    count: { $sum: 1 },
+                },
+            },
+        ])
+            .exec();
+        const avg = agg.length ? Math.round(agg[0].avg * 10) / 10 : 0;
+        const count = agg.length ? agg[0].count : 0;
+        await this.productModel.updateOne({ _id: productId }, { $set: { rating: avg, reviewCount: count } });
+    }
+    async recalculateShopStats(shopId) {
+        const agg = await this.reviewModel
+            .aggregate([
+            { $match: { shopId } },
+            {
+                $group: {
+                    _id: '$shopId',
+                    avg: { $avg: '$rating' },
+                    count: { $sum: 1 },
+                },
+            },
+        ])
+            .exec();
+        const avg = agg.length ? Math.round(agg[0].avg * 10) / 10 : 0;
+        const count = agg.length ? agg[0].count : 0;
+        await this.shopModel.updateOne({ _id: shopId }, { $set: { rating: avg, reviewCount: count } });
+    }
+};
+exports.ProductReviewService = ProductReviewService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(product_review_schema_1.ProductReview.name)),
+    __param(1, (0, mongoose_1.InjectModel)(ecommerce_order_schema_1.EcommerceOrder.name)),
+    __param(2, (0, mongoose_1.InjectModel)('Product')),
+    __param(3, (0, mongoose_1.InjectModel)('Shop')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object])
+], ProductReviewService);
+
+
+/***/ }),
+
 /***/ "./src/product/product.controller.ts":
 /*!*******************************************!*\
   !*** ./src/product/product.controller.ts ***!
@@ -10567,12 +13011,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProductController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const product_service_1 = __webpack_require__(/*! ./product.service */ "./src/product/product.service.ts");
+const product_review_service_1 = __webpack_require__(/*! ./product-review.service */ "./src/product/product-review.service.ts");
 const create_product_dto_1 = __webpack_require__(/*! ./dto/create-product.dto */ "./src/product/dto/create-product.dto.ts");
 const update_product_dto_1 = __webpack_require__(/*! ./dto/update-product.dto */ "./src/product/dto/update-product.dto.ts");
 const product_query_dto_1 = __webpack_require__(/*! ./dto/product-query.dto */ "./src/product/dto/product-query.dto.ts");
@@ -10580,8 +13025,9 @@ const product_response_dto_1 = __webpack_require__(/*! ./dto/product-response.dt
 const jwt_auth_guard_1 = __webpack_require__(/*! src/auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
 const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator */ "./src/decorators/user.decorator.ts");
 let ProductController = exports.ProductController = class ProductController {
-    constructor(productService) {
+    constructor(productService, productReviewService) {
         this.productService = productService;
+        this.productReviewService = productReviewService;
     }
     async createProduct(createProductDto, user) {
         const product = await this.productService.createProduct(createProductDto, user.id);
@@ -10589,6 +13035,14 @@ let ProductController = exports.ProductController = class ProductController {
             success: true,
             message: 'Product created successfully',
             data: product
+        };
+    }
+    async getProductReviews(id, limit, offset) {
+        const result = await this.productReviewService.listReviewsForProduct(id, limit ?? 20, offset ?? 0);
+        return {
+            success: true,
+            message: 'Reviews retrieved',
+            data: result,
         };
     }
     async getProductById(id) {
@@ -10664,9 +13118,22 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof create_product_dto_1.CreateProductDTO !== "undefined" && create_product_dto_1.CreateProductDTO) === "function" ? _b : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_c = typeof create_product_dto_1.CreateProductDTO !== "undefined" && create_product_dto_1.CreateProductDTO) === "function" ? _c : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ProductController.prototype, "createProduct", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'List reviews for a product' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Product ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'offset', required: false }),
+    (0, common_1.Get)(':id/reviews'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Query)('limit')),
+    __param(2, (0, common_1.Query)('offset')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number, Number]),
+    __metadata("design:returntype", Promise)
+], ProductController.prototype, "getProductReviews", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get product by ID' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Product ID' }),
@@ -10711,7 +13178,7 @@ __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [typeof (_d = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _d : Object]),
     __metadata("design:returntype", Promise)
 ], ProductController.prototype, "getAllProducts", null);
 __decorate([
@@ -10733,7 +13200,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_d = typeof update_product_dto_1.UpdateProductDTO !== "undefined" && update_product_dto_1.UpdateProductDTO) === "function" ? _d : Object, Object]),
+    __metadata("design:paramtypes", [String, typeof (_e = typeof update_product_dto_1.UpdateProductDTO !== "undefined" && update_product_dto_1.UpdateProductDTO) === "function" ? _e : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ProductController.prototype, "updateProduct", null);
 __decorate([
@@ -10769,7 +13236,7 @@ __decorate([
     __param(0, (0, common_1.Param)('shopId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_e = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [String, typeof (_f = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _f : Object]),
     __metadata("design:returntype", Promise)
 ], ProductController.prototype, "getProductsByShop", null);
 __decorate([
@@ -10798,13 +13265,13 @@ __decorate([
     __param(0, (0, common_1.Param)('categoryId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_f = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _f : Object]),
+    __metadata("design:paramtypes", [String, typeof (_g = typeof product_query_dto_1.ProductQueryDTO !== "undefined" && product_query_dto_1.ProductQueryDTO) === "function" ? _g : Object]),
     __metadata("design:returntype", Promise)
 ], ProductController.prototype, "getProductsByCategory", null);
 exports.ProductController = ProductController = __decorate([
     (0, swagger_1.ApiTags)('Products'),
     (0, common_1.Controller)('products'),
-    __metadata("design:paramtypes", [typeof (_a = typeof product_service_1.ProductService !== "undefined" && product_service_1.ProductService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof product_service_1.ProductService !== "undefined" && product_service_1.ProductService) === "function" ? _a : Object, typeof (_b = typeof product_review_service_1.ProductReviewService !== "undefined" && product_review_service_1.ProductReviewService) === "function" ? _b : Object])
 ], ProductController);
 
 
@@ -10829,9 +13296,13 @@ const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const product_controller_1 = __webpack_require__(/*! ./product.controller */ "./src/product/product.controller.ts");
 const product_service_1 = __webpack_require__(/*! ./product.service */ "./src/product/product.service.ts");
+const product_review_service_1 = __webpack_require__(/*! ./product-review.service */ "./src/product/product-review.service.ts");
+const product_review_controller_1 = __webpack_require__(/*! ./product-review.controller */ "./src/product/product-review.controller.ts");
 const product_schema_1 = __webpack_require__(/*! src/schema/product/product.schema */ "./src/schema/product/product.schema.ts");
 const shop_schema_1 = __webpack_require__(/*! src/schema/shop/shop.schema */ "./src/schema/shop/shop.schema.ts");
 const category_schema_1 = __webpack_require__(/*! src/schema/category/category.schema */ "./src/schema/category/category.schema.ts");
+const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
+const product_review_schema_1 = __webpack_require__(/*! src/schema/product-review/product-review.schema */ "./src/schema/product-review/product-review.schema.ts");
 let ProductModule = exports.ProductModule = class ProductModule {
 };
 exports.ProductModule = ProductModule = __decorate([
@@ -10841,11 +13312,13 @@ exports.ProductModule = ProductModule = __decorate([
                 { name: 'Product', schema: product_schema_1.ProductSchema },
                 { name: 'Shop', schema: shop_schema_1.ShopSchema },
                 { name: 'Category', schema: category_schema_1.CategorySchema },
+                { name: ecommerce_order_schema_1.EcommerceOrder.name, schema: ecommerce_order_schema_1.EcommerceOrderSchema },
+                { name: product_review_schema_1.ProductReview.name, schema: product_review_schema_1.ProductReviewSchema },
             ]),
         ],
-        controllers: [product_controller_1.ProductController],
-        providers: [product_service_1.ProductService],
-        exports: [product_service_1.ProductService],
+        controllers: [product_controller_1.ProductController, product_review_controller_1.ProductReviewWriteController],
+        providers: [product_service_1.ProductService, product_review_service_1.ProductReviewService],
+        exports: [product_service_1.ProductService, product_review_service_1.ProductReviewService],
     })
 ], ProductModule);
 
@@ -11090,6 +13563,89 @@ let ProductService = exports.ProductService = class ProductService {
             throw new common_1.BadRequestException(err?.message || 'Failed to delete product');
         }
     }
+    async createProductAsAdmin(createProductDto) {
+        try {
+            const shop = await this.shopModel.findOne({
+                _id: createProductDto.shopId,
+                status: 'active',
+            });
+            if (!shop) {
+                throw new common_1.BadRequestException('Shop not found or inactive');
+            }
+            await this.validateCategories(createProductDto);
+            if (createProductDto.sku) {
+                const existingProduct = await this.productModel.findOne({
+                    sku: createProductDto.sku,
+                });
+                if (existingProduct) {
+                    throw new common_1.BadRequestException('SKU already exists');
+                }
+            }
+            const product = await new this.productModel(createProductDto).save();
+            return await this.getProductById(product.id);
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.BadRequestException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to create product');
+        }
+    }
+    async updateProductAsAdmin(id, updateProductDto) {
+        try {
+            const product = await this.productModel.findById(id);
+            if (!product) {
+                throw new common_1.NotFoundException('Product not found');
+            }
+            if (updateProductDto.sku && updateProductDto.sku !== product.sku) {
+                const existingProduct = await this.productModel.findOne({
+                    sku: updateProductDto.sku,
+                    _id: { $ne: id },
+                });
+                if (existingProduct) {
+                    throw new common_1.BadRequestException('SKU already exists');
+                }
+            }
+            const updatedProduct = await this.productModel
+                .findByIdAndUpdate(id, updateProductDto, { new: true })
+                .populate({
+                path: 'shopId',
+                populate: {
+                    path: 'user',
+                    select: 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt',
+                },
+            })
+                .populate('shopCategoryId', 'id name type')
+                .populate('productCategoryId', 'id name type')
+                .populate('subCategoryId', 'id name type');
+            return this.formatProductResponse(updatedProduct);
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.NotFoundException || err instanceof common_1.BadRequestException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to update product');
+        }
+    }
+    async deleteProductAsAdmin(id) {
+        try {
+            const product = await this.productModel.findById(id);
+            if (!product) {
+                throw new common_1.NotFoundException('Product not found');
+            }
+            await this.productModel.findByIdAndDelete(id);
+            return { message: 'Product deleted successfully' };
+        }
+        catch (err) {
+            console.log(err);
+            if (err instanceof common_1.NotFoundException) {
+                throw err;
+            }
+            throw new common_1.BadRequestException(err?.message || 'Failed to delete product');
+        }
+    }
     async getProductsByShop(shopId, query) {
         try {
             const shopQuery = { ...query, shopId };
@@ -11228,6 +13784,61 @@ exports.ProductService = ProductService = __decorate([
     __param(2, (0, mongoose_1.InjectModel)('Category')),
     __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object])
 ], ProductService);
+
+
+/***/ }),
+
+/***/ "./src/schema/banner/banner.schema.ts":
+/*!********************************************!*\
+  !*** ./src/schema/banner/banner.schema.ts ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BannerModel = exports.BannerSchema = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+exports.BannerSchema = new mongoose_1.Schema({
+    _id: { type: String, default: utils_1.generateStringId },
+    type: {
+        type: String,
+        enum: ['carousel', 'modal'],
+        default: 'carousel',
+        required: true,
+    },
+    title: { type: String, required: true },
+    imageUrl: { type: String, default: '' },
+    linkType: {
+        type: String,
+        enum: ['none', 'shop', 'product', 'category', 'url'],
+        default: 'none',
+    },
+    linkId: { type: String, default: null },
+    linkUrl: { type: String, default: null },
+    sortOrder: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+    subtitle: { type: String, default: '' },
+    discount: { type: String, default: '' },
+    description: { type: String, default: '' },
+    buttonText: { type: String, default: 'Shop Now' },
+    bgColorHex: { type: String, default: '#FFF2EE' },
+    gradientStartHex: { type: String, default: '#FFF2EE' },
+    gradientEndHex: { type: String, default: '#FFE5DC' },
+    showOnce: { type: Boolean, default: false },
+}, {
+    collection: 'banners',
+    timestamps: true,
+});
+exports.BannerSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: (_doc, ret) => {
+        delete ret._id;
+    },
+});
+exports.BannerSchema.index({ type: 1, isActive: 1, sortOrder: 1 });
+exports.BannerModel = (0, mongoose_1.model)('Banner', exports.BannerSchema);
 
 
 /***/ }),
@@ -11654,7 +14265,11 @@ __decorate([
     __metadata("design:type", String)
 ], EcommerceOrder.prototype, "id", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: String, required: true, unique: true }),
+    (0, mongoose_1.Prop)({
+        type: String,
+        unique: true,
+        default: () => `ORD-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    }),
     __metadata("design:type", String)
 ], EcommerceOrder.prototype, "orderNumber", void 0);
 __decorate([
@@ -11764,14 +14379,6 @@ exports.EcommerceOrderSchema.set('toJSON', {
         delete ret._id;
     },
 });
-exports.EcommerceOrderSchema.pre('save', async function (next) {
-    if (!this.orderNumber) {
-        const timestamp = Date.now();
-        const random = Math.floor(Math.random() * 10000);
-        this.orderNumber = `ORD-${timestamp}-${random}`;
-    }
-    next();
-});
 
 
 /***/ }),
@@ -11852,6 +14459,70 @@ exports.LoginHistorySchema.index({ userId: 1, loginAt: -1 });
 exports.LoginHistorySchema.index({ userId: 1, status: 1, loginAt: -1 });
 exports.LoginHistorySchema.index({ loginAt: -1 });
 exports.LoginHistorySchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
+
+
+/***/ }),
+
+/***/ "./src/schema/notification/notification.schema.ts":
+/*!********************************************************!*\
+  !*** ./src/schema/notification/notification.schema.ts ***!
+  \********************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NotificationSchema = exports.Notification = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let Notification = exports.Notification = class Notification {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true, index: true }),
+    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+], Notification.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true }),
+    __metadata("design:type", String)
+], Notification.prototype, "title", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true }),
+    __metadata("design:type", String)
+], Notification.prototype, "body", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        enum: ['order', 'chat', 'promotion', 'system', 'shop'],
+        default: 'system',
+    }),
+    __metadata("design:type", String)
+], Notification.prototype, "type", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false, index: true }),
+    __metadata("design:type", Boolean)
+], Notification.prototype, "read", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], Notification.prototype, "imageUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Object, default: {} }),
+    __metadata("design:type", typeof (_b = typeof Record !== "undefined" && Record) === "function" ? _b : Object)
+], Notification.prototype, "meta", void 0);
+exports.Notification = Notification = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: true })
+], Notification);
+exports.NotificationSchema = mongoose_1.SchemaFactory.createForClass(Notification);
+exports.NotificationSchema.index({ userId: 1, createdAt: -1 });
 
 
 /***/ }),
@@ -12004,6 +14675,47 @@ exports.OtpSchema.set('toJSON', {
         delete ret._id;
     },
 });
+
+
+/***/ }),
+
+/***/ "./src/schema/platform-settings/platform-settings.schema.ts":
+/*!******************************************************************!*\
+  !*** ./src/schema/platform-settings/platform-settings.schema.ts ***!
+  \******************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PlatformSettingsSchema = exports.PlatformSettings = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+let PlatformSettings = exports.PlatformSettings = class PlatformSettings {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, unique: true, default: 'global' }),
+    __metadata("design:type", String)
+], PlatformSettings.prototype, "key", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Boolean, default: false }),
+    __metadata("design:type", Boolean)
+], PlatformSettings.prototype, "maintenanceMode", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], PlatformSettings.prototype, "maintenanceMessage", void 0);
+exports.PlatformSettings = PlatformSettings = __decorate([
+    (0, mongoose_1.Schema)({ collection: 'platform_settings', timestamps: true })
+], PlatformSettings);
+exports.PlatformSettingsSchema = mongoose_1.SchemaFactory.createForClass(PlatformSettings);
 
 
 /***/ }),
@@ -12238,6 +14950,73 @@ exports.PostSchema.index({ isDeleted: 1 });
 
 /***/ }),
 
+/***/ "./src/schema/product-review/product-review.schema.ts":
+/*!************************************************************!*\
+  !*** ./src/schema/product-review/product-review.schema.ts ***!
+  \************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProductReviewSchema = exports.ProductReview = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts");
+let ProductReview = exports.ProductReview = class ProductReview {
+};
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: utils_1.generateStringId }),
+    __metadata("design:type", String)
+], ProductReview.prototype, "id", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true, index: true }),
+    __metadata("design:type", String)
+], ProductReview.prototype, "productId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true, index: true }),
+    __metadata("design:type", String)
+], ProductReview.prototype, "shopId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true, index: true }),
+    __metadata("design:type", String)
+], ProductReview.prototype, "buyerId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, required: true, index: true }),
+    __metadata("design:type", String)
+], ProductReview.prototype, "orderId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Number, required: true, min: 1, max: 5 }),
+    __metadata("design:type", Number)
+], ProductReview.prototype, "rating", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: '' }),
+    __metadata("design:type", String)
+], ProductReview.prototype, "comment", void 0);
+exports.ProductReview = ProductReview = __decorate([
+    (0, mongoose_1.Schema)({ collection: 'product_reviews', timestamps: true })
+], ProductReview);
+exports.ProductReviewSchema = mongoose_1.SchemaFactory.createForClass(ProductReview);
+exports.ProductReviewSchema.index({ orderId: 1, productId: 1 }, { unique: true });
+exports.ProductReviewSchema.index({ shopId: 1, createdAt: -1 });
+exports.ProductReviewSchema.set('toJSON', {
+    virtuals: true,
+    versionKey: false,
+    transform: function (_doc, ret) {
+        delete ret._id;
+    },
+});
+
+
+/***/ }),
+
 /***/ "./src/schema/product/product.schema.ts":
 /*!**********************************************!*\
   !*** ./src/schema/product/product.schema.ts ***!
@@ -12397,8 +15176,13 @@ exports.ShopSchema = new mongoose_1.Schema({
     followers: [{ type: String, ref: 'User' }],
     products: [{ type: String, ref: 'Product' }],
     rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
     reviews: [{ type: String, ref: 'Review' }],
     isVerified: { type: Boolean, default: false },
+    badges: [{
+            type: String,
+            enum: ['top_seller', 'new_arrival', 'premium', 'hot_deal', 'flash_sale', 'trusted', 'best_value', 'staff_pick'],
+        }],
     status: {
         type: String,
         default: 'active',
@@ -12579,6 +15363,40 @@ exports.VillageSchema.set('toJSON', {
     },
 });
 exports.VillageSchema.index({ name: 1 }, { unique: true });
+
+
+/***/ }),
+
+/***/ "./src/shop/dto/admin-update-shop.dto.ts":
+/*!***********************************************!*\
+  !*** ./src/shop/dto/admin-update-shop.dto.ts ***!
+  \***********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminUpdateShopDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const update_shop_dto_1 = __webpack_require__(/*! ./update-shop.dto */ "./src/shop/dto/update-shop.dto.ts");
+class AdminUpdateShopDto extends (0, swagger_1.PartialType)(update_shop_dto_1.UpdateShopDTO) {
+}
+exports.AdminUpdateShopDto = AdminUpdateShopDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Verified badge' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], AdminUpdateShopDto.prototype, "isVerified", void 0);
 
 
 /***/ }),
@@ -12875,6 +15693,18 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateShopDTO.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Badges assigned to the shop by admin',
+        required: false,
+        type: [String],
+        enum: ['top_seller', 'new_arrival', 'premium', 'hot_deal', 'flash_sale', 'trusted', 'best_value', 'staff_pick'],
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], UpdateShopDTO.prototype, "badges", void 0);
 
 
 /***/ }),
@@ -12921,6 +15751,9 @@ let ShopController = exports.ShopController = class ShopController {
     }
     getAllShops() {
         return this.shopService.getAllShops();
+    }
+    getFollowedShops(user) {
+        return this.shopService.getFollowedShops(user.id);
     }
     getShopById(id, user) {
         return this.shopService.getShopById(id, user?.id);
@@ -12984,6 +15817,18 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], ShopController.prototype, "getAllShops", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all shops followed by the current user' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Followed shops retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('following'),
+    __param(0, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ShopController.prototype, "getFollowedShops", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get shop by ID' }),
     (0, swagger_1.ApiResponse)({
@@ -13148,16 +15993,17 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShopService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
 let ShopService = exports.ShopService = class ShopService {
-    constructor(shopModel, userModel) {
+    constructor(shopModel, userModel, shopCategoryModel) {
         this.shopModel = shopModel;
         this.userModel = userModel;
+        this.shopCategoryModel = shopCategoryModel;
     }
     async createShop(createShopDto, userId) {
         try {
@@ -13253,6 +16099,52 @@ let ShopService = exports.ShopService = class ShopService {
             console.log(err);
             throw new common_1.BadRequestException(err?.message || 'Failed to get shops');
         }
+    }
+    async updateShopForAdmin(shopId, dto) {
+        try {
+            const existing = await this.shopModel.findOne({ _id: shopId }).exec();
+            if (!existing) {
+                throw new common_1.NotFoundException('Shop not found');
+            }
+            const patch = {};
+            for (const [key, value] of Object.entries(dto)) {
+                if (value !== undefined) {
+                    patch[key] = value;
+                }
+            }
+            const updatedShop = await this.shopModel
+                .findByIdAndUpdate(shopId, patch, { new: true })
+                .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                .populate('villageId', 'id name')
+                .populate('categoryId', 'id name')
+                .exec();
+            if (updatedShop && updatedShop.user) {
+                const userObj = updatedShop.user;
+                delete userObj.password;
+            }
+            return {
+                shop: updatedShop,
+                message: 'Shop updated successfully',
+            };
+        }
+        catch (err) {
+            if (err instanceof common_1.NotFoundException) {
+                throw err;
+            }
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to update shop');
+        }
+    }
+    async listActiveShopCategories() {
+        const rows = await this.shopCategoryModel
+            .find({ isActive: true })
+            .sort({ name: 1 })
+            .lean()
+            .exec();
+        return rows.map((r) => ({
+            id: String(r._id ?? ''),
+            name: String(r.name ?? ''),
+        }));
     }
     async updateShop(shopId, updateShopDto, userId) {
         try {
@@ -13399,12 +16291,38 @@ let ShopService = exports.ShopService = class ShopService {
             throw new common_1.BadRequestException(err?.message || 'Failed to get shop followers');
         }
     }
+    async getFollowedShops(userId) {
+        try {
+            const shops = await this.shopModel
+                .find({ status: 'active', followers: userId })
+                .populate('user', 'id fullName email phoneNumber userRole userStatus profilePic createdAt updatedAt')
+                .populate('villageId', 'id name')
+                .populate('categoryId', 'id name')
+                .populate('followers', 'id fullName email profilePic')
+                .sort({ createdAt: -1 })
+                .exec();
+            return shops.map(shop => {
+                if (shop.user) {
+                    const userObj = shop.user;
+                    delete userObj.password;
+                }
+                const shopObj = shop.toObject ? shop.toObject() : shop;
+                shopObj.isFollowing = true;
+                return shopObj;
+            });
+        }
+        catch (err) {
+            console.log(err);
+            throw new common_1.BadRequestException(err?.message || 'Failed to get followed shops');
+        }
+    }
 };
 exports.ShopService = ShopService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)('Shop')),
     __param(1, (0, mongoose_1.InjectModel)('User')),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
+    __param(2, (0, mongoose_1.InjectModel)('ShopCategory')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object])
 ], ShopService);
 
 
@@ -14404,12 +17322,18 @@ async function bootstrap() {
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup('swagger', app, document);
-    const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];
-    if (!corsOrigins.includes('http://localhost:4200') && corsOrigins[0] !== '*') {
-        corsOrigins.push('http://localhost:4200');
-    }
+    const corsTokens = (process.env.CORS_ORIGIN?.split(',') ?? [])
+        .map((o) => o.trim())
+        .filter(Boolean);
+    const useReflect = corsTokens.length === 0 ||
+        corsTokens[0] === '*' ||
+        corsTokens[0].toLowerCase() === 'reflect';
+    const origin = useReflect
+        ? true
+        : [...corsTokens, 'http://localhost:4200'].filter((v, i, a) => a.indexOf(v) === i);
+    console.log(`[BOOT] CORS: ${useReflect ? 'reflect Origin (dev/LAN)' : `whitelist (${origin.length} origins)`}`);
     app.enableCors({
-        origin: corsOrigins,
+        origin,
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

@@ -4,11 +4,15 @@ import { User } from 'src/decorators/user.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { EcommerceOrderService } from './ecommerce-order.service';
 import { CreateEcommerceOrderDTO, GetAllOrdersDTO, UpdateOrderStatusDTO } from './dto/ecommerce-order.dto';
+import { ProductReviewService } from 'src/product/product-review.service';
 
 @ApiTags('E-commerce Orders')
 @Controller('orders')
 export class EcommerceOrderController {
-  constructor(private readonly ecommerceOrderService: EcommerceOrderService) {}
+  constructor(
+    private readonly ecommerceOrderService: EcommerceOrderService,
+    private readonly productReviewService: ProductReviewService,
+  ) {}
 
   @ApiOperation({ summary: 'Create a new e-commerce order' })
   @ApiResponse({ status: 201, description: 'Order created successfully' })
@@ -16,8 +20,9 @@ export class EcommerceOrderController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post()
-  async createOrder(@Body() createOrderDTO: CreateEcommerceOrderDTO) {
-    const order = await this.ecommerceOrderService.createOrder(createOrderDTO);
+  async createOrder(@Body() createOrderDTO: CreateEcommerceOrderDTO, @User() user: any) {
+    // Always use the authenticated user's ID as buyerId for security
+    const order = await this.ecommerceOrderService.createOrder({ ...createOrderDTO, buyerId: user.id });
     return {
       success: true,
       message: 'Order created successfully',
@@ -41,6 +46,21 @@ export class EcommerceOrderController {
       success: true,
       message: 'Orders retrieved successfully',
       data: orders,
+    };
+  }
+
+  @ApiOperation({ summary: 'Line items eligible for product review (delivered orders)' })
+  @ApiParam({ name: 'id', description: 'Order ID' })
+  @ApiResponse({ status: 200 })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/reviewable')
+  async getReviewable(@Param('id') orderId: string, @User() user: { id: string }) {
+    const data = await this.productReviewService.getReviewableForOrder(orderId, user.id);
+    return {
+      success: true,
+      message: 'OK',
+      data,
     };
   }
 

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt/dist';
@@ -11,6 +13,7 @@ import { SignupDTO } from './dto/signup.dto';
 import { UpdateProfileDTO } from './dto/update-profile.dto';
 import { LoginDTO } from './dto/login.dto';
 import { AdminLoginDTO } from '../admin/dto/admin-login.dto';
+import { UpdateAdminUserDto } from '../admin/dto/update-admin-user.dto';
 var bcrypt = require('bcryptjs');
 //import * as otpGenerator from 'otp-generator';
 import { OtpTypeEnum } from 'src/enum/otp.enum';
@@ -35,6 +38,7 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectModel('User') private _userModel: Model<User>,
     @InjectModel('Otp') private _otpModel: Model<Otp>,
+    @InjectModel('Product') private _productModel: Model<any>,
     private utilsService: UtilsService,
     private twoFactorService: TwoFactorService,
     private deviceService: DeviceService,
@@ -492,13 +496,14 @@ export class AuthService {
       const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
       
       if (isPasswordValid) {
-        // Generate token
+        // Plain JSON payload (ObjectId must be string or JWT signing/verification can drift)
         const payload = {
-          id: user._id,
+          sub: user._id.toString(),
+          id: user._id.toString(),
           email: user.email,
           userRole: user.userRole,
         };
-        
+
         const token = this.generateToken(payload);
 
         // Return user data without password
@@ -582,36 +587,9 @@ export class AuthService {
       // Get total count
       const total = await this._userModel.countDocuments(filter);
 
-      // Transform users to response format
-      const transformedUsers = users.map((user: any) => {
-        // Handle _id field (Mongoose returns _id, but schema transform converts it to id)
-        const userId = user.id || user._id?.toString() || '';
-        
-        return {
-          id: userId,
-          email: user.email || '',
-          name: user.name || '',
-          fullName: user.fullName || user.name || '',
-          phoneNumber: user.phoneNumber || '',
-          userRole: user.userRole || 'normal',
-          userStatus: user.userStatus || 'active',
-          userLevel: user.userLevel || 'beginner',
-          profilePic: user.profilePic || user.pic || '',
-          pic: user.pic || '',
-          color: user.color || '#3B82F6',
-          village: user.village || '',
-          country: user.country || '',
-          homeAddress: user.homeAddress || '',
-          zipcode: user.zipcode || '',
-          isEmailVerified: user.isEmailVerified || false,
-          isTwoFactorEnabled: user.isTwoFactorEnabled || false,
-          isBiometric: user.isBiometric || false,
-          sellOrders: user.sellOrders || 0,
-          buyOrders: user.buyOrders || 0,
-          createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
-          updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(),
-        };
-      });
+      const transformedUsers = users.map((user: any) =>
+        this.mapOneUserForAdminResponse(user),
+      );
 
       return {
         users: transformedUsers,
@@ -621,6 +599,138 @@ export class AuthService {
       console.error('Error getting all users for admin:', error);
       throw new Error('Failed to retrieve users');
     }
+  }
+
+  /** Active users with role admin (not soft-deleted). */
+  private async countActiveAdmins(): Promise<number> {
+    return this._userModel.countDocuments({
+      userRole: 'admin',
+      isDeleted: false,
+    });
+  }
+
+  mapOneUserForAdminResponse(user: Record<string, any>) {
+    const userId = user.id || user._id?.toString() || '';
+    return {
+      id: userId,
+      email: user.email || '',
+      name: user.name || '',
+      fullName: user.fullName || user.name || '',
+      phoneNumber: user.phoneNumber || '',
+      userRole: user.userRole || 'normal',
+      userStatus: user.userStatus || 'active',
+      userLevel: user.userLevel || 'beginner',
+      profilePic: user.profilePic || user.pic || '',
+      pic: user.pic || '',
+      color: user.color || '#3B82F6',
+      village: user.village || '',
+      country: user.country || '',
+      homeAddress: user.homeAddress || '',
+      zipcode: user.zipcode || '',
+      isEmailVerified: user.isEmailVerified || false,
+      isTwoFactorEnabled: user.isTwoFactorEnabled || false,
+      isBiometric: user.isBiometric || false,
+      sellOrders: user.sellOrders || 0,
+      buyOrders: user.buyOrders || 0,
+      createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
+      updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(),
+    };
+  }
+
+  async updateUserForAdmin(
+    targetId: string,
+    dto: UpdateAdminUserDto,
+  ): Promise<{ success: boolean; message: string; data: Record<string, unknown> }> {
+    const existing = await this._userModel
+      .findOne({ _id: targetId, isDeleted: false })
+      .exec();
+    if (!existing) {
+      throw new NotFoundException('User not found');
+    }
+
+    const wasAdmin = existing.userRole === 'admin';
+    const nextRole = dto.userRole ?? existing.userRole;
+    if (wasAdmin && nextRole !== 'admin') {
+      const admins = await this.countActiveAdmins();
+      if (admins <= 1) {
+        throw new ForbiddenException('Cannot change role of the last admin');
+      }
+    }
+
+    const $set: Record<string, unknown> = {};
+    const keys: (keyof UpdateAdminUserDto)[] = [
+      'fullName',
+      'phoneNumber',
+      'village',
+      'country',
+      'homeAddress',
+      'zipcode',
+      'userLevel',
+      'userStatus',
+      'userRole',
+      'isEmailVerified',
+      'isTwoFactorEnabled',
+      'isBiometric',
+    ];
+    for (const k of keys) {
+      if (dto[k] !== undefined) $set[k] = dto[k];
+    }
+
+    if (Object.keys($set).length === 0) {
+      const lean = existing.toObject();
+      return {
+        success: true,
+        message: 'No changes',
+        data: this.mapOneUserForAdminResponse(lean),
+      };
+    }
+
+    const updated = await this._userModel
+      .findOneAndUpdate({ _id: targetId, isDeleted: false }, { $set }, { new: true })
+      .select('-password -twoFactorSecret')
+      .lean()
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      success: true,
+      message: 'User updated',
+      data: this.mapOneUserForAdminResponse(updated as Record<string, any>),
+    };
+  }
+
+  async deleteUserForAdmin(
+    targetId: string,
+    jwtUser: Record<string, unknown>,
+  ): Promise<{ success: boolean; message: string }> {
+    const requesterId = String(jwtUser['id'] ?? jwtUser['sub'] ?? '');
+    if (requesterId && targetId === requesterId) {
+      throw new BadRequestException('Cannot delete your own account');
+    }
+
+    const existing = await this._userModel
+      .findOne({ _id: targetId, isDeleted: false })
+      .exec();
+    if (!existing) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (existing.userRole === 'admin') {
+      const admins = await this.countActiveAdmins();
+      if (admins <= 1) {
+        throw new ForbiddenException('Cannot delete the last admin');
+      }
+    }
+
+    await this._userModel.updateOne(
+      { _id: targetId },
+      { $set: { isDeleted: true, userStatus: 'inactive' } },
+    );
+
+    return { success: true, message: 'User deleted' };
   }
 
   async forgotPassword(emailDto: EmailDTO) {
@@ -1143,6 +1253,51 @@ export class AuthService {
     } catch (err) {
       console.log(err);
       throw new BadRequestException(err?.message || 'Failed to get OTPs');
+    }
+  }
+
+  // ─── Wishlist ────────────────────────────────────────────────────────────────
+
+  async toggleWishlist(userId: string, productId: string) {
+    try {
+      const user = await this._userModel.findById(userId);
+      if (!user) throw new NotFoundException('User not found');
+
+      const alreadyIn = user.wishlist.includes(productId);
+      if (alreadyIn) {
+        await this._userModel.findByIdAndUpdate(userId, { $pull: { wishlist: productId } });
+      } else {
+        await this._userModel.findByIdAndUpdate(userId, { $addToSet: { wishlist: productId } });
+      }
+
+      const updated = await this._userModel.findById(userId);
+      return {
+        success: true,
+        added: !alreadyIn,
+        message: alreadyIn ? 'Product removed from wishlist' : 'Product added to wishlist',
+        wishlistIds: updated.wishlist,
+      };
+    } catch (err) {
+      throw new BadRequestException(err?.message || 'Failed to toggle wishlist');
+    }
+  }
+
+  async getWishlist(userId: string) {
+    try {
+      const user = await this._userModel.findById(userId);
+      if (!user) throw new NotFoundException('User not found');
+
+      const products = await this._productModel
+        .find({ _id: { $in: user.wishlist } })
+        .exec();
+
+      return {
+        success: true,
+        wishlistIds: user.wishlist,
+        products,
+      };
+    } catch (err) {
+      throw new BadRequestException(err?.message || 'Failed to get wishlist');
     }
   }
 

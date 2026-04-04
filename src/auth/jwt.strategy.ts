@@ -1,21 +1,25 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
+/**
+ * Must use the same JWT secret as JwtModule.registerAsync (ConfigService),
+ * not a stale `process.env` read at import time.
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
-    const secretOrKey = process.env.JWT_SECRET || 'fallback-secret-key-change-in-production';
+  constructor(config: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: secretOrKey,
+      secretOrKey:
+        config.get<string>('JWT_SECRET') ||
+        'fallback-secret-key-change-in-production',
     });
-    console.log('🔑 [JWT STRATEGY] Initialized with secret:', secretOrKey ? 'Secret configured' : 'No secret');
   }
 
-  async validate(payload: any) {
-    console.log('✅ [JWT STRATEGY] Token validated, payload:', payload);
+  async validate(payload: Record<string, unknown>) {
     return payload;
   }
 }

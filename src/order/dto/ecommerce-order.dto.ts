@@ -61,7 +61,8 @@ export class OrderItemDTO {
 }
 
 export class CreateEcommerceOrderDTO {
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
   buyerId: string;
 

@@ -52,6 +52,16 @@ export class ShopController {
     return this.shopService.getAllShops();
   }
 
+  @ApiOperation({ summary: 'Get all shops followed by the current user' })
+  @ApiResponse({ status: 200, description: 'Followed shops retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('following')
+  getFollowedShops(@User() user) {
+    return this.shopService.getFollowedShops(user.id);
+  }
+
   @ApiOperation({ summary: 'Get shop by ID' })
   @ApiResponse({ 
     status: 200, 

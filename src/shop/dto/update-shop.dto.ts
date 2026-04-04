@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsUrl, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsEnum, IsArray } from 'class-validator';
 
 export class UpdateShopDTO {
   @ApiProperty({ description: 'Name of the shop', required: false })
@@ -38,4 +38,15 @@ export class UpdateShopDTO {
   @IsEnum(['active', 'suspended', 'closed'])
   @IsOptional()
   status?: 'active' | 'suspended' | 'closed';
+
+  @ApiProperty({
+    description: 'Badges assigned to the shop by admin',
+    required: false,
+    type: [String],
+    enum: ['top_seller', 'new_arrival', 'premium', 'hot_deal', 'flash_sale', 'trusted', 'best_value', 'staff_pick'],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  badges?: string[];
 }
