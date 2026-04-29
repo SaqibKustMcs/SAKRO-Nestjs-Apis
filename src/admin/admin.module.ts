@@ -7,9 +7,11 @@ import { AdminDashboardService } from './admin-dashboard.service';
 import { AdminProductsController } from './admin-products.controller';
 import { AdminOrdersController } from './admin-orders.controller';
 import { AdminShopsController } from './admin-shops.controller';
+import { AdminNotificationsController } from './admin-notifications.controller';
 import { ProductModule } from 'src/product/product.module';
 import { OrderModule } from 'src/order/order.module';
 import { ShopModule } from 'src/shop/shop.module';
+import { NotificationModule } from 'src/notification/notification.module';
 import { EcommerceOrder, EcommerceOrderSchema } from 'src/schema/ecommerce-order/ecommerce-order.schema';
 import { Order, OrderSchema } from 'src/schema/order/order.schema';
 import { ProductSchema } from 'src/schema/product/product.schema';
@@ -29,6 +31,7 @@ import { UserSchema } from 'src/schema/user/user.schema';
     ProductModule,
     OrderModule,
     ShopModule,
+    NotificationModule,
   ],
   controllers: [
     AdminAuthController,
@@ -37,6 +40,7 @@ import { UserSchema } from 'src/schema/user/user.schema';
     AdminProductsController,
     AdminOrdersController,
     AdminShopsController,
+    AdminNotificationsController,
   ],
   providers: [AdminDashboardService],
 })

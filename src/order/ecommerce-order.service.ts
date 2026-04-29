@@ -84,12 +84,14 @@ export class EcommerceOrderService {
           body: `Order ${saved.orderNumber} — ${saved.currency} ${saved.total.toFixed(0)}`,
           type: 'order',
           meta: { orderId: saved.id, shopId: saved.shopId },
+          pushSource: 'order',
         });
         await this.notificationService.createForUser(saved.buyerId, {
           title: 'Order placed',
           body: `Your order ${saved.orderNumber} was received.`,
           type: 'order',
           meta: { orderId: saved.id, shopId: saved.shopId },
+          pushSource: 'order',
         });
       } catch (notifyErr) {
         console.error('⚠️ Notification create failed (order still saved):', notifyErr);

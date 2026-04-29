@@ -148,6 +148,8 @@ export class Auth2FAController {
         platform: login2FADto.platform || 'Unknown',
         browser: login2FADto.browser,
         location: login2FADto.location,
+        fcmToken: login2FADto.fcmToken,
+        appId: login2FADto.appId,
       };
     }
 

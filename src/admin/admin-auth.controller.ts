@@ -4,6 +4,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from '../auth/auth.service';
 import { AdminLoginDTO } from './dto/admin-login.dto';
 import { AdminLoginResponseDTO } from './dto/admin-login-response.dto';
+import { DeviceInfoDTO } from '../auth/dto/device.dto';
 
 @ApiTags('adminApis')
 @Controller('admin/auth')
@@ -35,11 +36,23 @@ export class AdminAuthController {
     console.log('📦 [ADMIN AUTH CONTROLLER] Email:', loginDto?.email);
     
     // Get IP address from request
-    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+    const ipAddress = req.ip || req.connection?.remoteAddress || 'Unknown';
     console.log('🌐 [ADMIN AUTH CONTROLLER] IP Address:', ipAddress);
 
-    // Call auth service with admin flag
-    const result = await this.authService.adminLogin(loginDto, ipAddress);
+    let deviceInfo: DeviceInfoDTO | undefined;
+    if (loginDto.deviceId && loginDto.deviceName) {
+      deviceInfo = {
+        deviceId: loginDto.deviceId,
+        deviceName: loginDto.deviceName,
+        deviceType: loginDto.deviceType || 'other',
+        platform: loginDto.platform || 'Unknown',
+        browser: loginDto.browser,
+        location: loginDto.location,
+        fcmToken: loginDto.fcmToken,
+      };
+    }
+
+    const result = await this.authService.adminLogin(loginDto, ipAddress, deviceInfo);
     
     return {
       success: true,

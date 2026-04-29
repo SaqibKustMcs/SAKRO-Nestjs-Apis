@@ -1,6 +1,13 @@
 import { Document } from 'mongoose';
 //jknkn
 
+export interface FcmTokenEntry {
+  token: string;
+  appId: string;
+  deviceId: string;
+  updatedAt: Date;
+}
+
 export interface User extends Document {
   id: string;
   email: string;
@@ -36,6 +43,8 @@ export interface User extends Document {
   
   // Biometric Authentication field
   isBiometric: boolean;
+
+  fcmTokens: FcmTokenEntry[];
   
   // Timestamps
   createdAt: Date;

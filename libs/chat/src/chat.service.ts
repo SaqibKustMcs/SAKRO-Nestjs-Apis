@@ -653,18 +653,22 @@ export class ChatService {
             //     tokens: [],
             // };
 
-            let messagePayload: { notification: object, data: object, tokens: string[] } = {
+            const messagePayload: {
+                notification: { title: string; body: string };
+                data: Record<string, string>;
+                tokens: string[];
+            } = {
                 notification: {
                     title: 'chat',
-                    body: payload.message ? payload.message.toString() : ''
+                    body: payload.message ? payload.message.toString() : '',
                 },
                 data: {
-                    type: "CHAT",
+                    type: 'CHAT',
                     title: 'chat',
                     message: payload.message ? payload.message.toString() : '',
-                    eventType: payload.eventType ? payload.eventType : '',
-                    eventId: payload.eventId ? payload.eventId : '',
-                    chatId: payload.chatId,
+                    eventType: String(payload.eventType ?? ''),
+                    eventId: String(payload.eventId ?? ''),
+                    chatId: String(payload.chatId ?? ''),
                     time: payload.time.toUTCString(),
                 },
                 tokens: [],
@@ -729,12 +733,12 @@ export class ChatService {
     async sendJoinNotification(payload: UserChatDTO) {
         try {
             debugger;
-            let messagePayload: { data: object, tokens: string[] } = {
+            const messagePayload: { data: Record<string, string>; tokens: string[] } = {
                 data: {
-                    type: "JOIN",
+                    type: 'JOIN',
                     title: 'Join Chat',
-                    message: "You are invited to join chat",
-                    chatId: payload.chatId,
+                    message: 'You are invited to join chat',
+                    chatId: String(payload.chatId ?? ''),
                     time: new Date().toUTCString(),
                 },
                 tokens: [],

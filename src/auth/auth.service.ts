@@ -30,6 +30,7 @@ import { ChangePasswordDTO } from './dto/change-password.dto';
 import { DeviceService } from './device.service';
 import { LoginHistoryService } from './login-history.service';
 import { DeviceInfoDTO } from './dto/device.dto';
+import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto';
 const GO_CARDLESS_ACTIVE = false;
 
 @Injectable()
@@ -244,7 +245,11 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(otpDto: OtpDTO) {
+  async verifyEmail(
+    otpDto: OtpDTO,
+    deviceInfo?: DeviceInfoDTO,
+    ipAddress?: string,
+  ) {
     try {
       otpDto.email = otpDto?.email?.toLowerCase();
 
@@ -289,13 +294,41 @@ export class AuthService {
 
       const token = await this.generateToken(userData);
 
-      // Removed legacy chat user creation hook
+      const userId = user.id.toString();
+      if (deviceInfo) {
+        try {
+          await this.deviceService.registerDevice(
+            userId,
+            deviceInfo,
+            token.access_token,
+            ipAddress,
+          );
+        } catch (deviceErr) {
+          console.error('verifyEmail: device registration failed', deviceErr);
+        }
+      }
 
       return { status: 'success', token };
     } catch (err) {
       console.log(err);
       throw new BadRequestException(err?.message);
     }
+  }
+
+  /**
+   * Removes the Device row for this JWT (including stored FCM token).
+   * Authorization header must match the stored loginToken (e.g. "Bearer ...").
+   */
+  async logoutCurrentSession(authorizationHeader: string | undefined) {
+    if (!authorizationHeader || !authorizationHeader.trim()) {
+      throw new UnauthorizedException('Missing authorization');
+    }
+    await this.deviceService.removeDeviceByToken(authorizationHeader.trim());
+    return { success: true, message: 'Logged out' };
+  }
+
+  async registerFcmToken(userId: string, dto: RegisterFcmTokenDto) {
+    return this.deviceService.registerFcmTokenForUser(userId, dto);
   }
 
   async login(loginDto: LoginDTO, deviceInfo?: DeviceInfoDTO, ipAddress?: string) {
@@ -467,11 +500,16 @@ export class AuthService {
     }
   }
 
-  async adminLogin(loginDto: AdminLoginDTO, ipAddress?: string) {
+  async adminLogin(
+    loginDto: AdminLoginDTO,
+    ipAddress?: string,
+    deviceInfo?: DeviceInfoDTO,
+  ) {
     console.log('🟢 [AUTH SERVICE] Admin login method called');
     console.log('📧 [AUTH SERVICE] Email:', loginDto?.email);
     console.log('🌐 [AUTH SERVICE] IP Address:', ipAddress);
-    
+    console.log('📱 [AUTH SERVICE] Device info for FCM:', deviceInfo ? 'YES' : 'NO');
+
     try {
       // Normalize email
       const normalizedEmail = loginDto.email.toLowerCase().trim();
@@ -492,23 +530,39 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials or insufficient permissions');
       }
 
+      const userId = user._id.toString();
+
       // Verify password
       const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
       
       if (isPasswordValid) {
         // Plain JSON payload (ObjectId must be string or JWT signing/verification can drift)
         const payload = {
-          sub: user._id.toString(),
-          id: user._id.toString(),
+          sub: userId,
+          id: userId,
           email: user.email,
           userRole: user.userRole,
         };
 
         const token = this.generateToken(payload);
 
+        if (deviceInfo) {
+          try {
+            await this.deviceService.registerDevice(
+              userId,
+              deviceInfo,
+              token.access_token,
+              ipAddress,
+            );
+            console.log('✅ [AUTH SERVICE] Admin device + FCM registered');
+          } catch (deviceErr) {
+            console.error('❌ [AUTH SERVICE] Admin device registration failed:', deviceErr);
+          }
+        }
+
         // Return user data without password
         const userData = {
-          id: user._id.toString(),
+          id: userId,
           email: user.email,
           fullName: user.fullName || user.name,
           userRole: user.userRole,

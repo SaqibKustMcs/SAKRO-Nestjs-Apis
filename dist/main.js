@@ -2,6 +2,46 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./libs/chat/src/auth/firebaseAdmin.ts":
+/*!*********************************************!*\
+  !*** ./libs/chat/src/auth/firebaseAdmin.ts ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.defaultApp = void 0;
+const fs = __webpack_require__(/*! fs */ "fs");
+const path = __webpack_require__(/*! path */ "path");
+const admin = __webpack_require__(/*! firebase-admin */ "firebase-admin");
+function resolveServiceAccountPath() {
+    const fromEnv = process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim();
+    if (fromEnv) {
+        return path.isAbsolute(fromEnv) ? fromEnv : path.resolve(process.cwd(), fromEnv);
+    }
+    return path.join(process.cwd(), 'jhamat-app-firebase-adminsdk-fbsvc-686f30ea30.json');
+}
+function createOrGetApp() {
+    if (admin.apps.length > 0) {
+        return admin.app();
+    }
+    const serviceAccountPath = resolveServiceAccountPath();
+    if (!fs.existsSync(serviceAccountPath)) {
+        throw new Error(`[Firebase Admin] Service account file not found: ${serviceAccountPath}. ` +
+            'Add jhamat-app-firebase-adminsdk-fbsvc-686f30ea30.json to the API project root, or set FIREBASE_SERVICE_ACCOUNT_PATH.');
+    }
+    const raw = fs.readFileSync(serviceAccountPath, 'utf8');
+    const serviceAccount = JSON.parse(raw);
+    return admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+    });
+}
+const defaultApp = createOrGetApp();
+exports.defaultApp = defaultApp;
+
+
+/***/ }),
+
 /***/ "./src/admin/admin-auth.controller.ts":
 /*!********************************************!*\
   !*** ./src/admin/admin-auth.controller.ts ***!
@@ -37,9 +77,21 @@ let AdminAuthController = exports.AdminAuthController = class AdminAuthControlle
     async adminLogin(loginDto, req) {
         console.log('🔵 [ADMIN AUTH CONTROLLER] Admin login request received');
         console.log('📦 [ADMIN AUTH CONTROLLER] Email:', loginDto?.email);
-        const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+        const ipAddress = req.ip || req.connection?.remoteAddress || 'Unknown';
         console.log('🌐 [ADMIN AUTH CONTROLLER] IP Address:', ipAddress);
-        const result = await this.authService.adminLogin(loginDto, ipAddress);
+        let deviceInfo;
+        if (loginDto.deviceId && loginDto.deviceName) {
+            deviceInfo = {
+                deviceId: loginDto.deviceId,
+                deviceName: loginDto.deviceName,
+                deviceType: loginDto.deviceType || 'other',
+                platform: loginDto.platform || 'Unknown',
+                browser: loginDto.browser,
+                location: loginDto.location,
+                fcmToken: loginDto.fcmToken,
+            };
+        }
+        const result = await this.authService.adminLogin(loginDto, ipAddress, deviceInfo);
         return {
             success: true,
             message: 'Admin login successful',
@@ -375,6 +427,99 @@ exports.AdminDashboardService = AdminDashboardService = __decorate([
     __param(4, (0, mongoose_1.InjectModel)('User')),
     __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object])
 ], AdminDashboardService);
+
+
+/***/ }),
+
+/***/ "./src/admin/admin-notifications.controller.ts":
+/*!*****************************************************!*\
+  !*** ./src/admin/admin-notifications.controller.ts ***!
+  \*****************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdminNotificationsController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/jwt-auth.guard */ "./src/auth/jwt-auth.guard.ts");
+const admin_role_guard_1 = __webpack_require__(/*! ../auth/admin-role.guard */ "./src/auth/admin-role.guard.ts");
+const notification_service_1 = __webpack_require__(/*! ../notification/notification.service */ "./src/notification/notification.service.ts");
+const create_admin_notification_dto_1 = __webpack_require__(/*! ./dto/create-admin-notification.dto */ "./src/admin/dto/create-admin-notification.dto.ts");
+let AdminNotificationsController = exports.AdminNotificationsController = class AdminNotificationsController {
+    constructor(notificationService) {
+        this.notificationService = notificationService;
+    }
+    async list(userId, type, search, limit, offset) {
+        const l = Math.min(parseInt(limit ?? '50', 10) || 50, 100);
+        const o = parseInt(offset ?? '0', 10) || 0;
+        const data = await this.notificationService.listAdmin(l, o, {
+            userId: userId?.trim(),
+            type: type?.trim(),
+            search: search?.trim(),
+        });
+        return { success: true, data };
+    }
+    async create(dto) {
+        const doc = await this.notificationService.createForUser(dto.userId.trim(), {
+            title: dto.title.trim(),
+            body: dto.body.trim(),
+            type: dto.type,
+            imageUrl: dto.imageUrl?.trim(),
+            pushSource: 'admin',
+        });
+        const plain = doc && typeof doc.toObject === 'function'
+            ? doc.toObject()
+            : doc;
+        return { success: true, data: plain };
+    }
+};
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'List notifications (admin)' }),
+    (0, swagger_1.ApiQuery)({ name: 'userId', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'type', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'offset', required: false }),
+    __param(0, (0, common_1.Query)('userId')),
+    __param(1, (0, common_1.Query)('type')),
+    __param(2, (0, common_1.Query)('search')),
+    __param(3, (0, common_1.Query)('limit')),
+    __param(4, (0, common_1.Query)('offset')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], AdminNotificationsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create notification for a user (admin)' }),
+    (0, swagger_1.ApiBody)({ type: create_admin_notification_dto_1.CreateAdminNotificationDto }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof create_admin_notification_dto_1.CreateAdminNotificationDto !== "undefined" && create_admin_notification_dto_1.CreateAdminNotificationDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], AdminNotificationsController.prototype, "create", null);
+exports.AdminNotificationsController = AdminNotificationsController = __decorate([
+    (0, swagger_1.ApiTags)('adminApis'),
+    (0, common_1.Controller)('admin/notifications'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof notification_service_1.NotificationService !== "undefined" && notification_service_1.NotificationService) === "function" ? _a : Object])
+], AdminNotificationsController);
 
 
 /***/ }),
@@ -886,9 +1031,11 @@ const admin_dashboard_service_1 = __webpack_require__(/*! ./admin-dashboard.serv
 const admin_products_controller_1 = __webpack_require__(/*! ./admin-products.controller */ "./src/admin/admin-products.controller.ts");
 const admin_orders_controller_1 = __webpack_require__(/*! ./admin-orders.controller */ "./src/admin/admin-orders.controller.ts");
 const admin_shops_controller_1 = __webpack_require__(/*! ./admin-shops.controller */ "./src/admin/admin-shops.controller.ts");
+const admin_notifications_controller_1 = __webpack_require__(/*! ./admin-notifications.controller */ "./src/admin/admin-notifications.controller.ts");
 const product_module_1 = __webpack_require__(/*! src/product/product.module */ "./src/product/product.module.ts");
 const order_module_1 = __webpack_require__(/*! src/order/order.module */ "./src/order/order.module.ts");
 const shop_module_1 = __webpack_require__(/*! src/shop/shop.module */ "./src/shop/shop.module.ts");
+const notification_module_1 = __webpack_require__(/*! src/notification/notification.module */ "./src/notification/notification.module.ts");
 const ecommerce_order_schema_1 = __webpack_require__(/*! src/schema/ecommerce-order/ecommerce-order.schema */ "./src/schema/ecommerce-order/ecommerce-order.schema.ts");
 const order_schema_1 = __webpack_require__(/*! src/schema/order/order.schema */ "./src/schema/order/order.schema.ts");
 const product_schema_1 = __webpack_require__(/*! src/schema/product/product.schema */ "./src/schema/product/product.schema.ts");
@@ -909,6 +1056,7 @@ exports.AdminModule = AdminModule = __decorate([
             product_module_1.ProductModule,
             order_module_1.OrderModule,
             shop_module_1.ShopModule,
+            notification_module_1.NotificationModule,
         ],
         controllers: [
             admin_auth_controller_1.AdminAuthController,
@@ -917,6 +1065,7 @@ exports.AdminModule = AdminModule = __decorate([
             admin_products_controller_1.AdminProductsController,
             admin_orders_controller_1.AdminOrdersController,
             admin_shops_controller_1.AdminShopsController,
+            admin_notifications_controller_1.AdminNotificationsController,
         ],
         providers: [admin_dashboard_service_1.AdminDashboardService],
     })
@@ -1038,6 +1187,47 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], AdminLoginDTO.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminLoginDTO.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminLoginDTO.prototype, "deviceName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], AdminLoginDTO.prototype, "deviceType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminLoginDTO.prototype, "platform", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminLoginDTO.prototype, "browser", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminLoginDTO.prototype, "location", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, description: 'FCM token for push notifications (e.g. admin PWA or companion app)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminLoginDTO.prototype, "fcmToken", void 0);
 
 
 /***/ }),
@@ -1252,6 +1442,65 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Total count of users' }),
     __metadata("design:type", Number)
 ], AdminUsersResponseDTO.prototype, "total", void 0);
+
+
+/***/ }),
+
+/***/ "./src/admin/dto/create-admin-notification.dto.ts":
+/*!********************************************************!*\
+  !*** ./src/admin/dto/create-admin-notification.dto.ts ***!
+  \********************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateAdminNotificationDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const NOTIFICATION_TYPES = ['order', 'chat', 'promotion', 'system', 'shop'];
+class CreateAdminNotificationDto {
+}
+exports.CreateAdminNotificationDto = CreateAdminNotificationDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Target user id' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateAdminNotificationDto.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateAdminNotificationDto.prototype, "title", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateAdminNotificationDto.prototype, "body", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: NOTIFICATION_TYPES }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)([...NOTIFICATION_TYPES]),
+    __metadata("design:type", String)
+], CreateAdminNotificationDto.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateAdminNotificationDto.prototype, "imageUrl", void 0);
 
 
 /***/ }),
@@ -1660,6 +1909,8 @@ let Auth2FAController = exports.Auth2FAController = class Auth2FAController {
                 platform: login2FADto.platform || 'Unknown',
                 browser: login2FADto.browser,
                 location: login2FADto.location,
+                fcmToken: login2FADto.fcmToken,
+                appId: login2FADto.appId,
             };
         }
         const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
@@ -1923,7 +2174,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -1941,6 +2192,7 @@ const user_decorator_1 = __webpack_require__(/*! src/decorators/user.decorator *
 const biometric_dto_1 = __webpack_require__(/*! ./dto/biometric.dto */ "./src/auth/dto/biometric.dto.ts");
 const change_password_dto_1 = __webpack_require__(/*! ./dto/change-password.dto */ "./src/auth/dto/change-password.dto.ts");
 const device_dto_1 = __webpack_require__(/*! ./dto/device.dto */ "./src/auth/dto/device.dto.ts");
+const register_fcm_token_dto_1 = __webpack_require__(/*! ./dto/register-fcm-token.dto */ "./src/auth/dto/register-fcm-token.dto.ts");
 const dev_otp_response_dto_1 = __webpack_require__(/*! ./dto/dev-otp-response.dto */ "./src/auth/dto/dev-otp-response.dto.ts");
 const login_history_dto_1 = __webpack_require__(/*! ./dto/login-history.dto */ "./src/auth/dto/login-history.dto.ts");
 const login_history_service_1 = __webpack_require__(/*! ./login-history.service */ "./src/auth/login-history.service.ts");
@@ -1955,8 +2207,21 @@ let AuthController = exports.AuthController = class AuthController {
     isEmailExists(emailDto) {
         return this.authService.isEmailExists(emailDto);
     }
-    verifyEmail(otpDto) {
-        return this.authService.verifyEmail(otpDto);
+    verifyEmail(otpDto, req) {
+        let deviceInfo;
+        if (otpDto.deviceId && otpDto.deviceName) {
+            deviceInfo = {
+                deviceId: otpDto.deviceId,
+                deviceName: otpDto.deviceName,
+                deviceType: otpDto.deviceType || 'other',
+                platform: otpDto.platform || 'Unknown',
+                browser: otpDto.browser,
+                location: otpDto.location,
+                fcmToken: otpDto.fcmToken,
+            };
+        }
+        const ipAddress = req.ip || req.connection?.remoteAddress || 'Unknown';
+        return this.authService.verifyEmail(otpDto, deviceInfo, ipAddress);
     }
     resendOtp(emailDto) {
         return this.authService.resendOtp(emailDto);
@@ -1976,6 +2241,8 @@ let AuthController = exports.AuthController = class AuthController {
                 platform: loginDto.platform || 'Unknown',
                 browser: loginDto.browser,
                 location: loginDto.location,
+                fcmToken: loginDto.fcmToken,
+                appId: loginDto.appId,
             };
             console.log('📱 [AUTH CONTROLLER] Device info extracted:', JSON.stringify(deviceInfo, null, 2));
         }
@@ -2008,6 +2275,17 @@ let AuthController = exports.AuthController = class AuthController {
     }
     changePassword(changePasswordDto, user) {
         return this.authService.changePassword(user.id, changePasswordDto);
+    }
+    logout(req) {
+        const auth = req.headers?.authorization;
+        return this.authService.logoutCurrentSession(auth);
+    }
+    registerFcmToken(dto, user) {
+        const uid = user?.id ?? user?.sub ?? user?._id;
+        if (!uid) {
+            throw new common_1.UnauthorizedException('Invalid token');
+        }
+        return this.authService.registerFcmToken(String(uid), dto);
     }
     getUserDevices(user, currentDeviceId) {
         return this.authService.getUserDevices(user.id, currentDeviceId);
@@ -2066,15 +2344,16 @@ __decorate([
 __decorate([
     (0, common_1.Post)('verifyEmail'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof otp_dto_1.OtpDTO !== "undefined" && otp_dto_1.OtpDTO) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [typeof (_e = typeof otp_dto_1.OtpDTO !== "undefined" && otp_dto_1.OtpDTO) === "function" ? _e : Object, typeof (_f = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _f : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyEmail", null);
 __decorate([
     (0, common_1.Post)('resendOtp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _f : Object]),
+    __metadata("design:paramtypes", [typeof (_g = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _g : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "resendOtp", null);
 __decorate([
@@ -2082,21 +2361,21 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_g = typeof login_dto_1.LoginDTO !== "undefined" && login_dto_1.LoginDTO) === "function" ? _g : Object, typeof (_h = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _h : Object]),
+    __metadata("design:paramtypes", [typeof (_h = typeof login_dto_1.LoginDTO !== "undefined" && login_dto_1.LoginDTO) === "function" ? _h : Object, typeof (_j = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _j : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('forgotPassword'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_j = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _j : Object]),
+    __metadata("design:paramtypes", [typeof (_k = typeof email_dto_1.EmailDTO !== "undefined" && email_dto_1.EmailDTO) === "function" ? _k : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "forgotPassword", null);
 __decorate([
     (0, common_1.Post)('verifyOtpForForgotPassword'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_k = typeof otp_dto_1.OtpDTO !== "undefined" && otp_dto_1.OtpDTO) === "function" ? _k : Object]),
+    __metadata("design:paramtypes", [typeof (_l = typeof otp_dto_1.OtpDTO !== "undefined" && otp_dto_1.OtpDTO) === "function" ? _l : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyOtpForForgotPassword", null);
 __decorate([
@@ -2106,7 +2385,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_l = typeof password_dto_1.PasswordDTO !== "undefined" && password_dto_1.PasswordDTO) === "function" ? _l : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_m = typeof password_dto_1.PasswordDTO !== "undefined" && password_dto_1.PasswordDTO) === "function" ? _m : Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "resetPassword", null);
 __decorate([
@@ -2125,7 +2404,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_m = typeof update_profile_dto_1.UpdateProfileDTO !== "undefined" && update_profile_dto_1.UpdateProfileDTO) === "function" ? _m : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_o = typeof update_profile_dto_1.UpdateProfileDTO !== "undefined" && update_profile_dto_1.UpdateProfileDTO) === "function" ? _o : Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "updateProfile", null);
 __decorate([
@@ -2143,7 +2422,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_o = typeof biometric_dto_1.UpdateBiometricStatusDTO !== "undefined" && biometric_dto_1.UpdateBiometricStatusDTO) === "function" ? _o : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_p = typeof biometric_dto_1.UpdateBiometricStatusDTO !== "undefined" && biometric_dto_1.UpdateBiometricStatusDTO) === "function" ? _p : Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "updateBiometricStatus", null);
 __decorate([
@@ -2161,9 +2440,34 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_p = typeof change_password_dto_1.ChangePasswordDTO !== "undefined" && change_password_dto_1.ChangePasswordDTO) === "function" ? _p : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_q = typeof change_password_dto_1.ChangePasswordDTO !== "undefined" && change_password_dto_1.ChangePasswordDTO) === "function" ? _q : Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "changePassword", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Logout current session: remove device record and FCM token for this JWT' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Session cleared on server' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('logout'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_r = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _r : Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "logout", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({
+        summary: 'Register or refresh FCM token after login (when token was not ready during login/signup)',
+    }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('register-fcm-token'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.User)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_s = typeof register_fcm_token_dto_1.RegisterFcmTokenDto !== "undefined" && register_fcm_token_dto_1.RegisterFcmTokenDto) === "function" ? _s : Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "registerFcmToken", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all user devices' }),
     (0, swagger_1.ApiResponse)({
@@ -2195,7 +2499,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_q = typeof device_dto_1.LogoutDeviceDTO !== "undefined" && device_dto_1.LogoutDeviceDTO) === "function" ? _q : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_t = typeof device_dto_1.LogoutDeviceDTO !== "undefined" && device_dto_1.LogoutDeviceDTO) === "function" ? _t : Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "logoutDevice", null);
 __decorate([
@@ -2242,7 +2546,7 @@ __decorate([
     __param(0, (0, user_decorator_1.User)()),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_r = typeof login_history_dto_1.GetLoginHistoryDTO !== "undefined" && login_history_dto_1.GetLoginHistoryDTO) === "function" ? _r : Object]),
+    __metadata("design:paramtypes", [Object, typeof (_u = typeof login_history_dto_1.GetLoginHistoryDTO !== "undefined" && login_history_dto_1.GetLoginHistoryDTO) === "function" ? _u : Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getLoginHistory", null);
 __decorate([
@@ -2562,7 +2866,7 @@ let AuthService = exports.AuthService = class AuthService {
             throw new common_1.BadRequestException(err?.message);
         }
     }
-    async verifyEmail(otpDto) {
+    async verifyEmail(otpDto, deviceInfo, ipAddress) {
         try {
             otpDto.email = otpDto?.email?.toLowerCase();
             const user = await this._userModel.findOne({ email: otpDto?.email, isDeleted: false, });
@@ -2592,12 +2896,31 @@ let AuthService = exports.AuthService = class AuthService {
             userData = JSON.parse(JSON.stringify(userData));
             delete userData.password;
             const token = await this.generateToken(userData);
+            const userId = user.id.toString();
+            if (deviceInfo) {
+                try {
+                    await this.deviceService.registerDevice(userId, deviceInfo, token.access_token, ipAddress);
+                }
+                catch (deviceErr) {
+                    console.error('verifyEmail: device registration failed', deviceErr);
+                }
+            }
             return { status: 'success', token };
         }
         catch (err) {
             console.log(err);
             throw new common_1.BadRequestException(err?.message);
         }
+    }
+    async logoutCurrentSession(authorizationHeader) {
+        if (!authorizationHeader || !authorizationHeader.trim()) {
+            throw new common_1.UnauthorizedException('Missing authorization');
+        }
+        await this.deviceService.removeDeviceByToken(authorizationHeader.trim());
+        return { success: true, message: 'Logged out' };
+    }
+    async registerFcmToken(userId, dto) {
+        return this.deviceService.registerFcmTokenForUser(userId, dto);
     }
     async login(loginDto, deviceInfo, ipAddress) {
         console.log('🟢 [AUTH SERVICE] Login method called');
@@ -2738,10 +3061,11 @@ let AuthService = exports.AuthService = class AuthService {
             throw new common_1.UnauthorizedException(err?.message);
         }
     }
-    async adminLogin(loginDto, ipAddress) {
+    async adminLogin(loginDto, ipAddress, deviceInfo) {
         console.log('🟢 [AUTH SERVICE] Admin login method called');
         console.log('📧 [AUTH SERVICE] Email:', loginDto?.email);
         console.log('🌐 [AUTH SERVICE] IP Address:', ipAddress);
+        console.log('📱 [AUTH SERVICE] Device info for FCM:', deviceInfo ? 'YES' : 'NO');
         try {
             const normalizedEmail = loginDto.email.toLowerCase().trim();
             if (!normalizedEmail) {
@@ -2757,17 +3081,27 @@ let AuthService = exports.AuthService = class AuthService {
                 console.log('❌ [AUTH SERVICE] Admin user not found or not an admin');
                 throw new common_1.UnauthorizedException('Invalid credentials or insufficient permissions');
             }
+            const userId = user._id.toString();
             const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
             if (isPasswordValid) {
                 const payload = {
-                    sub: user._id.toString(),
-                    id: user._id.toString(),
+                    sub: userId,
+                    id: userId,
                     email: user.email,
                     userRole: user.userRole,
                 };
                 const token = this.generateToken(payload);
+                if (deviceInfo) {
+                    try {
+                        await this.deviceService.registerDevice(userId, deviceInfo, token.access_token, ipAddress);
+                        console.log('✅ [AUTH SERVICE] Admin device + FCM registered');
+                    }
+                    catch (deviceErr) {
+                        console.error('❌ [AUTH SERVICE] Admin device registration failed:', deviceErr);
+                    }
+                }
                 const userData = {
-                    id: user._id.toString(),
+                    id: userId,
                     email: user.email,
                     fullName: user.fullName || user.name,
                     userRole: user.userRole,
@@ -3426,15 +3760,17 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DeviceService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const DEFAULT_FCM_APP_ID = 'cloth_shop_flutter';
 let DeviceService = exports.DeviceService = class DeviceService {
-    constructor(_deviceModel) {
+    constructor(_deviceModel, _userModel) {
         this._deviceModel = _deviceModel;
+        this._userModel = _userModel;
     }
     async registerDevice(userId, deviceInfo, loginToken, ipAddress) {
         try {
@@ -3467,7 +3803,14 @@ let DeviceService = exports.DeviceService = class DeviceService {
                 existingDevice.location = deviceInfo.location || null;
                 existingDevice.lastActive = new Date();
                 existingDevice.loginToken = loginToken;
+                if (deviceInfo.fcmToken !== undefined) {
+                    existingDevice.fcmToken =
+                        deviceInfo.fcmToken && deviceInfo.fcmToken.length > 0
+                            ? deviceInfo.fcmToken
+                            : null;
+                }
                 await existingDevice.save();
+                await this.syncUserFcmAfterDeviceSave(userId, deviceInfo, existingDevice);
                 console.log('✅ Device updated successfully');
                 return existingDevice;
             }
@@ -3483,8 +3826,12 @@ let DeviceService = exports.DeviceService = class DeviceService {
                 location: deviceInfo.location || null,
                 lastActive: new Date(),
                 loginToken,
+                fcmToken: deviceInfo.fcmToken && deviceInfo.fcmToken.length > 0
+                    ? deviceInfo.fcmToken
+                    : null,
             });
             console.log('✅ Device created successfully:', newDevice._id);
+            await this.syncUserFcmAfterDeviceSave(userId, deviceInfo, newDevice);
             return newDevice;
         }
         catch (err) {
@@ -3518,8 +3865,90 @@ let DeviceService = exports.DeviceService = class DeviceService {
             console.error('Error updating device activity:', err);
         }
     }
+    async syncUserFcmAfterDeviceSave(userId, deviceInfo, saved) {
+        const appId = (deviceInfo.appId?.trim() || DEFAULT_FCM_APP_ID);
+        let effective;
+        if (deviceInfo.fcmToken !== undefined) {
+            const raw = deviceInfo.fcmToken;
+            effective =
+                typeof raw === 'string' && raw.length > 0 ? raw : null;
+        }
+        else {
+            const t = saved.fcmToken;
+            effective =
+                t && String(t).length > 0 ? String(t) : null;
+        }
+        if (effective) {
+            await this.applyUserFcmUpsert(userId, deviceInfo.deviceId, appId, effective);
+        }
+        else {
+            await this.applyUserFcmPull(userId, deviceInfo.deviceId, appId);
+        }
+    }
+    async applyUserFcmUpsert(userId, deviceId, appId, token) {
+        const now = new Date();
+        const updated = await this._userModel.updateOne({
+            _id: userId,
+            fcmTokens: { $elemMatch: { deviceId, appId } },
+        }, {
+            $set: {
+                'fcmTokens.$.token': token,
+                'fcmTokens.$.updatedAt': now,
+            },
+        });
+        if (updated.matchedCount === 0) {
+            await this._userModel.updateOne({ _id: userId }, {
+                $push: {
+                    fcmTokens: {
+                        token,
+                        appId,
+                        deviceId,
+                        updatedAt: now,
+                    },
+                },
+            });
+        }
+    }
+    async applyUserFcmPull(userId, deviceId, appId) {
+        await this._userModel.updateOne({ _id: userId }, { $pull: { fcmTokens: { deviceId, appId } } });
+    }
+    async registerFcmTokenForUser(userId, dto) {
+        const appId = dto.appId?.trim() || DEFAULT_FCM_APP_ID;
+        const device = await this._deviceModel.findOne({
+            userId,
+            deviceId: dto.deviceId,
+        });
+        if (device) {
+            device.fcmToken = dto.fcmToken;
+            await device.save();
+            const deviceInfo = {
+                deviceId: device.deviceId,
+                deviceName: device.deviceName,
+                deviceType: device.deviceType,
+                platform: device.platform,
+                browser: device.browser,
+                location: device.location ?? undefined,
+                fcmToken: dto.fcmToken,
+                appId,
+            };
+            await this.syncUserFcmAfterDeviceSave(userId, deviceInfo, device);
+        }
+        else {
+            await this.applyUserFcmUpsert(userId, dto.deviceId, appId, dto.fcmToken);
+        }
+        return { success: true };
+    }
+    async pullUserFcmByHardwareDeviceId(userId, hardwareDeviceId) {
+        await this._userModel.updateOne({ _id: userId }, { $pull: { fcmTokens: { deviceId: hardwareDeviceId } } });
+    }
     async logoutDevice(userId, deviceId) {
         try {
+            const existing = await this._deviceModel
+                .findOne({ userId, _id: deviceId })
+                .lean();
+            if (existing?.deviceId) {
+                await this.pullUserFcmByHardwareDeviceId(userId, existing.deviceId);
+            }
             const result = await this._deviceModel.deleteOne({
                 userId,
                 _id: deviceId,
@@ -3537,6 +3966,13 @@ let DeviceService = exports.DeviceService = class DeviceService {
             if (currentDeviceId) {
                 query._id = { $ne: currentDeviceId };
             }
+            const toRemove = await this._deviceModel.find(query).select('deviceId').lean();
+            const hardwareIds = [
+                ...new Set(toRemove.map((d) => d.deviceId).filter(Boolean)),
+            ];
+            if (hardwareIds.length > 0) {
+                await this._userModel.updateOne({ _id: userId }, { $pull: { fcmTokens: { deviceId: { $in: hardwareIds } } } });
+            }
             const result = await this._deviceModel.deleteMany(query);
             return result.deletedCount;
         }
@@ -3547,6 +3983,10 @@ let DeviceService = exports.DeviceService = class DeviceService {
     }
     async removeDeviceByToken(loginToken) {
         try {
+            const device = await this._deviceModel.findOne({ loginToken }).lean();
+            if (device?.userId && device.deviceId) {
+                await this.pullUserFcmByHardwareDeviceId(String(device.userId), device.deviceId);
+            }
             await this._deviceModel.deleteOne({ loginToken });
         }
         catch (err) {
@@ -3571,7 +4011,8 @@ let DeviceService = exports.DeviceService = class DeviceService {
 exports.DeviceService = DeviceService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)('Device')),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __param(1, (0, mongoose_1.InjectModel)('User')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
 ], DeviceService);
 
 
@@ -3673,6 +4114,18 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], Login2FADTO.prototype, "location", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, description: 'FCM token for push notifications' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "fcmToken", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, example: 'cloth_shop_flutter' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], Login2FADTO.prototype, "appId", void 0);
 class Enable2FAResponseDTO {
 }
 exports.Enable2FAResponseDTO = Enable2FAResponseDTO;
@@ -3980,6 +4433,25 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], DeviceInfoDTO.prototype, "location", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Firebase Cloud Messaging token for this device',
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "fcmToken", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Client app id (e.g. cloth_shop_flutter) for multi-app FCM routing',
+        example: 'cloth_shop_flutter',
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DeviceInfoDTO.prototype, "appId", void 0);
 class LogoutDeviceDTO {
 }
 exports.LogoutDeviceDTO = LogoutDeviceDTO;
@@ -4208,6 +4680,18 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], LoginDTO.prototype, "location", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, description: 'FCM token for push notifications' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "fcmToken", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, example: 'cloth_shop_flutter' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LoginDTO.prototype, "appId", void 0);
 
 
 /***/ }),
@@ -4231,17 +4715,69 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OtpDTO = void 0;
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class OtpDTO {
 }
 exports.OtpDTO = OtpDTO;
 __decorate([
     (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], OtpDTO.prototype, "email", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], OtpDTO.prototype, "otp", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "deviceName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "deviceType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "platform", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "browser", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "location", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "fcmToken", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, example: 'cloth_shop_flutter' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], OtpDTO.prototype, "appId", void 0);
 
 
 /***/ }),
@@ -4272,6 +4808,51 @@ __decorate([
     (0, swagger_1.ApiProperty)(),
     __metadata("design:type", String)
 ], PasswordDTO.prototype, "password", void 0);
+
+
+/***/ }),
+
+/***/ "./src/auth/dto/register-fcm-token.dto.ts":
+/*!************************************************!*\
+  !*** ./src/auth/dto/register-fcm-token.dto.ts ***!
+  \************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterFcmTokenDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class RegisterFcmTokenDto {
+}
+exports.RegisterFcmTokenDto = RegisterFcmTokenDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Hardware / app-stable device id', example: 'abc-uuid' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterFcmTokenDto.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'FCM registration token' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterFcmTokenDto.prototype, "fcmToken", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, example: 'cloth_shop_flutter' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterFcmTokenDto.prototype, "appId", void 0);
 
 
 /***/ }),
@@ -8289,6 +8870,162 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 /***/ }),
 
+/***/ "./src/notification/fcm-push.service.ts":
+/*!**********************************************!*\
+  !*** ./src/notification/fcm-push.service.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var FcmPushService_1;
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FcmPushService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const mongoose_3 = __webpack_require__(/*! mongoose */ "mongoose");
+const firebaseAdmin_1 = __webpack_require__(/*! ../../libs/chat/src/auth/firebaseAdmin */ "./libs/chat/src/auth/firebaseAdmin.ts");
+const FCM_MULTICAST_LIMIT = 500;
+let FcmPushService = exports.FcmPushService = FcmPushService_1 = class FcmPushService {
+    constructor(deviceModel, userModel) {
+        this.deviceModel = deviceModel;
+        this.userModel = userModel;
+        this.logger = new common_1.Logger(FcmPushService_1.name);
+    }
+    async sendToUser(userId, payload) {
+        const tokens = await this.collectTokensForUser(userId);
+        if (tokens.length === 0) {
+            this.logger.warn(`No FCM tokens for userId=${userId}. User must open the app and allow notifications (device row with fcmToken).`);
+            return { sent: 0, failures: 0 };
+        }
+        const baseData = {
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        };
+        for (const [k, v] of Object.entries(payload.data ?? {})) {
+            baseData[k] = v == null ? '' : String(v);
+        }
+        if (baseData.category == null || baseData.category === '') {
+            baseData.category = 'system';
+        }
+        if (baseData.type == null || baseData.type === '') {
+            baseData.type = 'system';
+        }
+        let totalSent = 0;
+        let totalFailures = 0;
+        for (let i = 0; i < tokens.length; i += FCM_MULTICAST_LIMIT) {
+            const chunk = tokens.slice(i, i + FCM_MULTICAST_LIMIT);
+            try {
+                const res = await firebaseAdmin_1.defaultApp.messaging().sendEachForMulticast({
+                    tokens: chunk,
+                    notification: {
+                        title: payload.title,
+                        body: payload.body,
+                    },
+                    data: baseData,
+                    android: {
+                        priority: 'high',
+                        notification: {
+                            channelId: 'pushnotificationapp',
+                            sound: 'default',
+                            defaultSound: true,
+                            priority: 'high',
+                            visibility: 'public',
+                        },
+                    },
+                    apns: {
+                        headers: {
+                            'apns-priority': '10',
+                        },
+                        payload: {
+                            aps: {
+                                alert: {
+                                    title: payload.title,
+                                    body: payload.body,
+                                },
+                                sound: 'default',
+                                badge: 1,
+                            },
+                        },
+                    },
+                });
+                totalSent += res.successCount;
+                totalFailures += res.failureCount;
+                if (res.failureCount > 0 && res.responses?.length) {
+                    res.responses.forEach((r, idx) => {
+                        if (!r.success && r.error) {
+                            this.logger.debug(`FCM token failure [${chunk[idx]?.slice(0, 12)}…]: ${r.error.code} ${r.error.message}`);
+                        }
+                    });
+                }
+            }
+            catch (err) {
+                this.logger.error(`FCM sendEachForMulticast failed: ${err instanceof Error ? err.message : err}`);
+                totalFailures += chunk.length;
+            }
+        }
+        this.logger.log(`FCM to user ${userId}: sent=${totalSent} failures=${totalFailures} (tokens=${tokens.length})`);
+        return { sent: totalSent, failures: totalFailures };
+    }
+    async collectTokensForUser(userId) {
+        const hasToken = {
+            fcmToken: { $exists: true, $nin: [null, ''] },
+        };
+        let devices = await this.deviceModel
+            .find({ userId, ...hasToken })
+            .select('fcmToken')
+            .lean()
+            .exec();
+        if (!devices.length && mongoose_3.Types.ObjectId.isValid(userId) && userId.length === 24) {
+            devices = await this.deviceModel
+                .find({ userId: new mongoose_3.Types.ObjectId(userId), ...hasToken })
+                .select('fcmToken')
+                .lean()
+                .exec();
+        }
+        const fromDevices = devices
+            .map((d) => d.fcmToken)
+            .filter(Boolean);
+        let userDoc = await this.userModel
+            .findById(userId)
+            .select('fcmTokens')
+            .lean()
+            .exec();
+        if (!userDoc && mongoose_3.Types.ObjectId.isValid(userId) && userId.length === 24) {
+            userDoc = await this.userModel
+                .findById(new mongoose_3.Types.ObjectId(userId))
+                .select('fcmTokens')
+                .lean()
+                .exec();
+        }
+        const fromUser = (userDoc?.fcmTokens ?? [])
+            .map((e) => e.token)
+            .filter((t) => typeof t === 'string' && t.length > 0);
+        return [...new Set([...fromDevices, ...fromUser])];
+    }
+};
+exports.FcmPushService = FcmPushService = FcmPushService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)('Device')),
+    __param(1, (0, mongoose_1.InjectModel)('User')),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
+], FcmPushService);
+
+
+/***/ }),
+
 /***/ "./src/notification/notification.controller.ts":
 /*!*****************************************************!*\
   !*** ./src/notification/notification.controller.ts ***!
@@ -8411,17 +9148,24 @@ exports.NotificationModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const notification_schema_1 = __webpack_require__(/*! src/schema/notification/notification.schema */ "./src/schema/notification/notification.schema.ts");
+const device_schema_1 = __webpack_require__(/*! src/schema/device.schema */ "./src/schema/device.schema.ts");
+const user_schema_1 = __webpack_require__(/*! src/schema/user/user.schema */ "./src/schema/user/user.schema.ts");
 const notification_controller_1 = __webpack_require__(/*! ./notification.controller */ "./src/notification/notification.controller.ts");
 const notification_service_1 = __webpack_require__(/*! ./notification.service */ "./src/notification/notification.service.ts");
+const fcm_push_service_1 = __webpack_require__(/*! ./fcm-push.service */ "./src/notification/fcm-push.service.ts");
 let NotificationModule = exports.NotificationModule = class NotificationModule {
 };
 exports.NotificationModule = NotificationModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: 'Notification', schema: notification_schema_1.NotificationSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: 'Notification', schema: notification_schema_1.NotificationSchema },
+                { name: 'Device', schema: device_schema_1.DeviceSchema },
+                { name: 'User', schema: user_schema_1.UserSchema },
+            ]),
         ],
         controllers: [notification_controller_1.NotificationController],
-        providers: [notification_service_1.NotificationService],
+        providers: [notification_service_1.NotificationService, fcm_push_service_1.FcmPushService],
         exports: [notification_service_1.NotificationService],
     })
 ], NotificationModule);
@@ -8448,16 +9192,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
 const notification_schema_1 = __webpack_require__(/*! src/schema/notification/notification.schema */ "./src/schema/notification/notification.schema.ts");
+const fcm_push_service_1 = __webpack_require__(/*! ./fcm-push.service */ "./src/notification/fcm-push.service.ts");
 let NotificationService = exports.NotificationService = class NotificationService {
-    constructor(notificationModel) {
+    constructor(notificationModel, fcmPushService) {
         this.notificationModel = notificationModel;
+        this.fcmPushService = fcmPushService;
     }
     async listForUser(userId, limit = 50, offset = 0) {
         const filter = { userId: new mongoose_2.Types.ObjectId(userId) };
@@ -8489,6 +9235,58 @@ let NotificationService = exports.NotificationService = class NotificationServic
         const res = await this.notificationModel.updateMany({ userId: new mongoose_2.Types.ObjectId(userId), read: false }, { $set: { read: true } });
         return { modifiedCount: res.modifiedCount };
     }
+    async listAdmin(limit = 50, offset = 0, filters) {
+        const conditions = [];
+        if (filters?.userId?.trim()) {
+            try {
+                conditions.push({ userId: new mongoose_2.Types.ObjectId(filters.userId.trim()) });
+            }
+            catch {
+                conditions.push({ userId: filters.userId.trim() });
+            }
+        }
+        if (filters?.type?.trim()) {
+            conditions.push({ type: filters.type.trim() });
+        }
+        if (filters?.search?.trim()) {
+            const q = filters.search.trim();
+            conditions.push({
+                $or: [
+                    { title: { $regex: q, $options: 'i' } },
+                    { body: { $regex: q, $options: 'i' } },
+                ],
+            });
+        }
+        const filter = conditions.length === 0
+            ? {}
+            : conditions.length === 1
+                ? conditions[0]
+                : { $and: conditions };
+        const lim = Math.min(Math.max(1, limit), 100);
+        const off = Math.max(0, offset);
+        const [items, total] = await Promise.all([
+            this.notificationModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(off)
+                .limit(lim)
+                .lean()
+                .exec(),
+            this.notificationModel.countDocuments(filter),
+        ]);
+        const normalized = items.map((doc) => {
+            const uid = doc['userId'];
+            const id = doc['_id'];
+            return {
+                ...doc,
+                id: id != null ? String(id) : '',
+                userId: uid != null && typeof uid === 'object' && 'toString' in uid
+                    ? String(uid.toString())
+                    : String(uid ?? ''),
+            };
+        });
+        return { items: normalized, total, limit: lim, offset: off };
+    }
     async createForUser(userId, payload) {
         const doc = await this.notificationModel.create({
             userId: new mongoose_2.Types.ObjectId(userId),
@@ -8499,13 +9297,28 @@ let NotificationService = exports.NotificationService = class NotificationServic
             imageUrl: payload.imageUrl ?? '',
             meta: payload.meta ?? {},
         });
+        const idStr = doc._id != null ? String(doc._id) : '';
+        try {
+            await this.fcmPushService.sendToUser(userId, {
+                title: payload.title,
+                body: payload.body,
+                data: {
+                    category: payload.type ?? 'system',
+                    type: payload.type ?? 'system',
+                    notificationId: idStr,
+                    source: payload.pushSource ?? 'app',
+                },
+            });
+        }
+        catch {
+        }
         return doc;
     }
 };
 exports.NotificationService = NotificationService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(notification_schema_1.Notification.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof fcm_push_service_1.FcmPushService !== "undefined" && fcm_push_service_1.FcmPushService) === "function" ? _b : Object])
 ], NotificationService);
 
 
@@ -9187,12 +10000,14 @@ let EcommerceOrderService = exports.EcommerceOrderService = class EcommerceOrder
                     body: `Order ${saved.orderNumber} — ${saved.currency} ${saved.total.toFixed(0)}`,
                     type: 'order',
                     meta: { orderId: saved.id, shopId: saved.shopId },
+                    pushSource: 'order',
                 });
                 await this.notificationService.createForUser(saved.buyerId, {
                     title: 'Order placed',
                     body: `Your order ${saved.orderNumber} was received.`,
                     type: 'order',
                     meta: { orderId: saved.id, shopId: saved.shopId },
+                    pushSource: 'order',
                 });
             }
             catch (notifyErr) {
@@ -14228,6 +15043,10 @@ exports.DeviceSchema = new mongoose.Schema({
         required: true,
         index: true,
     },
+    fcmToken: {
+        type: String,
+        default: null,
+    },
 }, {
     timestamps: true,
 });
@@ -15226,6 +16045,12 @@ const utils_1 = __webpack_require__(/*! src/utils/utils */ "./src/utils/utils.ts
 var bcrypt = __webpack_require__(/*! bcryptjs */ "bcryptjs");
 const user_interface_1 = __webpack_require__(/*! src/interface/user/user.interface */ "./src/interface/user/user.interface.ts");
 Object.defineProperty(exports, "User", ({ enumerable: true, get: function () { return user_interface_1.User; } }));
+const FcmTokenEntrySchema = new mongoose_1.Schema({
+    token: { type: String, required: true },
+    appId: { type: String, default: 'cloth_shop_flutter' },
+    deviceId: { type: String, required: true },
+    updatedAt: { type: Date, default: Date.now },
+}, { _id: false });
 exports.UserSchema = new mongoose_1.Schema({
     _id: { type: String, default: utils_1.generateStringId },
     email: { type: String, default: '' },
@@ -15253,6 +16078,7 @@ exports.UserSchema = new mongoose_1.Schema({
     twoFactorSecret: { type: String, default: null },
     isTwoFactorEnabled: { type: Boolean, default: false },
     isBiometric: { type: Boolean, default: false },
+    fcmTokens: { type: [FcmTokenEntrySchema], default: [] },
 }, {
     collection: 'users',
     timestamps: true,
@@ -17123,6 +17949,16 @@ module.exports = require("class-validator");
 /***/ ((module) => {
 
 module.exports = require("express");
+
+/***/ }),
+
+/***/ "firebase-admin":
+/*!*********************************!*\
+  !*** external "firebase-admin" ***!
+  \*********************************/
+/***/ ((module) => {
+
+module.exports = require("firebase-admin");
 
 /***/ }),
 

@@ -63,6 +63,16 @@ export class Login2FADTO {
   @ApiProperty({ required: false })
   @IsOptional()
   location?: string;
+
+  @ApiProperty({ required: false, description: 'FCM token for push notifications' })
+  @IsOptional()
+  @IsString()
+  fcmToken?: string;
+
+  @ApiProperty({ required: false, example: 'cloth_shop_flutter' })
+  @IsOptional()
+  @IsString()
+  appId?: string;
 }
 
 export class Enable2FAResponseDTO {

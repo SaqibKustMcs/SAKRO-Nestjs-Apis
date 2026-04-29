@@ -13,6 +13,7 @@ export interface Device extends Document {
   lastActive: Date;
   isCurrentDevice: boolean;
   loginToken: string; // JWT token associated with this device
+  fcmToken?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

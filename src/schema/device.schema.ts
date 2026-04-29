@@ -51,6 +51,11 @@ export const DeviceSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    /** FCM registration token for push on this device/session */
+    fcmToken: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

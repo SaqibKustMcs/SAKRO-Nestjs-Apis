@@ -2,6 +2,18 @@ import { model, Schema } from 'mongoose';
 import { generateStringId } from 'src/utils/utils';
 var bcrypt = require('bcryptjs');
 import { User } from 'src/interface/user/user.interface';
+
+/** Per-device FCM registration (multi-device login). */
+const FcmTokenEntrySchema = new Schema(
+  {
+    token: { type: String, required: true },
+    appId: { type: String, default: 'cloth_shop_flutter' },
+    deviceId: { type: String, required: true },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
 export const UserSchema = new Schema(
   {
     _id: { type: String, default: generateStringId },
@@ -39,6 +51,8 @@ export const UserSchema = new Schema(
     // Biometric Authentication field
     isBiometric: { type: Boolean, default: false },
 
+    /** FCM tokens per device/app (multi-device push). */
+    fcmTokens: { type: [FcmTokenEntrySchema], default: [] },
   },
   {
     collection: 'users',

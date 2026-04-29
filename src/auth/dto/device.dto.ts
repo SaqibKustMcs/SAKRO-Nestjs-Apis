@@ -61,6 +61,23 @@ export class DeviceInfoDTO {
   @IsOptional()
   @IsString()
   location?: string;
+
+  @ApiProperty({
+    description: 'Firebase Cloud Messaging token for this device',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  fcmToken?: string;
+
+  @ApiProperty({
+    description: 'Client app id (e.g. cloth_shop_flutter) for multi-app FCM routing',
+    example: 'cloth_shop_flutter',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  appId?: string;
 }
 
 export class LogoutDeviceDTO {

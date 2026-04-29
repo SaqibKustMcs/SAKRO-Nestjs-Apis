@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards, Req, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
@@ -13,6 +24,7 @@ import { User } from 'src/decorators/user.decorator';
 import { UpdateBiometricStatusDTO, BiometricResponseDTO } from './dto/biometric.dto';
 import { ChangePasswordDTO, ChangePasswordResponseDTO } from './dto/change-password.dto';
 import { DeviceInfoDTO, DevicesListResponseDTO, LogoutDeviceDTO } from './dto/device.dto';
+import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto';
 import { DevOtpListResponseDTO } from './dto/dev-otp-response.dto';
 import { GetLoginHistoryDTO, LoginHistoryResponseDTO, LoginStatisticsDTO } from './dto/login-history.dto';
 import { LoginHistoryService } from './login-history.service';
@@ -35,15 +47,28 @@ export class AuthController {
   }
 
   @Post('verifyEmail')
-  verifyEmail(@Body() otpDto: OtpDTO) {
-    return this.authService.verifyEmail(otpDto);
+  verifyEmail(@Body() otpDto: OtpDTO, @Req() req: Request) {
+    let deviceInfo: DeviceInfoDTO | undefined;
+    if (otpDto.deviceId && otpDto.deviceName) {
+      deviceInfo = {
+        deviceId: otpDto.deviceId,
+        deviceName: otpDto.deviceName,
+        deviceType: otpDto.deviceType || 'other',
+        platform: otpDto.platform || 'Unknown',
+        browser: otpDto.browser,
+        location: otpDto.location,
+        fcmToken: otpDto.fcmToken,
+      };
+    }
+    const ipAddress = req.ip || req.connection?.remoteAddress || 'Unknown';
+    return this.authService.verifyEmail(otpDto, deviceInfo, ipAddress);
   }
 
   @Post('resendOtp')
   resendOtp(@Body() emailDto: EmailDTO) {
     return this.authService.resendOtp(emailDto)
   }
- me 
+
   @Post('login')
   login(@Body() loginDto: LoginDTO, @Req() req: Request) {
     console.log('🔵 [AUTH CONTROLLER] Login request received');
@@ -62,6 +87,8 @@ export class AuthController {
         platform: loginDto.platform || 'Unknown',
         browser: loginDto.browser,
         location: loginDto.location,
+        fcmToken: loginDto.fcmToken,
+        appId: loginDto.appId,
       };
       console.log('📱 [AUTH CONTROLLER] Device info extracted:', JSON.stringify(deviceInfo, null, 2));
     } else {
@@ -136,6 +163,35 @@ export class AuthController {
   @Put('change-password')
   changePassword(@Body() changePasswordDto: ChangePasswordDTO, @User() user) {
     return this.authService.changePassword(user.id, changePasswordDto);
+  }
+
+  @ApiOperation({ summary: 'Logout current session: remove device record and FCM token for this JWT' })
+  @ApiResponse({ status: 200, description: 'Session cleared on server' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  logout(@Req() req: Request) {
+    const auth = req.headers?.authorization;
+    return this.authService.logoutCurrentSession(auth);
+  }
+
+  @ApiOperation({
+    summary:
+      'Register or refresh FCM token after login (when token was not ready during login/signup)',
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('register-fcm-token')
+  registerFcmToken(
+    @Body() dto: RegisterFcmTokenDto,
+    @User() user: { id?: string; sub?: string; _id?: string },
+  ) {
+    const uid = user?.id ?? user?.sub ?? user?._id;
+    if (!uid) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    return this.authService.registerFcmToken(String(uid), dto);
   }
 
   @ApiOperation({ summary: 'Get all user devices' })
