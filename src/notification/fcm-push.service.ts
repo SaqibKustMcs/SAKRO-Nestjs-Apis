@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Types } from 'mongoose';
 import { Device } from 'src/interface/device/device.interface';
 import { User } from 'src/interface/user/user.interface';
-import { defaultApp } from '../../libs/chat/src/auth/firebaseAdmin';
+import { getFirebaseAdmin } from '../../libs/chat/src/auth/firebaseAdmin';
 
 /** Max tokens per FCM multicast request */
 const FCM_MULTICAST_LIMIT = 500;
@@ -29,6 +29,12 @@ export class FcmPushService {
       data?: Record<string, string>;
     },
   ): Promise<{ sent: number; failures: number }> {
+    const firebaseApp = getFirebaseAdmin();
+    if (!firebaseApp) {
+      this.logger.warn('FCM skipped: Firebase Admin is not configured');
+      return { sent: 0, failures: 0 };
+    }
+
     const tokens = await this.collectTokensForUser(userId);
     if (tokens.length === 0) {
       this.logger.warn(
@@ -56,7 +62,7 @@ export class FcmPushService {
     for (let i = 0; i < tokens.length; i += FCM_MULTICAST_LIMIT) {
       const chunk = tokens.slice(i, i + FCM_MULTICAST_LIMIT);
       try {
-        const res = await defaultApp.messaging().sendEachForMulticast({
+        const res = await firebaseApp.messaging().sendEachForMulticast({
           tokens: chunk,
           notification: {
             title: payload.title,

@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Chat } from './schemas/chat.schema';
 import { Message } from './schemas/message.schema';
 import { UserToken } from './schemas/userTokens.schema';
-import { defaultApp } from './auth/firebaseAdmin';
+import { getFirebaseAdmin } from './auth/firebaseAdmin';
 import { UserChatDTO, MessageDTO, ChatHistoryQueryDTO, CreateChatDTO, UserStatusDTO, AddUserDTO, PaginationDTO, AllChatQueryDTO, FavouriteChatDTO, ReadChatDTO, MessageHistoryQueryDTO, AddUserToChatDTO, UserProfileDTO, UpdateChatDTO, GetAllUsersDTO } from './dto/chat.dto';
 import { UserData } from './schemas/user.schema';
 import { UserChat, UserChatDocument } from './schemas/userChat.schema';
@@ -715,10 +715,13 @@ export class ChatService {
             messagePayload.tokens = userTokens;
             console.log(messagePayload);
             try {
-                if (messagePayload.tokens.length > 0) {
-                    const response = await defaultApp.messaging().sendMulticast(messagePayload);
+                const firebaseApp = getFirebaseAdmin();
+                if (messagePayload.tokens.length > 0 && firebaseApp) {
+                    const response = await firebaseApp.messaging().sendMulticast(messagePayload);
                     console.log("reposne: sendMulticast")
                     console.log(JSON.stringify(response));
+                } else if (messagePayload.tokens.length > 0 && !firebaseApp) {
+                    console.warn('[Firebase Admin] sendMulticast skipped — not configured');
                 }
             } catch (ex) {
                 console.log("error: sendMulticast");
@@ -785,9 +788,12 @@ export class ChatService {
             messagePayload.tokens = userTokens;
             console.log(messagePayload);
             try {
-                if (messagePayload.tokens.length > 0) {
-                    const response = await defaultApp.messaging().sendMulticast(messagePayload);
+                const firebaseApp = getFirebaseAdmin();
+                if (messagePayload.tokens.length > 0 && firebaseApp) {
+                    const response = await firebaseApp.messaging().sendMulticast(messagePayload);
                     console.log(response);
+                } else if (messagePayload.tokens.length > 0 && !firebaseApp) {
+                    console.warn('[Firebase Admin] sendMulticast skipped — not configured');
                 }
             } catch (ex) {
                 console.log(JSON.stringify(ex));
