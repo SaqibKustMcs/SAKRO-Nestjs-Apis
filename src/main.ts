@@ -13,7 +13,10 @@ async function bootstrap() {
   console.log(`[BOOT] PORT=${port}`);
   console.log(`[BOOT] MONGODB_URI configured: ${hasMongoUri ? 'YES' : 'NO'}`);
 
-  const app = await NestFactory.create(AppModule);
+  const isProd = process.env.NODE_ENV === 'production';
+  const app = await NestFactory.create(AppModule, {
+    logger: isProd ? ['error', 'warn', 'log'] : undefined,
+  });
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     transformOptions: {

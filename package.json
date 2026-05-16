@@ -5,14 +5,18 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "build": "nest build",
     "build:render": "NODE_OPTIONS=--max-old-space-size=460 nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"libs/**/*.ts\"",
-    "start": "nest start",
+    "start": "sh -c 'if [ -n \"$RENDER\" ] || [ \"$NODE_ENV\" = \"production\" ]; then exec node --max-old-space-size=460 dist/src/main.js; else exec nest start; fi'",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main.js",
+    "start:render": "NODE_ENV=production node --max-old-space-size=460 dist/src/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
