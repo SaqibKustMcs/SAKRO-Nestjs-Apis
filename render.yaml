@@ -9,3 +9,5 @@ services:
         value: production
       - key: HOST
         value: 0.0.0.0
+      - key: URL
+        value: https://sakro-nestjs-apis-8ln1.onrender.com/

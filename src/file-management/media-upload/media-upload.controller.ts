@@ -95,9 +95,10 @@ export class MediaUploadController {
     @Req() req,
   ) {
     req.setTimeout(10 * 60 * 1000);
+    const baseUrl = (process.env.RENDER_EXTERNAL_URL || process.env.URL || '').replace(/\/$/, '');
     file['url'] =
-      process.env.URL +
-      'media-upload/mediaFiles/' +
+      baseUrl +
+      '/media-upload/mediaFiles/' +
       folderName.toLowerCase() +
       '/' +
       file.filename;
