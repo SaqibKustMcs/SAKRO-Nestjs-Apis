@@ -60,6 +60,9 @@ export class MediaUploadController {
   })
   @UseInterceptors(
     FileInterceptor('file', {
+      limits: {
+        fileSize: 8 * 1024 * 1024, // 8MB — keeps jimp/memory usage safe on 512MB instances
+      },
       fileFilter: fileFilter,
       storage: diskStorage({
         destination: function (req, file, cb) {
@@ -112,29 +115,25 @@ export class MediaUploadController {
 
     if (type && allowTypes.includes(`.${type}`)) {
       const img = await jimp.read(file['path']);
-
       const height = img.bitmap.height;
       const width = img.bitmap.width;
 
-      this._mediaUploadService.compressImageTo300(file);
       if ((height < 500 && width < 275) || file.size <= 500 * 1000) {
+        await this._mediaUploadService.compressImageTo300(file, img);
         return file;
       }
 
-      const heightRatio = height / width;
       const widthRatio = width / height;
-
-      // console.log({ height });
-      // console.log({ width });
-      // console.log({ heightRatio });
-      // console.log({ widthRatio });
-
-      file['path'] = file['path'].replace(
-        file['filename'],
-        `compressed/${file['filename']}`,
+      const compressedDir = path.join(
+        path.dirname(file['path']),
+        'compressed',
       );
-
-      img.resize(500 * widthRatio, jimp.AUTO).write(file['path']);
+      if (!fs.existsSync(compressedDir)) {
+        fs.mkdirSync(compressedDir, { recursive: true });
+      }
+      file['path'] = path.join(compressedDir, file['filename']);
+      await img.resize(500 * widthRatio, jimp.AUTO).writeAsync(file['path']);
+      await this._mediaUploadService.compressImageTo300(file, img);
     }
     // console.log('***************====================***************');
     // console.log(file);

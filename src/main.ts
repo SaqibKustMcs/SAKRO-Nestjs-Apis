@@ -24,15 +24,17 @@ async function bootstrap() {
     skipMissingProperties: false, // Don't skip missing properties
   }));
 
-  const config = new DocumentBuilder()
-    .setTitle('Shop app')
-    .setDescription('Shop App APIs')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .addTag('apis')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, document);
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Shop app')
+      .setDescription('Shop App APIs')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .addTag('apis')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('swagger', app, document);
+  }
 
   // CORS: list frontend app origins (e.g. http://localhost:4200), not the API URL.
   // Use CORS_ORIGIN=reflect to mirror the request Origin (works for LAN IPs during dev).

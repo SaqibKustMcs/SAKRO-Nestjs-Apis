@@ -1,6 +1,11 @@
 # compiled output
-#/dist
+/dist
 /node_modules
+
+# User uploads — do not deploy via git (use disk volume or S3/R2 on Render)
+/mediaFiles/*
+!/mediaFiles/metasuite/
+!/mediaFiles/metasuite/.gitkeep
 
 # Logs
 logs
