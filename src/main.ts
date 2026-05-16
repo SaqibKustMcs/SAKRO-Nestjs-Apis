@@ -7,11 +7,20 @@ async function bootstrap() {
   const port = parseInt(process.env.PORT || '3000', 10);
   const host = process.env.HOST || '0.0.0.0';
   const networkIp = process.env.NETWORK_IP || 'localhost';
-  const hasMongoUri = Boolean(process.env.MONGODB_URI);
+  const mongoUri = (process.env.MONGODB_URI ?? '').trim();
+  const hasMongoUri = mongoUri.length > 0;
+  const mongoHostMatch = mongoUri.match(/@([^/?]+)/);
+  const mongoHost = mongoHostMatch?.[1] ?? '(unknown)';
 
   // Startup diagnostics without exposing secrets
   console.log(`[BOOT] PORT=${port}`);
   console.log(`[BOOT] MONGODB_URI configured: ${hasMongoUri ? 'YES' : 'NO'}`);
+  if (hasMongoUri) {
+    console.log(`[BOOT] Mongo cluster host: ${mongoHost}`);
+    if (mongoUri.includes('localhost') || mongoUri.includes('127.0.0.1')) {
+      console.warn('[BOOT] WARNING: MONGODB_URI uses localhost — will fail on Render');
+    }
+  }
 
   const isProd = process.env.NODE_ENV === 'production';
   const app = await NestFactory.create(AppModule, {
@@ -74,4 +83,13 @@ async function bootstrap() {
   console.log(`🌐 WebSocket: ws://${networkIp}:${port}`);
   console.log('=====================================\n');
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  console.error('[BOOT] Fatal startup error:', err?.message ?? err);
+  if (String(err?.message ?? '').includes('whitelist')) {
+    console.error(
+      '[BOOT] Fix: MongoDB Atlas → Network Access → Add IP → Allow access from anywhere (0.0.0.0/0) for Render.',
+    );
+  }
+  process.exit(1);
+});

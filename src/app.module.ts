@@ -18,12 +18,27 @@ import { BannerModule } from './banner/banner.module';
 import { NotificationModule } from './notification/notification.module';
 import { PlatformSettingsModule } from './platform-settings/platform-settings.module';
 
+function getMongoUri(): string {
+  const uri = (process.env.MONGODB_URI ?? '').trim();
+  if (!uri) {
+    throw new Error(
+      'MONGODB_URI is not set. Add it in Render Environment (Atlas connection string).',
+    );
+  }
+  if (uri.includes('localhost') || uri.includes('127.0.0.1')) {
+    throw new Error(
+      'MONGODB_URI points to localhost — use your MongoDB Atlas SRV URL on Render.',
+    );
+  }
+  return uri;
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGODB_URI, {
-      // Fail faster when Mongo is unreachable (avoids long-hanging writes from the API client’s perspective)
-      serverSelectionTimeoutMS: 15000,
+    MongooseModule.forRoot(getMongoUri(), {
+      serverSelectionTimeoutMS: 20000,
+      retryWrites: true,
     }),
     AuthModule.forRoot(),
     ChatModule,
