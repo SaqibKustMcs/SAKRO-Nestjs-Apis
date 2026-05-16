@@ -40,7 +40,8 @@ async function bootstrap() {
     skipMissingProperties: false, // Don't skip missing properties
   }));
 
-  if (process.env.NODE_ENV !== 'production') {
+  // Swagger — enabled always (use DISABLE_SWAGGER=true env var to turn off)
+  if (process.env.DISABLE_SWAGGER !== 'true') {
     const config = new DocumentBuilder()
       .setTitle('Shop app')
       .setDescription('Shop App APIs')
