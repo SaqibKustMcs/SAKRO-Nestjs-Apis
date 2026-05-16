@@ -6,7 +6,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const port = parseInt(process.env.PORT || '3000', 10);
   const host = process.env.HOST || '0.0.0.0';
-  const networkIp = process.env.NETWORK_IP || 'localhost';
+  // On Render, RENDER_EXTERNAL_URL is set automatically (e.g. https://your-service.onrender.com)
+  const publicUrl =
+    process.env.RENDER_EXTERNAL_URL?.trim() ||
+    process.env.NETWORK_IP ||
+    `http://localhost:${port}`;
   const mongoUri = (process.env.MONGODB_URI ?? '').trim();
   const hasMongoUri = mongoUri.length > 0;
   const mongoHostMatch = mongoUri.match(/@([^/?]+)/);
@@ -77,10 +81,10 @@ async function bootstrap() {
 
   console.log('\n🚀 ===================================');
   console.log('✅ API is running successfully!');
-  console.log(`📍 Local:   http://localhost:${port}`);
-  console.log(`📍 Network: http://${networkIp}:${port}`);
-  console.log(`📚 Swagger: http://${networkIp}:${port}/swagger`);
-  console.log(`🌐 WebSocket: ws://${networkIp}:${port}`);
+  console.log(`📍 Local:      http://localhost:${port}`);
+  console.log(`🌐 Public URL: ${publicUrl}`);
+  console.log(`📚 Swagger:    ${publicUrl}/swagger`);
+  console.log(`🔌 WebSocket:  ${publicUrl.replace(/^http/, 'ws')}`);
   console.log('=====================================\n');
 }
 
