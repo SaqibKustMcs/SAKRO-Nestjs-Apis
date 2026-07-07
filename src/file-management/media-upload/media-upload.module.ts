@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MediaUploadController } from './media-upload.controller';
-import { MediaUploadService } from './media-upload.service';
+import { CloudinaryService } from './cloudinary.service';
 
 @Module({
   controllers: [MediaUploadController],
-  providers: [MediaUploadService],
+  providers: [CloudinaryService],
+  exports: [CloudinaryService],
 })
 export class MediaUploadModule {}

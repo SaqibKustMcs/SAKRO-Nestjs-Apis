@@ -11,3 +11,11 @@ services:
         value: 0.0.0.0
       - key: URL
         value: https://sakro-nestjs-apis-8ln1.onrender.com/
+      - key: whiteListedExtensions
+        value: .jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.txt,.m4a,.wav,.mp3
+      - key: CLOUDINARY_CLOUD_NAME
+        value: Mandiqor
+      - key: CLOUDINARY_API_KEY
+        value: "828366476286331"
+      - key: CLOUDINARY_API_SECRET
+        value: jZF8-zWR1_Wgps6RWL4tcPkyRO0

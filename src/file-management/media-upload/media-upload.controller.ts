@@ -10,25 +10,20 @@ import {
   HttpException,
   HttpStatus,
   Query,
-  Body,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
-import { extname } from 'path';
-import { diskStorage } from 'multer';
 import * as path from 'path';
+import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiTags, ApiConsumes } from '@nestjs/swagger';
-import * as fs from 'fs';
-const jimp = require('jimp');
-import { URLBody } from '../dto/url.dto';
-import { MediaUploadService } from './media-upload.service';
+import { CloudinaryService } from './cloudinary.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 const fileFilter = (req, file, callback) => {
-  let ext = path.extname(file.originalname);
-  // console.log(ext);
-  // console.log(process.env.whiteListedExtensions);
-  if (!process.env.whiteListedExtensions.includes(ext.toLowerCase())) {
+  const ext = path.extname(file.originalname);
+  const whitelist = process.env.whiteListedExtensions || '';
+  if (!whitelist.includes(ext.toLowerCase())) {
     req.fileValidationError = 'Invalid file type';
     return callback(
       new HttpException('Invalid file type', HttpStatus.BAD_REQUEST),
@@ -42,7 +37,7 @@ const fileFilter = (req, file, callback) => {
 @Controller('media-upload')
 @ApiBearerAuth()
 export class MediaUploadController {
-  constructor(private _mediaUploadService: MediaUploadService) { }
+  constructor(private readonly _cloudinaryService: CloudinaryService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('mediaFiles/:folderName')
@@ -60,33 +55,12 @@ export class MediaUploadController {
   })
   @UseInterceptors(
     FileInterceptor('file', {
+      // Keep the file in memory only — nothing is written to the project/disk.
+      storage: memoryStorage(),
       limits: {
-        fileSize: 8 * 1024 * 1024, // 8MB — keeps jimp/memory usage safe on 512MB instances
+        fileSize: 25 * 1024 * 1024, // 25MB (covers images, short videos, docs)
       },
       fileFilter: fileFilter,
-      storage: diskStorage({
-        destination: function (req, file, cb) {
-          const dir =
-            'mediaFiles/metasuite/' + req.params.folderName.toLowerCase();
-
-          fs.exists(dir, (exist) => {
-            if (!exist) {
-              return fs.mkdir(dir, { recursive: true }, (error) =>
-                cb(error, dir),
-              );
-            }
-            return cb(null, dir);
-          });
-        },
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-
-          return cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
     }),
   )
   async uploadAvatar(
@@ -95,84 +69,54 @@ export class MediaUploadController {
     @Req() req,
   ) {
     req.setTimeout(10 * 60 * 1000);
-    const baseUrl = (process.env.RENDER_EXTERNAL_URL || process.env.URL || '').replace(/\/$/, '');
-    file['url'] =
-      baseUrl +
-      '/media-upload/mediaFiles/' +
-      folderName.toLowerCase() +
-      '/' +
-      file.filename;
-    // console.log('***************+++++++++++++++++++++++***************');
-    // console.log({ file });
-    // console.log('***************+++++++++++++++++++++++***************');
 
-    let type = '';
-    const nameSplit = file['filename'].split('.');
-    if (nameSplit.length > 1) {
-      type = nameSplit[1];
+    if (!file?.buffer) {
+      throw new BadRequestException('No file uploaded');
     }
-
-    const allowTypes = ['.jpg', '.jpeg', '.png'];
-
-    if (type && allowTypes.includes(`.${type}`)) {
-      const img = await jimp.read(file['path']);
-      const height = img.bitmap.height;
-      const width = img.bitmap.width;
-
-      if ((height < 500 && width < 275) || file.size <= 500 * 1000) {
-        await this._mediaUploadService.compressImageTo300(file, img);
-        return file;
-      }
-
-      const widthRatio = width / height;
-      const compressedDir = path.join(
-        path.dirname(file['path']),
-        'compressed',
+    if (!this._cloudinaryService.isConfigured) {
+      throw new HttpException(
+        'Media storage is not configured (Cloudinary credentials missing).',
+        HttpStatus.SERVICE_UNAVAILABLE,
       );
-      if (!fs.existsSync(compressedDir)) {
-        fs.mkdirSync(compressedDir, { recursive: true });
-      }
-      file['path'] = path.join(compressedDir, file['filename']);
-      await img.resize(500 * widthRatio, jimp.AUTO).writeAsync(file['path']);
-      await this._mediaUploadService.compressImageTo300(file, img);
     }
-    // console.log('***************====================***************');
-    // console.log(file);
-    // console.log('***************====================***************');
-    return file;
+
+    const folder = (folderName || 'misc').toLowerCase();
+    const result = await this._cloudinaryService.uploadBuffer(
+      file.buffer,
+      folder,
+    );
+
+    // Response mirrors the previous multer shape so existing clients that read
+    // `res.url` keep working — now `url` is a permanent Cloudinary HTTPS link.
+    return {
+      url: result.secure_url,
+      secure_url: result.secure_url,
+      publicId: result.public_id,
+      resourceType: result.resource_type,
+      format: result.format,
+      bytes: result.bytes,
+      width: result.width,
+      height: result.height,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+    };
   }
 
+  /**
+   * Backward-compat redirect for legacy DB records that still store
+   * `/media-upload/mediaFiles/...` URLs. New uploads return absolute
+   * Cloudinary URLs and never hit this route.
+   */
   @Get('mediaFiles/:folderName/:fileName')
   async mediaFiles(
-    @Param('folderName') folderName: string,
     @Param('fileName') fileName: string,
     @Res() res,
-    @Req() req,
-    @Query('size') size: string = 'original',
   ): Promise<any> {
-    req.setTimeout(10 * 60 * 1000);
-    const sizeArray = ['original', 'compressed'];
-    size = sizeArray.includes(size) ? size : 'original';
-    folderName = folderName.toLowerCase();
-    if (size == 'original') {
-      res.sendFile(fileName, {
-        root: 'mediaFiles/metasuite/' + folderName,
-      });
-    } else {
-      const dir =
-        'mediaFiles/metasuite/' + folderName + '/' + size + '/' + fileName;
-      const exists = fs.existsSync(dir);
-      if (!exists) {
-        res.sendFile(fileName, {
-          root: 'mediaFiles/metasuite/' + folderName,
-        });
-        return;
-      }
-
-      res.sendFile(fileName, {
-        root: 'mediaFiles/metasuite/' + folderName + '/' + size,
-      });
-    }
+    return res.status(HttpStatus.NOT_FOUND).json({
+      success: false,
+      message:
+        'Local media serving is deprecated. This asset was not found; please re-upload.',
+      fileName,
+    });
   }
-
 }
