@@ -163,12 +163,17 @@ export class MediaUploadController {
         mimeType: file.mimetype,
       };
     } catch (err: any) {
+      const msg = String(err?.message ?? err);
       this.logger.error(
-        `Cloudinary upload failed (${folder}): ${err?.message ?? err}`,
+        `Cloudinary upload failed (${folder}): ${msg}`,
         err?.stack,
       );
+      const hint =
+        msg.includes('Invalid cloud_name') || msg.includes('cloud_name')
+          ? ' CLOUDINARY_CLOUD_NAME must be the Cloud name from Cloudinary Dashboard → Product environment credentials (not the API key "Key Name" label).'
+          : '';
       throw new HttpException(
-        err?.message || 'Failed to upload media to cloud storage',
+        (err?.message || 'Failed to upload media to cloud storage') + hint,
         err?.http_code || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
