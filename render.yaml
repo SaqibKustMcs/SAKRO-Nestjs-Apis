@@ -14,7 +14,7 @@ services:
       - key: whiteListedExtensions
         value: .jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.txt,.m4a,.wav,.mp3
       - key: CLOUDINARY_CLOUD_NAME
-        value: Mandiqor
+        value: jqimomzw
       - key: CLOUDINARY_API_KEY
         value: "828366476286331"
       - key: CLOUDINARY_API_SECRET
