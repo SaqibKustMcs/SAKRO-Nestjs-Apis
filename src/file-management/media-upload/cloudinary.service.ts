@@ -14,13 +14,13 @@ export class CloudinaryService implements OnModuleInit {
 
     if (cloudName && apiKey && apiSecret) {
       cloudinary.config({
-        cloud_name: cloudName,
+        cloud_name: cloudName.toLowerCase(),
         api_key: apiKey,
         api_secret: apiSecret,
         secure: true,
       });
       this.configured = true;
-      this.logger.log(`✅ Cloudinary configured (cloud: ${cloudName})`);
+      this.logger.log(`✅ Cloudinary configured (cloud: ${cloudName.toLowerCase()})`);
     } else {
       this.logger.warn(
         '⚠️  Cloudinary env vars missing (CLOUDINARY_CLOUD_NAME / API_KEY / API_SECRET) — media upload will fail',

@@ -9,9 +9,9 @@ import {
   UseGuards,
   HttpException,
   HttpStatus,
-  Query,
   Req,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import * as path from 'path';
 import { memoryStorage } from 'multer';
@@ -20,23 +20,83 @@ import { ApiBearerAuth, ApiBody, ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { CloudinaryService } from './cloudinary.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-const fileFilter = (req, file, callback) => {
-  const ext = path.extname(file.originalname);
-  const whitelist = process.env.whiteListedExtensions || '';
-  if (!whitelist.includes(ext.toLowerCase())) {
-    req.fileValidationError = 'Invalid file type';
-    return callback(
-      new HttpException('Invalid file type', HttpStatus.BAD_REQUEST),
-      false,
-    );
+const IMAGE_MIMES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+]);
+
+const VIDEO_MIMES = new Set([
+  'video/mp4',
+  'video/quicktime',
+  'video/x-msvideo',
+  'video/avi',
+]);
+
+const AUDIO_MIMES = new Set([
+  'audio/mpeg',
+  'audio/mp4',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/m4a',
+]);
+
+const DOC_MIMES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+]);
+
+function getAllowedExtensions(): string[] {
+  const raw =
+    process.env.whiteListedExtensions ||
+    '.jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.txt,.m4a,.wav,.mp3';
+  return raw
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isAllowedUpload(file: Express.Multer.File): boolean {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const allowed = getAllowedExtensions();
+  if (ext && allowed.includes(ext)) return true;
+
+  const mime = (file.mimetype || '').toLowerCase();
+  if (IMAGE_MIMES.has(mime) && allowed.some((e) => ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'].includes(e))) {
+    return true;
   }
-  return callback(null, true);
+  if (VIDEO_MIMES.has(mime) && allowed.some((e) => ['.mp4', '.mov', '.avi'].includes(e))) {
+    return true;
+  }
+  if (AUDIO_MIMES.has(mime) && allowed.some((e) => ['.m4a', '.wav', '.mp3'].includes(e))) {
+    return true;
+  }
+  if (DOC_MIMES.has(mime) && allowed.some((e) => ['.pdf', '.doc', '.docx', '.txt'].includes(e))) {
+    return true;
+  }
+  return false;
+}
+
+const fileFilter = (req, file, callback) => {
+  if (isAllowedUpload(file)) {
+    return callback(null, true);
+  }
+  req.fileValidationError = 'Invalid file type';
+  return callback(new Error('Invalid file type'), false);
 };
 
 @ApiTags('media-upload')
 @Controller('media-upload')
 @ApiBearerAuth()
 export class MediaUploadController {
+  private readonly logger = new Logger(MediaUploadController.name);
+
   constructor(private readonly _cloudinaryService: CloudinaryService) {}
 
   @UseGuards(JwtAuthGuard)
@@ -55,22 +115,24 @@ export class MediaUploadController {
   })
   @UseInterceptors(
     FileInterceptor('file', {
-      // Keep the file in memory only — nothing is written to the project/disk.
       storage: memoryStorage(),
       limits: {
-        fileSize: 25 * 1024 * 1024, // 25MB (covers images, short videos, docs)
+        fileSize: 25 * 1024 * 1024,
       },
       fileFilter: fileFilter,
     }),
   )
   async uploadAvatar(
-    @UploadedFile() file,
+    @UploadedFile() file: Express.Multer.File,
     @Param('folderName') folderName: string,
     @Req() req,
   ) {
     req.setTimeout(10 * 60 * 1000);
 
-    if (!file?.buffer) {
+    if (req.fileValidationError) {
+      throw new BadRequestException(req.fileValidationError);
+    }
+    if (!file?.buffer?.length) {
       throw new BadRequestException('No file uploaded');
     }
     if (!this._cloudinaryService.isConfigured) {
@@ -81,32 +143,37 @@ export class MediaUploadController {
     }
 
     const folder = (folderName || 'misc').toLowerCase();
-    const result = await this._cloudinaryService.uploadBuffer(
-      file.buffer,
-      folder,
-    );
 
-    // Response mirrors the previous multer shape so existing clients that read
-    // `res.url` keep working — now `url` is a permanent Cloudinary HTTPS link.
-    return {
-      url: result.secure_url,
-      secure_url: result.secure_url,
-      publicId: result.public_id,
-      resourceType: result.resource_type,
-      format: result.format,
-      bytes: result.bytes,
-      width: result.width,
-      height: result.height,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-    };
+    try {
+      const result = await this._cloudinaryService.uploadBuffer(
+        file.buffer,
+        folder,
+      );
+
+      return {
+        url: result.secure_url,
+        secure_url: result.secure_url,
+        publicId: result.public_id,
+        resourceType: result.resource_type,
+        format: result.format,
+        bytes: result.bytes,
+        width: result.width,
+        height: result.height,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+      };
+    } catch (err: any) {
+      this.logger.error(
+        `Cloudinary upload failed (${folder}): ${err?.message ?? err}`,
+        err?.stack,
+      );
+      throw new HttpException(
+        err?.message || 'Failed to upload media to cloud storage',
+        err?.http_code || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  /**
-   * Backward-compat redirect for legacy DB records that still store
-   * `/media-upload/mediaFiles/...` URLs. New uploads return absolute
-   * Cloudinary URLs and never hit this route.
-   */
   @Get('mediaFiles/:folderName/:fileName')
   async mediaFiles(
     @Param('fileName') fileName: string,
