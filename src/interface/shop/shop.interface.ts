@@ -19,6 +19,9 @@ export interface Shop extends Document {
   isVerified: boolean;
   badges?: string[];
   status: 'active' | 'suspended' | 'closed';
+  stripeAccountId?: string;
+  stripeOnboardingComplete?: boolean;
+  stripePayoutsEnabled?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

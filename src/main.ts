@@ -29,6 +29,7 @@ async function bootstrap() {
   const isProd = process.env.NODE_ENV === 'production';
   const app = await NestFactory.create(AppModule, {
     logger: isProd ? ['error', 'warn', 'log'] : undefined,
+    rawBody: true,
   });
   app.useGlobalPipes(new ValidationPipe({
     transform: true,

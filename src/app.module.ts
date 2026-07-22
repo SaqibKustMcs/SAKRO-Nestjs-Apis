@@ -17,6 +17,7 @@ import { AdminModule } from './admin/admin.module';
 import { BannerModule } from './banner/banner.module';
 import { NotificationModule } from './notification/notification.module';
 import { PlatformSettingsModule } from './platform-settings/platform-settings.module';
+import { StripeModule } from './stripe/stripe.module';
 
 function getMongoUri(): string {
   const uri = (process.env.MONGODB_URI ?? '').trim();
@@ -54,6 +55,7 @@ function getMongoUri(): string {
     BannerModule,
     NotificationModule,
     PlatformSettingsModule,
+    StripeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

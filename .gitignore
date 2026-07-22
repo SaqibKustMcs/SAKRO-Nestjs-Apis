@@ -36,6 +36,11 @@ lerna-debug.log*
 *-firebase-adminsdk-*.json
 jhamat-app-firebase-adminsdk-*.json
 
+# Local secrets
+.env
+.env.local
+.env.*.local
+
 # IDE - VSCode
 .vscode/*
 !.vscode/settings.json

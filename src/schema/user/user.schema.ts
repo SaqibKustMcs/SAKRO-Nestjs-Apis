@@ -51,6 +51,9 @@ export const UserSchema = new Schema(
     // Biometric Authentication field
     isBiometric: { type: Boolean, default: false },
 
+    /** Stripe Customer ID for saved cards / repeat checkout. */
+    stripeCustomerId: { type: String, default: '' },
+
     /** FCM tokens per device/app (multi-device push). */
     fcmTokens: { type: [FcmTokenEntrySchema], default: [] },
   },

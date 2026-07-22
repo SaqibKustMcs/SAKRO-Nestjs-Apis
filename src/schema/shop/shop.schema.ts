@@ -30,6 +30,10 @@ export const ShopSchema = new Schema(
       default: 'active', 
       enum: ['active', 'suspended', 'closed'] 
     },
+    /** Stripe Connect Express account for receiving payouts. */
+    stripeAccountId: { type: String, default: '' },
+    stripeOnboardingComplete: { type: Boolean, default: false },
+    stripePayoutsEnabled: { type: Boolean, default: false },
   },
   {
     collection: 'shops',

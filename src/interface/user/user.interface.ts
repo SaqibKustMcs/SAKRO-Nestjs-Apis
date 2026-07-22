@@ -45,6 +45,9 @@ export interface User extends Document {
   isBiometric: boolean;
 
   fcmTokens: FcmTokenEntry[];
+
+  /** Stripe Customer ID for card payments. */
+  stripeCustomerId?: string;
   
   // Timestamps
   createdAt: Date;

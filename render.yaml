@@ -19,3 +19,16 @@ services:
         value: "828366476286331"
       - key: CLOUDINARY_API_SECRET
         value: jZF8-zWR1_Wgps6RWL4tcPkyRO0
+      # Stripe Connect — set in Render dashboard (do not commit live secrets)
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: PLATFORM_FEE_PERCENT
+        value: "5"
+      - key: STRIPE_CURRENCY
+        value: usd
+      - key: STRIPE_CONNECT_COUNTRY
+        value: US

@@ -74,6 +74,14 @@ export class EcommerceOrder {
   @Prop({ type: String, required: false })
   paymentIntentId?: string; // For Stripe
 
+  /** Platform fee retained (e.g. 5% of total). */
+  @Prop({ type: Number, default: 0 })
+  platformFee: number;
+
+  /** Amount transferred to seller after platform fee. */
+  @Prop({ type: Number, default: 0 })
+  sellerPayout: number;
+
   @Prop({
     type: {
       fullName: String,
