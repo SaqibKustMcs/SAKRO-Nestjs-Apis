@@ -54,6 +54,34 @@ export class StripeService {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : 5;
   }
 
+  getMerchantCountryCode(): string {
+    return process.env.STRIPE_MERCHANT_COUNTRY?.trim().toUpperCase() || 'US';
+  }
+
+  getMerchantName(): string {
+    return process.env.STRIPE_MERCHANT_NAME?.trim() || 'JHAMAT';
+  }
+
+  getAppleMerchantId(): string {
+    return (
+      process.env.STRIPE_APPLE_MERCHANT_ID?.trim() ||
+      'merchant.com.app.clothShopFlutter'
+    );
+  }
+
+  isGooglePayTestEnv(): boolean {
+    return process.env.STRIPE_GOOGLE_PAY_TEST_ENV !== 'false';
+  }
+
+  /** Public currency for mobile wallet config (defaults to usd). */
+  getStripeCurrency(): string {
+    return this.resolveCurrency();
+  }
+
+  private isOnlinePaymentMethod(method: string): boolean {
+    return ['stripe', 'applePay', 'googlePay'].includes(method);
+  }
+
   private client(): Stripe {
     if (!this.stripe) {
       throw new HttpException(
@@ -212,8 +240,8 @@ export class StripeService {
     if (order.buyerId !== buyerId) {
       throw new ForbiddenException('Not your order');
     }
-    if (order.paymentMethod !== 'stripe') {
-      throw new BadRequestException('Order is not a card payment order');
+    if (!this.isOnlinePaymentMethod(order.paymentMethod)) {
+      throw new BadRequestException('Order is not an online payment order');
     }
     if (order.paymentStatus === 'paid') {
       throw new BadRequestException('Order is already paid');

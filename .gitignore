@@ -2,9 +2,11 @@
 /dist
 /node_modules
 
-# User uploads — do not deploy via git (use disk volume or S3/R2 on Render)
+# User uploads — do not deploy via git (use disk volume or S3/R2 on Render).
+# Keep the metasuite folder in the tree, but never its contents.
 /mediaFiles/*
 !/mediaFiles/metasuite/
+/mediaFiles/metasuite/*
 !/mediaFiles/metasuite/.gitkeep
 
 # Logs
@@ -35,6 +37,7 @@ lerna-debug.log*
 # Firebase service account keys (never commit)
 *-firebase-adminsdk-*.json
 jhamat-app-firebase-adminsdk-*.json
+*.base64.txt
 
 # Local secrets
 .env

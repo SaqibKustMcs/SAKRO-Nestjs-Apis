@@ -32,3 +32,16 @@ services:
         value: usd
       - key: STRIPE_CONNECT_COUNTRY
         value: US
+      - key: STRIPE_MERCHANT_COUNTRY
+        value: US
+      - key: STRIPE_MERCHANT_NAME
+        value: JHAMAT
+      - key: STRIPE_APPLE_MERCHANT_ID
+        value: merchant.com.app.clothShopFlutter
+      - key: STRIPE_GOOGLE_PAY_TEST_ENV
+        value: "true"
+      # Firebase Admin (FCM push) — the service account file is gitignored, so it is
+      # NOT present on Render. Without this, push is silently skipped and only the
+      # in-app notification record is created. Set in Render dashboard.
+      - key: FIREBASE_SERVICE_ACCOUNT_BASE64
+        sync: false

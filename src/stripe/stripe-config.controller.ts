@@ -16,6 +16,11 @@ export class StripeConfigController {
         publishableKey: this.stripeService.getPublishableKey(),
         platformFeePercent: this.stripeService.getPlatformFeePercent(),
         enabled: this.stripeService.isConfigured,
+        currency: this.stripeService.getStripeCurrency(),
+        merchantCountryCode: this.stripeService.getMerchantCountryCode(),
+        merchantName: this.stripeService.getMerchantName(),
+        appleMerchantId: this.stripeService.getAppleMerchantId(),
+        googlePayTestEnv: this.stripeService.isGooglePayTestEnv(),
       },
     };
   }
