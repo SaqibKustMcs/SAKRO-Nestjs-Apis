@@ -45,3 +45,16 @@ services:
       # in-app notification record is created. Set in Render dashboard.
       - key: FIREBASE_SERVICE_ACCOUNT_BASE64
         sync: false
+      # SMTP — set in Render dashboard to send OTP emails (signup + forgot password)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        value: JHAMAT

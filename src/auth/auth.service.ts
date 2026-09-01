@@ -21,7 +21,6 @@ import { Otp } from 'src/interface/otp/otp.interface';
 import { OtpDTO } from './dto/otp.dto';
 import { EmailDTO } from './dto/email.dto';
 import * as otpGenerator from 'otp-generator';
-import { getEmail } from './email';
 import { UtilsService } from '../utils/utils.service';
 import { Login2FADTO } from './dto/2fa.dto';
 import { TwoFactorService } from './2fa.service';
@@ -123,11 +122,12 @@ export class AuthService {
 
       await this._otpModel.create(otpObject);
 
-      const res = await this.utilsService.sendEmail({
-        to: signupDto?.email,
-        subject: "Confirm your email",
-        html: getEmail(`${signupDto?.email}`, otp)
-      })
+      const recipientName = signupDto.email;
+      await this.utilsService.sendVerificationEmail(
+        signupDto.email,
+        otp,
+        recipientName,
+      );
 
       // Return user data without password
       const userResponse = JSON.parse(JSON.stringify(userData));
@@ -177,13 +177,12 @@ export class AuthService {
 
         return await this.forgotPassword(emailDto)
       } else {
-        //signup
-        const otp = '123456';
-        //  otpGenerator.generate(6, {
-        //   upperCaseAlphabets: false,
-        //   lowerCaseAlphabets: false,
-        //   specialChars: false,
-        // });
+        // signup — resend verification OTP
+        const otp = otpGenerator.generate(6, {
+          upperCaseAlphabets: false,
+          lowerCaseAlphabets: false,
+          specialChars: false,
+        });
 
         const expiryTime = new Date(Date.now()).getTime() + 2 * 60 * 1000;
 
@@ -224,16 +223,13 @@ export class AuthService {
 
         await this._otpModel.create(otpObject);
 
-        /*
-          Send email logic here
-        */
-        // const res = await this.utilsService.sendEmail({
-        //   from: `Buildings Up<no-reply@${process.env.MAILGUN_DOMAIN}>`,
-        //   to: [userData?.email],
-        //   subject: "Confirm your email",
-        //   html: getEmail(`${userData?.firstname} ${userData?.lastname}`, otp)
-        // })
-
+        const recipientName =
+          userData?.fullName || userData?.name || userData?.email;
+        await this.utilsService.sendVerificationEmail(
+          userData.email,
+          otp,
+          recipientName,
+        );
 
         return { status: 'success', message: 'OTP resent' }
 
@@ -846,13 +842,12 @@ export class AuthService {
 
       // Send OTP email
       const userName = user?.fullName || user?.name || emailDto?.email;
-      
-      await this.utilsService.sendEmail({
-        to: emailDto?.email,
-        subject: "Password Reset - Verification Code",
-        html: getEmail(userName, otp, false),
-        text: `Your password reset verification code is: ${otp}`
-      });
+
+      await this.utilsService.sendResetPasswordEmail(
+        emailDto.email,
+        otp,
+        userName,
+      );
 
       console.log(`🔐 Forgot Password OTP sent to ${emailDto?.email}: ${otp}`);
 
@@ -1258,12 +1253,8 @@ export class AuthService {
    */
   async getRecentOTPs(email?: string) {
     try {
-      // Check if in development mode
-      const isMailjetConfigured = process.env.MAILJET_API_KEY && 
-                                 process.env.MAILJET_API_KEY !== '0' &&
-                                 process.env.MAILJET_API_KEY !== 'dummy-key-not-configured';
-
-      if (isMailjetConfigured) {
+      // Check if in development mode (SMTP not configured)
+      if (this.utilsService.isSmtpConfigured()) {
         throw new BadRequestException('This endpoint is only available in development mode');
       }
 
