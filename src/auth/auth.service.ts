@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -34,6 +35,8 @@ const GO_CARDLESS_ACTIVE = false;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private jwtService: JwtService,
     @InjectModel('User') private _userModel: Model<User>,
@@ -53,35 +56,53 @@ export class AuthService {
   }
 
   async signup(signupDto: SignupDTO) {
+    const traceId = `signup-${Date.now()}`;
+    const t0 = Date.now();
+    const step = (n: number, msg: string, extra?: Record<string, unknown>) => {
+      const elapsed = Date.now() - t0;
+      this.logger.log(
+        `[${traceId}][step ${n}] +${elapsed}ms ${msg}${
+          extra ? ` ${JSON.stringify(extra)}` : ''
+        }`,
+      );
+    };
+
     try {
+      step(1, 'POST /auth/signup — start');
 
       signupDto.email = signupDto?.email?.toLowerCase();
+      step(2, 'Email normalized', { email: signupDto.email });
 
+      step(3, 'Checking for existing verified user…');
       const existingUser = await this._userModel.findOne({
         email: signupDto.email,
         isEmailVerified: true,
         isDeleted: false,
       });
       if (existingUser) {
+        step(3, 'FAIL — user already exists with this email');
         throw new Error('User already exists with this email');
       }
+      step(3, 'OK — no verified user with this email');
 
-      await this._userModel.deleteMany({
+      step(4, 'Deleting unverified users with same email…');
+      const deleted = await this._userModel.deleteMany({
         email: signupDto?.email,
         isEmailVerified: false,
-      })
+      });
+      step(4, 'OK — unverified cleanup done', { deletedCount: deleted.deletedCount });
 
+      step(5, 'Creating user document…');
       const userData = await new this._userModel(signupDto).save();
+      step(5, 'OK — user saved', { userId: userData.id });
 
-
-
+      step(6, 'Generating 6-digit OTP…');
       const otp = otpGenerator.generate(6, {
         upperCaseAlphabets: false,
         lowerCaseAlphabets: false,
         specialChars: false,
       });
-
-      //const otp = '123456';
+      step(6, 'OK — OTP generated', { otp, expiresInSec: 120 });
 
       const expiryTime = new Date(Date.now()).getTime() + 2 * 60 * 1000;
 
@@ -92,6 +113,7 @@ export class AuthService {
         type: OtpTypeEnum.SIGNUP,
       };
 
+      step(7, 'Checking for expired OTP rows…');
       const expiredOtp = await this._otpModel.find({
         type: OtpTypeEnum.SIGNUP,
         userID: userData.id,
@@ -105,9 +127,13 @@ export class AuthService {
           await this._otpModel.findByIdAndUpdate(expiredOtp[0]._id, {
             isUsed: true,
           });
+          step(7, 'Marked expired OTP as used', { otpId: expiredOtp[0]._id });
         }
+      } else {
+        step(7, 'OK — no expired OTP rows');
       }
 
+      step(8, 'Checking for active OTP rows…');
       const otpAlreadyPresent = await this._otpModel.find({
         isKYC: true,
         userID: userData.id,
@@ -118,24 +144,50 @@ export class AuthService {
         await this._otpModel.findByIdAndUpdate(otpAlreadyPresent[0]._id, {
           isUsed: true,
         });
+        step(8, 'Marked previous active OTP as used', {
+          otpId: otpAlreadyPresent[0]._id,
+        });
+      } else {
+        step(8, 'OK — no previous active OTP');
       }
 
+      step(9, 'Saving OTP to database…');
       await this._otpModel.create(otpObject);
+      step(9, 'OK — OTP document created', {
+        userId: userData.id,
+        type: OtpTypeEnum.SIGNUP,
+      });
 
       const recipientName = signupDto.email;
-      await this.utilsService.sendVerificationEmail(
+      step(10, 'Queueing verification email (async, non-blocking)…', {
+        to: signupDto.email,
+        recipientName,
+        otp,
+      });
+      this.utilsService.queueVerificationEmail(
         signupDto.email,
         otp,
         recipientName,
+        traceId,
       );
+      step(10, 'OK — email queued; HTTP response will not wait for SMTP');
 
-      // Return user data without password
+      step(11, 'Building user response (password stripped)…');
       const userResponse = JSON.parse(JSON.stringify(userData));
       delete userResponse.password;
 
+      step(12, 'POST /auth/signup — success', {
+        userId: userData.id,
+        totalMs: Date.now() - t0,
+      });
       return { user: userResponse };
     } catch (err) {
-      console.log(err);
+      this.logger.error(
+        `[${traceId}] signup FAILED after ${Date.now() - t0}ms: ${
+          err instanceof Error ? err.message : err
+        }`,
+        err instanceof Error ? err.stack : undefined,
+      );
       throw new BadRequestException(err?.message);
     }
   }
@@ -225,7 +277,7 @@ export class AuthService {
 
         const recipientName =
           userData?.fullName || userData?.name || userData?.email;
-        await this.utilsService.sendVerificationEmail(
+        this.utilsService.queueVerificationEmail(
           userData.email,
           otp,
           recipientName,
@@ -840,16 +892,16 @@ export class AuthService {
 
       await this._otpModel.create(otpObject);
 
-      // Send OTP email
+      // Send OTP email (async — do not block response)
       const userName = user?.fullName || user?.name || emailDto?.email;
 
-      await this.utilsService.sendResetPasswordEmail(
+      this.utilsService.queueResetPasswordEmail(
         emailDto.email,
         otp,
         userName,
       );
 
-      console.log(`🔐 Forgot Password OTP sent to ${emailDto?.email}: ${otp}`);
+      console.log(`🔐 Forgot Password OTP queued for ${emailDto?.email}`);
 
       return {
         status: 'success',
@@ -1253,8 +1305,8 @@ export class AuthService {
    */
   async getRecentOTPs(email?: string) {
     try {
-      // Check if in development mode (SMTP not configured)
-      if (this.utilsService.isSmtpConfigured()) {
+      // Only when no real email provider is configured
+      if (this.utilsService.isEmailConfigured()) {
         throw new BadRequestException('This endpoint is only available in development mode');
       }
 

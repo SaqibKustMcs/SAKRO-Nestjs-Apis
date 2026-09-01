@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Logger,
   Param,
   Post,
   Put,
@@ -31,6 +32,8 @@ import { LoginHistoryService } from './login-history.service';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private authService: AuthService,
     private loginHistoryService: LoginHistoryService,
@@ -38,6 +41,9 @@ export class AuthController {
 
   @Post('signup')
   signup(@Body() signupDto: SignupDTO) {
+    this.logger.log(
+      `[signup] HTTP request received email=${signupDto?.email ?? '(missing)'}`,
+    );
     return this.authService.signup(signupDto);
   }
 

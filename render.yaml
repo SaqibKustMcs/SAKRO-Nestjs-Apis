@@ -58,3 +58,10 @@ services:
         sync: false
       - key: SMTP_FROM
         value: JHAMAT
+      # Resend (HTTPS) — use on Render free tier instead of SMTP
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: EMAIL_PROVIDER
+        value: auto
